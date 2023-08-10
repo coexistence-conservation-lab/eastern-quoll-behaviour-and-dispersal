@@ -1,0 +1,64 @@
+'CNP fence' text file
+
+CANBERRA NATURE PARK-
+COMBINATION OF FENCES COLLECTED FOR INDIVIDUAL RESERVES. Combined in Arcview under Xtools avx.
+All reserves have most of their fences collected, except Mt Majura north & eastern side, ROB ROY leasee boundary and Goorooyaroo (eastern side). 
+Fences collected during 2005 were: Nov  the urban edge western sides of Mt Ainslie & Mt Majura, Sept- Urambi Hills interanal, Dec - Stranger Hill,  Nov Callum Brae & Jerra Grasslands
+
+
+Method   Part of the aim of the project is to provide assetdata to CALM/Rod Florence.  GPS "Garmin GPS II Plus" used to collect points along fence, mainly strainers and gates. Downloaded in PCX5 and converted to Arcview with GarmapXL.  points made into lines by heads up digitising on the screen at about 1 to 4,000 metre scale. Attributes added in Arcview and Excel.
+Note ? means no data available.
+'Id'- is a unique identification number starting at 1-
+'Id_no' - is an 8 digit unique id number.  Note no number is used where data was captured with the GPS.  A number was essential when digitising the Namadgi fences from the 1:10,000 maps  
+'Length' - in metres,  as calculated by arcview
+'Purpose'- internal = internal stock fence within the reserve. Some are old stock fences that were there before CNP came into existance. Others have been built to assist with horse management, others for park/people management.
+	Boundary = CNP park boundary fence.		
+	Historic = any historical fence ie.the old tuggeranong stone wall fence.	
+	Security= a fence that aids security of the park, park facilities or an asset  i.e a depot chainmesh fence, ACTEW Reservoir fence. 	
+	Lease= a fence that is owned by the Leasee
+	Urban bound= a fence adjoining an urban house block.  It is any blockthat is not a rural lease
+	'                   ' = a blank space is used to  show where there is no fence
+	other  = fences owned by ACT Govt that are on road ways that are NOT owned or maintained by ACTPC.  These come up under the legend file as 'other ACT govt' 
+
+'wire'- type of wire in fence with B =barb, P=plain, net =netting, bollard = Treated Pine bollards/post and rail, pailing = wooden vertical pailing, with wood posts and rails, mesh/panel= variety of galvanised mesh which comes in panels that bolt to galvanised posts,  PFP=prefabricated  panels ie ringlock fence, no fence = where there is no fence on the lease boundary, guardrail = the fence is the road side metal safety guard rail, chain = chainmesh security fence around ACTEWagl reservoirs and P&C depots,  and other =  any that doesn't fit in the above.
+.
+'Posts'- H/W= hardwood, S=steel, con=concrete, TP=treated pine.
+'End assm'= strainer assemblies  H/W= hardwood, S=steel, con=concrete, TP=treated pine.
+'Inclusions'-  G=gates, FG=flood gates, BG=boom gates.
+'Condition'- condition of fence Good=stockproof, Fair=could be made stockproof, Poor= 
+expensive to repair, Decrepit= lying on the ground.
+'Tenure'-who owns or the status of the land on either side of the fence. In a nn/mm format.
+ NatP= national park, Lease=Rural or community or 
+business lease, Agist= agistment,ACTF=ACT Forests, NatR=nature reserve, Spec=Special Purpose 
+Reserve.
+'Borders'- who borders the fence either in block number or property/park name
+ in a XX/YY format.
+'Age'- approx age of fence in years (in 5 year groups) with 5 types
+ >20, <20, <15, <10 & <5.
+'Date'- similar to 'age' approx age of fence in year of construction 
+(in 5 year groups) with 5 types pre 1980, 1980,1985,1990,1995.
+'Ownershp'-100%Govt, Gov50%, Govt0%
+'Terrain'- Flat= 2 wheel drive, Flat/Und =inbtween Und= 4 wheel drive, Und/Steep = inbetween  
+and Steep= walk/motor bike.
+'Veg'- Simon Katzs/Virginia Logan categories  Gl=improved pasture/native grassland,
+ Hf=heavy forest, Rg=regrowth, Lf= light forest,
+'Comments'=Reserve name or property name or location within CNP
+'Future'= what is the planned future of the fence.  Keep= keep and fix/repair/maintain. Remove=
+'Comments2' = any other comments that help id the fence. i.e. Depot fence,  wing, physical location of fence,etc
+Block_nos= not always filled out, as not all fences sit on a block boundary and it was divised for rural blocks. In urban blocks there are also section numbers.  Normally 3 first letters of district followed by block no /  3 first letters of district followed by block no
+ 
+ 
+Aliases- a variety of fence names/alias were created as a variety of students people collected fence data since 1995 (Any of these should be checked and transfered into the GIS Officer and then deleted.  NOW the current names WILLNOT change when a new fence is installed or old fence replaced. 
+  
+PROJECTION
+ Projections of the World and Type: Geographic.
+   Projection: "Transverse Mercator"
+   Spheroid: Australian
+    Central Meridian: 147
+MGA Zone 55
+  
+
+  
+ G Hirth 23 Dec 2005
+
+

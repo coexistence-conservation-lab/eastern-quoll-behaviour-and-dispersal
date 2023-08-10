@@ -1,0 +1,123 @@
+---
+title: "Eastern quoll behaviour and dispersal"
+author: "Christina Gee, Belinda Wilson"
+date: "3 August 2023"
+output:
+  html_document:
+    toc: true
+    number_sections: true
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+    theme: cerulean
+    highlight: pygments
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = file.path(dirname(inputFile), 'tutorial.html')) })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, eval=TRUE)
+```
+
+# **Background**
+
+Personality can play a crucial role in the survival and dispersal of reintroduced animals. In 2017, we reintroduced a cohort of female-only eastern quolls (*Dasyurus viverrinus*) to a [conservation-fenced haven](https://www.mulligansflat.org.au/) in the Australian Capital Territory, and conducted behavioural assays on each animal prior to their release. We aimed to determine whether personality and plasticity of these animals could predict their post-release performance.
+
+Here we describe the analyses we conducted for our article [Wilson *et al.* (2022) Personality and plasticity predicts post-release performance in a reintroduced mesopredator](https://doi.org/10.1016/j.anbehav.2022.02.019), published in Animal Behaviour.
+
+# **Setup**
+
+First, we installed the [pacman Package Management Tool](https://cran.r-project.org/web/packages/pacman/index.html), which allows us to install and load subsequent packages in a condensed and efficient way. 
+
+```{r, eval=FALSE}
+#install.packages("pacman")
+```
+
+```{r, results='hide', warning=FALSE, message=FALSE}
+# Install and load required packages
+pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4, rgdal, 
+               readr, sf, readxl, rstudioapi, tidyverse, viridis)
+```
+
+We also set the working directly to where this R markdown is saved using the `rstudioapi` package.
+
+```{r}
+# Set the working directory to where this markdown is saved
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+# **Data preparation**
+
+```{r, eval=FALSE}
+# Assign raw data filename to an object
+raw_data <- "data.xlsx"
+
+# Read in den location data
+data <- read_excel(raw_data, sheet="data") %>% 
+  clean_names() 
+```
+
+## Map
+
+```{r, warning=FALSE}
+# Read in and project MFWS fence shapefile using rgdal
+mfws <- readOGR(dsn="shapefiles/MFGO_fences_and surrounds.shp", verbose=FALSE) %>% 
+  spTransform(CRS("+proj=utm +zone=55 +ellps=WGS84")) %>%
+  # Transform shapefile into a dataframe
+  fortify(verbose=FALSE) %>%
+  mutate(lat=as.numeric(lat + 10000000), 
+         long=as.numeric(long))
+
+# Read in and project MFGO fence shapefile using rgdal
+mfgo <- st_read("shapefiles/MFGO_fences.shp", quiet=TRUE) %>%
+  # Set projection to eastings/northings
+  st_set_crs("EPSG:32755") %>% 
+  # Reproject to lat/long
+  st_transform("EPSG:4326")
+
+# Plot den locations on MFWS map for each trial
+map <- ggplot() + 
+  geom_polygon(mfws, mapping=aes(x=long, y=lat, group=group), col="grey15") +
+  #coord_sf(xlim=c(695750, 699250), ylim=c(6104250, 6107750)) +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_rect(fill="white"),
+        axis.text.x = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.key = element_blank(), 
+        strip.background = element_blank()) +
+  #facet_wrap(~factor(year_of_acquisition), ncol=3) +
+  #scale_colour_manual(values = viridis(3, begin=0.9, end=0.1)) +
+  xlab("") + ylab("") + labs(col="Trial")
+print(map)
+```
+
+```{r}
+jpeg(file="mfgo_fences_and_surrounds.jpeg", 
+     width=4750, height=1500, units="px", res=500)
+map
+dev.off()
+```
+
+# **Analysis**
+
+```{r}
+
+```
+
+# **Plots**
+
+```{r}
+
+```
+
+# **Session information**
+
+```{r}
+# Display version information for R, OS, and packages
+sessionInfo()
+```
