@@ -1,7 +1,7 @@
 ---
 title: "Eastern quoll behaviour and dispersal"
 author: "Christina Gee, Belinda Wilson"
-date: "3 August 2023"
+date: "14 March 2024"
 output:
   html_document:
     toc: true
@@ -36,15 +36,13 @@ First, we installed the [pacman Package Management Tool](https://cran.r-project.
 
 ```{r, results='hide', warning=FALSE, message=FALSE}
 # Install and load required packages
-pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4, rgdal, 
+pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,  
                readr, sf, readxl, rstudioapi, tidyverse, viridis)
-```
 
-We also set the working directly to where this R markdown is saved using the `rstudioapi` package.
+install.packages("corrplot")
 
-```{r}
-# Set the working directory to where this markdown is saved
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+library(corrplot)
+
 ```
 
 # **Data preparation**
@@ -53,9 +51,820 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # Assign raw data filename to an object
 raw_data <- "data.xlsx"
 
-# Read in den location data
-data <- read_excel(raw_data, sheet="data") %>% 
-  clean_names() 
+# Read in behavioural assay data
+raw <- read_excel(raw_data, sheet="Assays", na="N/A") %>% 
+  clean_names() %>%
+  select("id"="observation_id", 
+         "assay_id", 
+         "quoll_code",
+         behaviour="behavior", 
+         occurrences="total_number_of_occurences")
+
+view(raw)
+
+
+#Read in the data for all data sheets in excel 
+
+meta <- read_excel(raw_data, sheet="Metadata", na="N/A") %>% 
+  clean_names()
+view(meta)
+
+quoll <- read_excel(raw_data, sheet="Quoll", na="N/A") %>%
+  clean_names()
+view(quoll)
+
+capture <- read_excel(raw_data, sheet="Captures") %>%
+  clean_names()
+view(capture)
+
+sites <- read_excel(raw_data, sheet="Sites") %>%
+  clean_names()
+view(sites)
+
+session <- read_excel(raw_data, sheet="Sessions") %>%
+  clean_names()
+view(session)
+
+trap_eff <- read_excel(raw_data, sheet="Trap effectiveness") %>%
+  clean_names()
+view(trap_eff)
+
+
+#Clean up behaviour data from long to wide format 
+
+occ <- pivot_wider(data = raw, 
+                   names_from = behaviour, 
+                   values_from = occurrences)  %>%
+  clean_names() %>%
+  mutate(across(all_of(c("section_1", "section_2", "section_3", "section_4", 
+                         "moving", "jump_climb", "food", "legs", 
+                         "grooming", "resting", "perch")), as.numeric)) %>%
+  rename(section_1_o = "section_1", 
+         section_2_o = "section_2", 
+         section_3_o = "section_3", 
+         section_4_o = "section_4", 
+         moving_o = "moving", 
+         jump_climb_o = "jump_climb", 
+         food_o = "food", 
+         legs_o = "legs", 
+         grooming_o = "grooming", 
+         resting_o = "resting", 
+         perch_o = "perch")
+view(occ)
+
+
+raw <- read_excel(raw_data, sheet="Assays", , na="N/A") %>% 
+  clean_names() %>%
+  select("id"="observation_id", 
+         "assay_id", 
+         quoll_code, 
+         behaviour="behavior", 
+         duration="total_duration_s")
+
+dur <- pivot_wider(data = raw,
+                   names_from = behaviour, 
+                   values_from = duration) %>%
+  clean_names() %>%
+  mutate(across(all_of(c("section_1", "section_2", "section_3", "section_4", 
+                         "moving", "jump_climb", "food", "legs", 
+                         "grooming", "resting", "perch")), as.numeric)) %>%
+  rename(section_1_d = "section_1", 
+         section_2_d = "section_2", 
+         section_3_d = "section_3", 
+         section_4_d = "section_4", 
+         moving_d = "moving", 
+         jump_climb_d = "jump_climb", 
+         food_d = "food", 
+         legs_d = "legs", 
+         grooming_d = "grooming", 
+         resting_d = "resting", 
+         perch_d = "perch")
+view(dur)
+
+assays <- left_join(occ, dur, by=c("id", "assay_id", "quoll_code"))
+
+
+view(assays)
+
+view(meta)
+
+
+# Append metadata for each assay to dataframe
+
+data <- left_join(meta, assays, by=c("assay_id", "quoll_code"))
+
+view(data)
+
+data <- data %>%
+  filter(!is.na(assay_number))
+
+
+
+
+```
+
+Adding together values to create new value columns 
+
+```{r}
+
+#Adding all sections together to create a column with total section visitations
+data$sumsect_o <- rowSums(data[, c("section_1_o", "section_2_o", "section_3_o", "section_4_o")])
+
+#Adding together all activity without sections
+data$totalact_o <- rowSums(data[, c(21:27)])
+
+view(data)
+
+
+```
+
+
+
+
+Plotting Goorooyarroo vs MFWS by action over multiple assays
+
+```{r}
+
+# Gooroo v Mulligans Moving
+mov <- ggplot(data, aes(x = as.character(assay_number), y = moving_d, 
+                        fill = as.character(assay_number))) + 
+  geom_violin() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab("Moving duration (s)") + labs("")
+print(mov)
+
+movo <- ggplot(data, aes(x = as.character(assay_number), y = moving_o, 
+                        fill = as.character(assay_number))) + 
+  geom_violin() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab("Moving occurrences (n)") + labs("")
+print(movo)
+
+summary(glm(moving_d ~ study_site + temp + assay_number, data=data))
+summary(glm(moving_o ~ study_site + temp + assay_number, data=data))
+
+#GS v Mulligans moving with random variables 
+mod <- lmer(moving_o ~ study_site + temp + assay_number + 
+              (1|quoll_code), data=data)
+# Statistics
+summary(mod)
+
+# p-values
+car::Anova(mod)
+
+# Gooroo v Mulligans Grooming
+groom <- ggplot(data, aes(x = as.character(assay_number), y = grooming_d, 
+                        fill = as.character(assay_number))) + 
+  geom_violin() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  xlab("Assay number") + ylab("Grooming duration (s)") + labs("")
+print(groom)
+
+groomo <- ggplot(data, aes(x = as.character(assay_number), y = grooming_o, 
+                        fill = as.character(assay_number))) + 
+  geom_violin() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  xlab("Assay number") + ylab("Grooming occurrences (n)") + labs("")
+print(groomo)
+
+summary(glm(grooming_d ~ study_site + temp + assay_number, data=data))
+summary(glm(grooming_o ~ study_site + temp + assay_number, data=data))
+
+
+
+# Gooroo v Mulligans Food
+food <- ggplot(data, aes(x = as.character(assay_number), 
+                         y = -remaining_bait_g+60, 
+                         fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Bait eaten (g)") + labs("")
+print(food)
+
+
+foodd <- ggplot(data, aes(x = as.character(assay_number), y = food_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Food interaction duration (s)") + labs("")
+
+print(foodo)
+
+foodd <- ggplot(data, aes(x = as.character(assay_number), y = food_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Food interaction occurrences (n)") + labs("")
+
+print(foodd)
+
+
+summary(glm(food_d ~ study_site + temp + assay_number, data=data))
+summary(glm(food_o ~ study_site + temp + assay_number, data=data))
+summary(glm(remaining_bait_g ~ study_site + temp + assay_number, data=data))
+
+
+
+# Gooroo v Mulligans Perching 
+perch <- ggplot(data, aes(x = as.character(assay_number), y = perch_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Perching duration (s)") + labs("")
+
+print(perch)
+
+
+percho <- ggplot(data, aes(x = as.character(assay_number), y = perch_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Perching occurrence (n)") + labs("")
+
+print(percho)
+
+
+summary(glm(perch_d ~ study_site + temp + assay_number, data=data))
+summary(glm(perch_o ~ study_site + temp + assay_number, data=data))
+
+
+# Gooroo v Mulligans meerkatting 
+legs <- ggplot(data, aes(x = as.character(assay_number), y = legs_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Meerkatting duration (s)") + labs("")
+
+print(legs)
+
+
+legso <- ggplot(data, aes(x = as.character(assay_number), y = legs_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Meerkatting occurrences (n)") + labs("")
+
+print(legso)
+
+summary(glm(legs_d ~ study_site + temp + assay_number, data=data))
+summary(glm(legs_o ~ study_site + temp + assay_number, data=data))
+
+
+# Gooroo v Mulligans jumping/climbing 
+jumpd <- ggplot(data, aes(x = as.character(assay_number), y = jump_climb_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Jumping/climbing duration (s)") + labs("")
+
+print(jumpd)
+
+
+jumpo <- ggplot(data, aes(x = as.character(assay_number), y = jump_climb_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Jumping/climbing occurrences (n)") + labs("")
+
+print(jumpo)
+
+summary(glm(jump_climb_d ~ study_site + temp + assay_number, data=data))
+summary(glm(jump_climb_o ~ study_site + temp + assay_number, data=data))
+
+
+# Gooroo v Mulligans Section visitation occurrences 
+sect_o <- ggplot(data, aes(x = as.character(assay_number), y = sumsect_o, 
+                        fill = as.character(assay_number))) + 
+  geom_violin() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab("Total movements across all sections (n)") + labs("")
+
+print(sect_o)
+
+
+summary(glm(formula = sumsect_o ~ study_site + temp + assay_number, data=data))
+summary(glm(formula = sumsect_o ~ study_site + sex + temp + assay_number, data=sexdata))
+
+
+# Gooroo v Mulligans total activity occurrences minus sections
+act_o <- ggplot(data, aes(x = as.character(assay_number), y = totalact_o, 
+                        fill = as.character(assay_number))) + 
+  geom_violin() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab("Total activity (n)") + labs("")
+
+print(act_o)
+
+summary(glm(formula = totalact_o ~ study_site + temp + assay_number, data=data))
+
+#summary(glm(formula = totalact_o ~ study_site + sex + temp + assay_number, data=sexdata)) haven't run this yet 
+
+
+```
+
+
+Plotting male vs female EQs by action over multiple assays
+
+```{r}
+
+# Append metadata for each assay to dataframe
+                                              
+sexdata <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many")
+
+view(sexdata)
+
+
+# Male v Female jumping/climbing 
+
+jumpso <- ggplot(sexdata, aes(x = as.character(assay_number), y = jump_climb_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Jumping/climbing occurrences (n)") + labs("")
+
+print(jumpso)
+
+jumpsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = jump_climb_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Jumping/climbing duration (s)") + labs("")
+
+print(jumpsd)
+
+
+summary(glm(jump_climb_d ~ sex + temp + assay_number + study_site, data=sexdata))
+summary(glm(jump_climb_o ~ sex + temp + assay_number + study_site, data=sexdata))
+
+
+# Male v Female meerkatting 
+
+legsso <- ggplot(sexdata, aes(x = as.character(assay_number), y = legs_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Meerkatting occurrences (n)") + labs("")
+
+print(legsso)
+
+legssd <- ggplot(sexdata, aes(x = as.character(assay_number), y = legs_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Meerkatting duration (s)") + labs("")
+
+print(legssd)
+
+
+summary(glm(legs_d ~ sex + temp + assay_number + study_site, data=sexdata))
+summary(glm(legs_o ~ sex + temp + assay_number + study_site, data=sexdata))
+
+
+
+# Males v Females Moving
+movsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = moving_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab("Moving duration (s)") + labs("")
+print(movsd)
+
+movso <- ggplot(sexdata, aes(x = as.character(assay_number), y = moving_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab("Moving occurrences (n)") + labs("")
+print(movso)
+
+summary(glm(moving_d ~ sex + study_site + temp + assay_number, data=sexdata))
+summary(glm(moving_o ~ sex + study_site + temp + assay_number, data=sexdata))
+
+# Males v Females  Grooming
+groomsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = grooming_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  xlab("Assay number") + ylab("Grooming duration (s)") + labs("")
+print(groomsd)
+
+groomso <- ggplot(sexdata, aes(x = as.character(assay_number), y = grooming_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  xlab("Assay number") + ylab("Grooming occurrences (n)") + labs("")
+print(groomso)
+
+summary(glm(grooming_d ~ sex + study_site + temp + assay_number, data=sexdata))
+summary(glm(grooming_o ~ sex + study_site + temp + assay_number, data=sexdata))
+
+
+
+# Males v Females Food
+foods <- ggplot(sexdata, aes(x = as.character(assay_number), 
+                         y = -remaining_bait_g+60, 
+                         fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Bait eaten (g)") + labs("")
+print(foods)
+
+
+
+foodsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = food_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Food interaction duration (s)") + labs("")
+
+print(foodsd)
+
+foodso <- ggplot(sexdata, aes(x = as.character(assay_number), y = food_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Food interaction occurrences (n)") + labs("")
+
+print(foodso)
+
+
+summary(glm(food_d ~ sex + study_site + temp + assay_number, data=sexdata))
+summary(glm(food_o ~ sex + study_site + temp + assay_number, data=sexdata))
+summary(glm(remaining_bait_g ~ sex + study_site + temp + assay_number, data=sexdata))
+
+
+
+# Male v Female Perching 
+perchsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = perch_d, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Perching duration (s)") + labs("")
+
+print(perchsd)
+
+
+perchso <- ggplot(sexdata, aes(x = as.character(assay_number), y = perch_o, 
+                        fill = as.character(assay_number))) + 
+  geom_boxplot() +
+  facet_wrap(~sex) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
+  xlab("Assay number") + ylab("Perching occurrence (n)") + labs("")
+
+print(perchso)
+
+
+summary(glm(perch_d ~ sex + study_site + temp + assay_number, data=sexdata))
+summary(glm(perch_o ~ sex + study_site + temp + assay_number, data=sexdata))
+
+
+```
+
+
+Plotting males vs females across Gooroo and MFWS
+
+```{r}
+# Male v Female jumping/climbing 
+
+jump_sl <- ggplot(sexdata, aes(x = as.character(sex), y = jump_climb_o, 
+                        fill = as.character(sex))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
+  xlab("Sex") + ylab("Jumping/climbing occurrences (n)") + labs("")
+
+print(jump_sl)
+
+jump_sld <- ggplot(sexdata, aes(x = as.character(sex), y = jump_climb_d, 
+                        fill = as.character(sex))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
+  xlab("Sex") + ylab("Jumping/climbing duration (s)") + labs("")
+
+print(jump_sld)
+
+
+summary(glm(jump_climb_d ~ sex + temp + assay_number + study_site, data=sexdata))
+summary(glm(jump_climb_o ~ sex + temp + assay_number + study_site, data=sexdata))
+
+
+# Male v Female meerkatting 
+
+legs_slo <- ggplot(sexdata, aes(x = as.character(sex), y = legs_o, 
+                        fill = as.character(sex))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
+  xlab("Sex") + ylab("Meerkatting occurrences (n)") + labs("")
+
+print(legs_slo)
+
+legs_sld <- ggplot(sexdata, aes(x = as.character(sex), y = legs_d, 
+                        fill = as.character(sex))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
+  xlab("Sex") + ylab("Meerkatting duration (s)") + labs("")
+
+print(legs_sld)
+
+
+summary(glm(legs_d ~ sex + temp + assay_number + study_site, data=sexdata))
+summary(glm(legs_o ~ sex + temp + assay_number + study_site, data=sexdata))
+
+
+
+# Males v Females Food
+food_sl <- ggplot(sexdata, aes(x = as.character(sex), 
+                         y = -remaining_bait_g+60, 
+                         fill = as.character(sex))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
+  xlab("Sex") + ylab("Bait eaten (g)") + labs("")
+print(food_sl)
+
+summary(glm(remaining_bait_g ~ sex + study_site + temp + assay_number, data=sexdata))
+
+
+
+# Male v Female Perching 
+perch_sld <- ggplot(sexdata, aes(x = as.character(sex), y = perch_d, 
+                        fill = as.character(sex))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
+  xlab("Sex") + ylab("Perching duration (s)") + labs("")
+
+print(perch_sld)
+
+
+summary(glm(legs_d ~ sex + temp + assay_number + arena + morph + study_site, data=sexdata))
+summary(glm(legs_o ~ sex + temp + assay_number + arena + morph + study_site, data=sexdata))
+
+```
+
+
+
+
+## Correlation analysis
+
+*Look in Belinda's behaviour code*
+
+```{r}
+
+#Finding out the locations of the relevant columns 
+colfoodo <- which(colnames(data) == "food_o")
+print(colfoodo)
+
+restingo <- which(colnames(data) == "resting_o")
+print(restingo)
+
+colsection4o <- which(colnames(sexdata) == "section_4_o")
+print(colsection4o)
+
+colfoodd <- which(colnames(sexdata) == "food_d")
+print(colfoodd)
+
+colsection4d <- which(colnames(sexdata) == "section_4_d")
+print(colsection4d)
+
+view(sexdata)
+
+
+#Selecting the appropriate columns for each correlation matrix
+cor_o_d <- sexdata %>% 
+  dplyr::select(21:42)
+
+cor_o <- sexdata %>%
+  dplyr::select(21:31)
+
+cor_d <- sexdata %>%
+  dplyr::select(32:42)
+
+
+#Running the correlations tests for both, then occurrences, then duration
+correlation_od <- cor(cor_o_d)
+correlation_o <- cor(cor_o)
+correlation_d <- cor(cor_d)
+
+view(correlation_od)
+view(correlation_o)
+view(correlation_d)
+
+#Saving them to a .csv file
+write.csv(correlation_od, "correlation matrix occ dur.csv")
+write.csv(correlation_o, "correlation matrix occ.csv")
+write.csv(correlation_d, "correlation matrix dur.csv")
+
+
+#Creating and printing correlation matrix .jpgs which colour code the correlations
+jpeg(height=2000, width=2000, file="correlation matrix od.jpeg", type="cairo")
+corrplot(correlation_od, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+
+
+jpeg(height=2000, width=2000, file="correlation matrix occ.jpeg", type="cairo")
+corrplot(correlation_o, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+
+
+jpeg(height=2000, width=2000, file="correlation matrix dur.jpeg", type="cairo")
+corrplot(correlation_d, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+
+
+
 ```
 
 ## Map
