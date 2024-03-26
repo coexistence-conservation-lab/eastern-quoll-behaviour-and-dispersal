@@ -42,7 +42,6 @@ pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,
 install.packages("corrplot")
 
 library(corrplot)
-
 ```
 
 # **Data preparation**
@@ -64,10 +63,13 @@ view(raw)
 
 
 #Read in the data for all data sheets in excel 
-
 meta <- read_excel(raw_data, sheet="Metadata", na="N/A") %>% 
   clean_names()
 view(meta)
+
+bin <- read_excel(raw_data, sheet="Binned assays", na="N/A")%>%
+  clean_names()
+view(bin)
 
 quoll <- read_excel(raw_data, sheet="Quoll", na="N/A") %>%
   clean_names()
@@ -91,7 +93,6 @@ view(trap_eff)
 
 
 #Clean up behaviour data from long to wide format 
-
 occ <- pivot_wider(data = raw, 
                    names_from = behaviour, 
                    values_from = occurrences)  %>%
@@ -142,23 +143,27 @@ dur <- pivot_wider(data = raw,
 view(dur)
 
 assays <- left_join(occ, dur, by=c("id", "assay_id", "quoll_code"))
-
-
 view(assays)
 
-view(meta)
-
-
 # Append metadata for each assay to dataframe
-
 data <- left_join(meta, assays, by=c("assay_id", "quoll_code"))
-
 view(data)
 
+data <- left_join(data, bin, by=c("assay_id", "quoll_code", "session"))
+view(data)
+
+megadata <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many")
+view(megadata)
+
+
+#this filters out animals which were not assayed
 data <- data %>%
   filter(!is.na(assay_number))
 
+megadata <- megadata %>%
+  filter(!is.na(assay_number))
 
+view(megadata)
 
 
 ```
@@ -168,27 +173,168 @@ Adding together values to create new value columns
 ```{r}
 
 #Adding all sections together to create a column with total section visitations
-data$sumsect_o <- rowSums(data[, c("section_1_o", "section_2_o", "section_3_o", "section_4_o")])
+megadata$sumsect_o <- rowSums(megadata[, c("section_1_o", "section_2_o", "section_3_o", "section_4_o")])
+
+#Finding out the locations of the relevant columns 
+colfoodo <- which(colnames(megadata) == "food_o")
+print(colfoodo)
+
+restingo <- which(colnames(megadata) == "resting_o")
+print(restingo)
 
 #Adding together all activity without sections
-data$totalact_o <- rowSums(data[, c(21:27)])
+megadata$totalact_o <- rowSums(megadata[, c(22:28)])
 
-view(data)
+view(megadata)
 
 
 ```
 
 
+## Correlation analysis
 
+```{r}
+
+#Finding out the locations of the relevant columns 
+colfoodo <- which(colnames(megadata) == "food_o")
+print(colfoodo) #22
+
+restingo <- which(colnames(megadata) == "resting_o")
+print(restingo) #28
+
+colsection4o <- which(colnames(megadata) == "section_4_o")
+print(colsection4o) #32
+
+colfoodd <- which(colnames(megadata) == "food_d")
+print(colfoodd) #33
+
+restingd <- which(colnames(megadata) == "resting_d")
+print(restingd) #39
+
+colsection4d <- which(colnames(megadata) == "section_4_d")
+print(colsection4d) #43
+
+#Selecting the appropriate columns for each correlation matrix
+
+#all occurrence and duration columns including sections
+cor_o_d <- megadata %>% 
+  dplyr::select(22:43)
+view(cor_o_d)
+
+#all occurrence columns including sections
+cor_o <- megadata %>%
+  dplyr::select(22:32)
+view(cor_o)
+
+#all duration data including sections 
+cor_d <- megadata %>%
+  dplyr::select(33:43)
+view(cor_d)
+
+#all duration and occurrence data not including sections
+cor_od_act <- megadata %>%
+  dplyr::select(22:28, 33:39)
+view(cor_od_act)
+
+#all occurrence data not including sections
+cor_o_act <- megadata %>%
+  dplyr::select(22:28)
+view(cor_o_act)
+
+#all duration data not including sections
+cor_d_act <- megadata %>%
+  dplyr::select(33:39)
+view(cor_d_act)
+
+#Running the correlations tests for both, then occurrences, then duration, with sections
+correlation_od <- cor(cor_o_d)
+correlation_o <- cor(cor_o)
+correlation_d <- cor(cor_d)
+
+#Running the correlations for both, then occurrences v duration, then occurrences, then duration, without sections
+correlation_od_act <- cor(cor_od_act)
+correlation_ovd_act <- cor(cor_d_act,cor_o_act)
+correlation_occ_act <- cor(cor_o_act)
+correlation_dur_act <- cor(cor_d_act)
+
+view(correlation_od)
+view(correlation_o)
+view(correlation_d)
+view(correlation_od_act)
+view(correlation_ovd_act)
+view(correlation_occ_act)
+view(correlation_dur_act)
+
+#Saving them to a .csv file
+write.csv(correlation_od, "correlation matrix occ dur.csv")
+write.csv(correlation_o, "correlation matrix occ.csv")
+write.csv(correlation_d, "correlation matrix dur.csv")
+write.csv(correlation_ovd_act, "correlation matrix activity occ vs dur.csv")
+write.csv(correlation_occ_act, "correlation matrix activity occ.csv")
+write.csv(correlation_dur_act, "correlation matrix activity dur.csv")
+
+
+#Creating and printing correlation matrix .jpgs which colour code the correlations
+
+#Correlation of occurrences and duration with sections
+jpeg(height=2000, width=2000, file="correlation matrix od.jpeg", type="cairo")
+corrplot(correlation_od, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+dev.off()
+
+#Correlation of occurrences only with sections
+jpeg(height=2000, width=2000, file="correlation matrix occ.jpeg", type="cairo")
+corrplot(correlation_o, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+dev.off()
+
+#Correlation of duration only with sections
+jpeg(height=2000, width=2000, file="correlation matrix dur.jpeg", type="cairo")
+corrplot(correlation_d, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+dev.off()
+
+#Correlations of duration and occurrences without sections
+jpeg(height=2000, width=2000, file="correlation matrix occdur act.jpeg", type="cairo")
+corrplot(correlation_od_act, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+dev.off()
+
+#Correlations of duration v occurrences without sections
+jpeg(height=2000, width=2000, file="correlation matrix occ v dur act.jpeg", type="cairo")
+corrplot(correlation_ovd_act, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=TRUE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+dev.off()
+
+#Correlation of occurrences only without sections
+jpeg(height=2000, width=2000, file="correlation matrix occ act.jpeg", type="cairo")
+corrplot(correlation_occ_act, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+dev.off()
+
+#Correlation of duration only without sections
+jpeg(height=2000, width=2000, file="correlation matrix dur act.jpeg", type="cairo")
+corrplot(correlation_dur_act, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+dev.off()
+
+```
 
 Plotting Goorooyarroo vs MFWS by action over multiple assays
 
 ```{r}
 
 # Gooroo v Mulligans Moving
-mov <- ggplot(data, aes(x = as.character(assay_number), y = moving_d, 
+mov <- ggplot(megadata, aes(x = as.character(assay_number), y = moving_d, 
                         fill = as.character(assay_number))) + 
-  geom_violin() +
+  geom_boxplot() +
   facet_wrap(~study_site) + 
   theme_minimal() +
   theme(legend.position = "none", 
@@ -198,9 +344,9 @@ mov <- ggplot(data, aes(x = as.character(assay_number), y = moving_d,
   xlab("Assay number") + ylab("Moving duration (s)") + labs("")
 print(mov)
 
-movo <- ggplot(data, aes(x = as.character(assay_number), y = moving_o, 
+movo <- ggplot(megadata, aes(x = as.character(assay_number), y = moving_o, 
                         fill = as.character(assay_number))) + 
-  geom_violin() +
+  geom_boxplot() +
   facet_wrap(~study_site) + 
   theme_minimal() +
   theme(legend.position = "none", 
@@ -210,8 +356,8 @@ movo <- ggplot(data, aes(x = as.character(assay_number), y = moving_o,
   xlab("Assay number") + ylab("Moving occurrences (n)") + labs("")
 print(movo)
 
-summary(glm(moving_d ~ study_site + temp + assay_number, data=data))
-summary(glm(moving_o ~ study_site + temp + assay_number, data=data))
+summary(glm(moving_d ~ study_site + temp + assay_number, data=megadata))
+summary(glm(moving_o ~ study_site + temp + assay_number, data=megadata))
 
 #GS v Mulligans moving with random variables 
 mod <- lmer(moving_o ~ study_site + temp + assay_number + 
@@ -792,81 +938,6 @@ summary(glm(legs_o ~ sex + temp + assay_number + arena + morph + study_site, dat
 ```
 
 
-
-
-## Correlation analysis
-
-*Look in Belinda's behaviour code*
-
-```{r}
-
-#Finding out the locations of the relevant columns 
-colfoodo <- which(colnames(data) == "food_o")
-print(colfoodo)
-
-restingo <- which(colnames(data) == "resting_o")
-print(restingo)
-
-colsection4o <- which(colnames(sexdata) == "section_4_o")
-print(colsection4o)
-
-colfoodd <- which(colnames(sexdata) == "food_d")
-print(colfoodd)
-
-colsection4d <- which(colnames(sexdata) == "section_4_d")
-print(colsection4d)
-
-view(sexdata)
-
-
-#Selecting the appropriate columns for each correlation matrix
-cor_o_d <- sexdata %>% 
-  dplyr::select(21:42)
-
-cor_o <- sexdata %>%
-  dplyr::select(21:31)
-
-cor_d <- sexdata %>%
-  dplyr::select(32:42)
-
-
-#Running the correlations tests for both, then occurrences, then duration
-correlation_od <- cor(cor_o_d)
-correlation_o <- cor(cor_o)
-correlation_d <- cor(cor_d)
-
-view(correlation_od)
-view(correlation_o)
-view(correlation_d)
-
-#Saving them to a .csv file
-write.csv(correlation_od, "correlation matrix occ dur.csv")
-write.csv(correlation_o, "correlation matrix occ.csv")
-write.csv(correlation_d, "correlation matrix dur.csv")
-
-
-#Creating and printing correlation matrix .jpgs which colour code the correlations
-jpeg(height=2000, width=2000, file="correlation matrix od.jpeg", type="cairo")
-corrplot(correlation_od, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-
-
-jpeg(height=2000, width=2000, file="correlation matrix occ.jpeg", type="cairo")
-corrplot(correlation_o, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-
-
-jpeg(height=2000, width=2000, file="correlation matrix dur.jpeg", type="cairo")
-corrplot(correlation_d, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-
-
-
-```
-
 ## Map
 
 ```{r, warning=FALSE}
@@ -904,6 +975,8 @@ map <- ggplot() +
   xlab("") + ylab("") + labs(col="Trial")
 print(map)
 ```
+
+
 
 ```{r}
 jpeg(file="mfgo_fences_and_surrounds.jpeg", 
