@@ -40,7 +40,9 @@ pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,
                readr, sf, readxl, rstudioapi, tidyverse, viridis)
 
 install.packages("corrplot")
+install.packages("beepr")
 
+library(beepr)
 library(corrplot)
 ```
 
@@ -59,37 +61,37 @@ raw <- read_excel(raw_data, sheet="Assays", na="N/A") %>%
          behaviour="behavior", 
          occurrences="total_number_of_occurences")
 
-view(raw)
+#view(raw)
 
 
 #Read in the data for all data sheets in excel 
 meta <- read_excel(raw_data, sheet="Metadata", na="N/A") %>% 
   clean_names()
-view(meta)
+#view(meta)
 
 bin <- read_excel(raw_data, sheet="Binned assays", na="N/A")%>%
   clean_names()
-view(bin)
+#view(bin)
 
 quoll <- read_excel(raw_data, sheet="Quoll", na="N/A") %>%
   clean_names()
-view(quoll)
+#view(quoll)
 
 capture <- read_excel(raw_data, sheet="Captures") %>%
   clean_names()
-view(capture)
+#view(capture)
 
 sites <- read_excel(raw_data, sheet="Sites") %>%
   clean_names()
-view(sites)
+#view(sites)
 
 session <- read_excel(raw_data, sheet="Sessions") %>%
   clean_names()
-view(session)
+#view(session)
 
 trap_eff <- read_excel(raw_data, sheet="Trap effectiveness") %>%
   clean_names()
-view(trap_eff)
+#view(trap_eff)
 
 
 #Clean up behaviour data from long to wide format 
@@ -111,7 +113,7 @@ occ <- pivot_wider(data = raw,
          grooming_o = "grooming", 
          resting_o = "resting", 
          perch_o = "perch")
-view(occ)
+#view(occ)
 
 
 raw <- read_excel(raw_data, sheet="Assays", , na="N/A") %>% 
@@ -140,21 +142,19 @@ dur <- pivot_wider(data = raw,
          grooming_d = "grooming", 
          resting_d = "resting", 
          perch_d = "perch")
-view(dur)
+#view(dur)
 
 assays <- left_join(occ, dur, by=c("id", "assay_id", "quoll_code"))
 view(assays)
 
 # Append metadata for each assay to dataframe
 data <- left_join(meta, assays, by=c("assay_id", "quoll_code"))
-view(data)
+#view(data)
 
 data <- left_join(data, bin, by=c("assay_id", "quoll_code", "session"))
-view(data)
+#view(data)
 
 megadata <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many")
-view(megadata)
-
 
 #this filters out animals which were not assayed
 data <- data %>%
@@ -164,6 +164,8 @@ megadata <- megadata %>%
   filter(!is.na(assay_number))
 
 view(megadata)
+
+beep("coin")
 
 
 ```
@@ -177,10 +179,10 @@ megadata$sumsect_o <- rowSums(megadata[, c("section_1_o", "section_2_o", "sectio
 
 #Finding out the locations of the relevant columns 
 colfoodo <- which(colnames(megadata) == "food_o")
-print(colfoodo)
+print(colfoodo) #22
 
 restingo <- which(colnames(megadata) == "resting_o")
-print(restingo)
+print(restingo) #28
 
 #Adding together all activity without sections
 megadata$totalact_o <- rowSums(megadata[, c(22:28)])
