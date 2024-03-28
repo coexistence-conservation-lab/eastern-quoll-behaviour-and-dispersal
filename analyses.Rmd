@@ -87,7 +87,7 @@ sites <- read_excel(raw_data, sheet="Sites") %>%
 
 session <- read_excel(raw_data, sheet="Sessions") %>%
   clean_names()
-#view(session)
+view(session)
 
 trap_eff <- read_excel(raw_data, sheet="Trap effectiveness") %>%
   clean_names()
@@ -161,8 +161,9 @@ data <- left_join(data, bin, by=c("assay_id", "quoll_code", "session"), relation
 
 data <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many")
 
-megadata <- left_join(data, capture, by=c("quoll_code", "session"), relationship = "many-to-many")
+data <- left_join(data, capture, by=c("quoll_code", "session"), relationship = "many-to-many")
 
+megadata <- left_join(data, session, by=c("session"))
 
 
 megadata <- megadata %>%
@@ -344,7 +345,22 @@ dev.off()
 
 ```
 
-Running models 
+
+## Accounting for environmental variables
+
+```{r}
+
+megadata_mutate <- megadata %>%
+    mutate_at(vars(5, 148), list(scale))
+
+view(megadata_mutate)
+
+write.csv(megadata_mutate, "megadata mutated.csv")
+
+```
+
+
+## Running models 
 
 ```{r}
 
@@ -358,10 +374,7 @@ summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_est
 summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata_excl))
 
 
-
 ```
-
-
 
 
 Plotting Goorooyarroo vs MFWS by action over multiple assays
@@ -430,6 +443,20 @@ movd_ageno<- ggplot(megadata, aes(x = as.character(age_estimate), y = moving_d,
         axis.line.y = element_line(color = "black")) + 
   xlab("Age estimate") + ylab("Moving duration (s)") + labs("")
 print(movd_ageno)
+
+
+movd_sexno<- ggplot(megadata, aes(x = as.character(sex), y = moving_d, 
+                        fill = as.character(sex))) + 
+  geom_boxplot() + 
+  facet_wrap(~study_site) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Sex") + ylab("Moving duration (s)") + labs("")
+print(movd_sexno)
+
 
 
 #GS v Mulligans moving with random variables 
@@ -660,356 +687,9 @@ print(act_o)
 
 summary(glm(formula = totalact_o ~ study_site + temp + assay_number, data=data))
 
-#summary(glm(formula = totalact_o ~ study_site + sex + temp + assay_number, data=sexdata)) haven't run this yet 
 
 
 ```
-
-
-Plotting male vs female EQs by action over multiple assays
-
-```{r}
-
-# Append metadata for each assay to dataframe
-                                              
-sexdata <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many")
-
-view(sexdata)
-
-
-# Male v Female jumping/climbing 
-
-jumpso <- ggplot(sexdata, aes(x = as.character(assay_number), y = jump_climb_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Jumping/climbing occurrences (n)") + labs("")
-
-print(jumpso)
-
-jumpsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = jump_climb_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Jumping/climbing duration (s)") + labs("")
-
-print(jumpsd)
-
-
-summary(glm(jump_climb_d ~ sex + temp + assay_number + study_site, data=sexdata))
-summary(glm(jump_climb_o ~ sex + temp + assay_number + study_site, data=sexdata))
-
-
-# Male v Female meerkatting 
-
-legsso <- ggplot(sexdata, aes(x = as.character(assay_number), y = legs_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Meerkatting occurrences (n)") + labs("")
-
-print(legsso)
-
-legssd <- ggplot(sexdata, aes(x = as.character(assay_number), y = legs_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Meerkatting duration (s)") + labs("")
-
-print(legssd)
-
-
-summary(glm(legs_d ~ sex + temp + assay_number + study_site, data=sexdata))
-summary(glm(legs_o ~ sex + temp + assay_number + study_site, data=sexdata))
-
-
-
-# Males v Females Moving
-movsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = moving_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Assay number") + ylab("Moving duration (s)") + labs("")
-print(movsd)
-
-movso <- ggplot(sexdata, aes(x = as.character(assay_number), y = moving_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Assay number") + ylab("Moving occurrences (n)") + labs("")
-print(movso)
-
-summary(glm(moving_d ~ sex + study_site + temp + assay_number, data=sexdata))
-summary(glm(moving_o ~ sex + study_site + temp + assay_number, data=sexdata))
-
-# Males v Females  Grooming
-groomsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = grooming_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  xlab("Assay number") + ylab("Grooming duration (s)") + labs("")
-print(groomsd)
-
-groomso <- ggplot(sexdata, aes(x = as.character(assay_number), y = grooming_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  xlab("Assay number") + ylab("Grooming occurrences (n)") + labs("")
-print(groomso)
-
-summary(glm(grooming_d ~ sex + study_site + temp + assay_number, data=sexdata))
-summary(glm(grooming_o ~ sex + study_site + temp + assay_number, data=sexdata))
-
-
-
-# Males v Females Food
-foods <- ggplot(sexdata, aes(x = as.character(assay_number), 
-                         y = -remaining_bait_g+60, 
-                         fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Bait eaten (g)") + labs("")
-print(foods)
-
-
-
-foodsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = food_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Food interaction duration (s)") + labs("")
-
-print(foodsd)
-
-foodso <- ggplot(sexdata, aes(x = as.character(assay_number), y = food_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Food interaction occurrences (n)") + labs("")
-
-print(foodso)
-
-
-summary(glm(food_d ~ sex + study_site + temp + assay_number, data=sexdata))
-summary(glm(food_o ~ sex + study_site + temp + assay_number, data=sexdata))
-summary(glm(remaining_bait_g ~ sex + study_site + temp + assay_number, data=sexdata))
-
-
-
-# Male v Female Perching 
-perchsd <- ggplot(sexdata, aes(x = as.character(assay_number), y = perch_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Perching duration (s)") + labs("")
-
-print(perchsd)
-
-
-perchso <- ggplot(sexdata, aes(x = as.character(assay_number), y = perch_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~sex) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Perching occurrence (n)") + labs("")
-
-print(perchso)
-
-
-summary(glm(perch_d ~ sex + study_site + temp + assay_number, data=sexdata))
-summary(glm(perch_o ~ sex + study_site + temp + assay_number, data=sexdata))
-
-
-```
-
-
-Plotting males vs females across Gooroo and MFWS
-
-```{r}
-# Male v Female jumping/climbing 
-
-jump_sl <- ggplot(sexdata, aes(x = as.character(sex), y = jump_climb_o, 
-                        fill = as.character(sex))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
-  xlab("Sex") + ylab("Jumping/climbing occurrences (n)") + labs("")
-
-print(jump_sl)
-
-jump_sld <- ggplot(sexdata, aes(x = as.character(sex), y = jump_climb_d, 
-                        fill = as.character(sex))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
-  xlab("Sex") + ylab("Jumping/climbing duration (s)") + labs("")
-
-print(jump_sld)
-
-
-summary(glm(jump_climb_d ~ sex + temp + assay_number + study_site, data=sexdata))
-summary(glm(jump_climb_o ~ sex + temp + assay_number + study_site, data=sexdata))
-
-
-# Male v Female meerkatting 
-
-legs_slo <- ggplot(sexdata, aes(x = as.character(sex), y = legs_o, 
-                        fill = as.character(sex))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
-  xlab("Sex") + ylab("Meerkatting occurrences (n)") + labs("")
-
-print(legs_slo)
-
-legs_sld <- ggplot(sexdata, aes(x = as.character(sex), y = legs_d, 
-                        fill = as.character(sex))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
-  xlab("Sex") + ylab("Meerkatting duration (s)") + labs("")
-
-print(legs_sld)
-
-
-summary(glm(legs_d ~ sex + temp + assay_number + study_site, data=sexdata))
-summary(glm(legs_o ~ sex + temp + assay_number + study_site, data=sexdata))
-
-
-
-# Males v Females Food
-food_sl <- ggplot(sexdata, aes(x = as.character(sex), 
-                         y = -remaining_bait_g+60, 
-                         fill = as.character(sex))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
-  xlab("Sex") + ylab("Bait eaten (g)") + labs("")
-print(food_sl)
-
-summary(glm(remaining_bait_g ~ sex + study_site + temp + assay_number, data=sexdata))
-
-
-
-# Male v Female Perching 
-perch_sld <- ggplot(sexdata, aes(x = as.character(sex), y = perch_d, 
-                        fill = as.character(sex))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("F" = "pink", "M" = "red")) +
-  xlab("Sex") + ylab("Perching duration (s)") + labs("")
-
-print(perch_sld)
-
-
-summary(glm(legs_d ~ sex + temp + assay_number + arena + morph + study_site, data=sexdata))
-summary(glm(legs_o ~ sex + temp + assay_number + arena + morph + study_site, data=sexdata))
-
-```
-
 
 ## Map
 
@@ -1064,11 +744,6 @@ dev.off()
 
 ```
 
-# **Plots**
-
-```{r}
-
-```
 
 # **Session information**
 
