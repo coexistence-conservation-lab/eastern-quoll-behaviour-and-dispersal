@@ -41,9 +41,11 @@ pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,
 
 install.packages("corrplot")
 install.packages("beepr")
+install.packages("lubridate")
 
 library(beepr)
 library(corrplot)
+library(lubridate)
 ```
 
 # **Data preparation**
@@ -87,7 +89,7 @@ sites <- read_excel(raw_data, sheet="Sites") %>%
 
 session <- read_excel(raw_data, sheet="Sessions") %>%
   clean_names()
-view(session)
+#view(session)
 
 trap_eff <- read_excel(raw_data, sheet="Trap effectiveness") %>%
   clean_names()
@@ -145,15 +147,15 @@ dur <- pivot_wider(data = raw,
 #view(dur)
 
 assays <- left_join(occ, dur, by=c("id", "assay_id", "quoll_code"))
-view(assays)
-
-# Append metadata for each assay to dataframe
-data <- left_join(meta, assays, by=c("assay_id", "quoll_code"))
-#view(data)
+#view(assays)
 
 #this filters out animals which were not assayed
 data <- data %>%
   filter(!is.na(assay_number))
+
+# Append metadata for each assay to dataframe
+data <- left_join(meta, assays, by=c("assay_id", "quoll_code"))
+#view(data)
 
 data <- left_join(data, bin, by=c("assay_id", "quoll_code", "session"), relationship = "many-to-many")
 
@@ -166,17 +168,36 @@ data <- left_join(data, capture, by=c("quoll_code", "session"), relationship = "
 megadata <- left_join(data, session, by=c("session"))
 
 
-megadata <- megadata %>%
-  filter(!is.na(assay_number))
-
 view(megadata)
 
-beep("coin")
+megadata_names <- names(megadata)
 
+view(megadata_names)
 
 ```
 
-Adding together values to create new value columns 
+
+# ** Calculating time differences 
+```{r}
+
+#Check if the time columns are in the correct format
+print(class(megadata$snout_in_arena))
+print(class(megadata$process_end))
+
+#If not, correct to POSIXct format
+megadata$snout_in_arena <- as.POSIXct(megadata$snout_in_arena)
+megadata$process_end <- as.POSIXct(megadata$process_end)
+
+#Calculate time difference
+megadata$time_difference <- megadata$snout_in_arena - megadata$process_end
+
+view(megadata)
+
+```
+
+
+
+# **Adding together values to create new value columns 
 
 ```{r}
 
@@ -209,7 +230,7 @@ view(megadata_excl)
 ```
 
 
-## Correlation analysis
+# **  Correlation analysis
 
 ```{r}
 
@@ -346,7 +367,7 @@ dev.off()
 ```
 
 
-## Accounting for environmental variables
+# ** Accounting for environmental variables
 
 ```{r}
 
@@ -360,7 +381,7 @@ write.csv(megadata_mutate, "megadata mutated.csv")
 ```
 
 
-## Running models 
+# ** Running models 
 
 ```{r}
 
@@ -377,7 +398,7 @@ summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_est
 ```
 
 
-Plotting Goorooyarroo vs MFWS by action over multiple assays
+# **Plotting Goorooyarroo vs MFWS by action over multiple assays
 
 ```{r}
 
