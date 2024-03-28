@@ -151,14 +151,19 @@ view(assays)
 data <- left_join(meta, assays, by=c("assay_id", "quoll_code"))
 #view(data)
 
-data <- left_join(data, bin, by=c("assay_id", "quoll_code", "session"))
-#view(data)
-
-megadata <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many")
-
 #this filters out animals which were not assayed
 data <- data %>%
   filter(!is.na(assay_number))
+
+data <- left_join(data, bin, by=c("assay_id", "quoll_code", "session"), relationship = "many-to-many")
+
+#view(data)
+
+data <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many")
+
+megadata <- left_join(data, capture, by=c("quoll_code", "session"), relationship = "many-to-many")
+
+
 
 megadata <- megadata %>%
   filter(!is.na(assay_number))
@@ -188,7 +193,17 @@ print(restingo) #28
 megadata$totalact_o <- rowSums(megadata[, c(22:28)])
 
 view(megadata)
+write.csv(megadata, "megadata.csv")
 
+
+#Adding a column to turn study site names into binomial 0 and 1 values 
+megadata$binomial_study_site <- as.numeric(ifelse(megadata$study_site == "MFWS", 0, ifelse(megadata$study_site == "Goorooyarroo", 1, NA)))
+
+#Filtering out the two individuals who were assayed in Sept 2023
+megadata_excl <- megadata %>%
+  filter(!(quoll_code %in% c("53328", "87DE0")))
+
+view(megadata_excl)
 
 ```
 
@@ -268,60 +283,60 @@ view(correlation_occ_act)
 view(correlation_dur_act)
 
 #Saving them to a .csv file
-write.csv(correlation_od, "correlation matrix occ dur.csv")
-write.csv(correlation_o, "correlation matrix occ.csv")
-write.csv(correlation_d, "correlation matrix dur.csv")
-write.csv(correlation_ovd_act, "correlation matrix activity occ vs dur.csv")
-write.csv(correlation_occ_act, "correlation matrix activity occ.csv")
-write.csv(correlation_dur_act, "correlation matrix activity dur.csv")
+write.csv(correlation_od, "correlation matrix occ dur all sessions.csv")
+write.csv(correlation_o, "correlation matrix occ all sessions.csv")
+write.csv(correlation_d, "correlation matrix dur all sessions.csv")
+write.csv(correlation_ovd_act, "correlation matrix activity occ vs dur all sessions.csv")
+write.csv(correlation_occ_act, "correlation matrix activity occ all sessions.csv")
+write.csv(correlation_dur_act, "correlation matrix activity dur all sessions.csv")
 
 
 #Creating and printing correlation matrix .jpgs which colour code the correlations
 
 #Correlation of occurrences and duration with sections
-jpeg(height=2000, width=2000, file="correlation matrix od.jpeg", type="cairo")
+jpeg(height=2000, width=2000, file="correlation matrix od all sessions.jpeg", type="cairo")
 corrplot(correlation_od, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 
 #Correlation of occurrences only with sections
-jpeg(height=2000, width=2000, file="correlation matrix occ.jpeg", type="cairo")
+jpeg(height=2000, width=2000, file="correlation matrix occ all sessions.jpeg", type="cairo")
 corrplot(correlation_o, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 
 #Correlation of duration only with sections
-jpeg(height=2000, width=2000, file="correlation matrix dur.jpeg", type="cairo")
+jpeg(height=2000, width=2000, file="correlation matrix dur all sessions.jpeg", type="cairo")
 corrplot(correlation_d, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 
 #Correlations of duration and occurrences without sections
-jpeg(height=2000, width=2000, file="correlation matrix occdur act.jpeg", type="cairo")
+jpeg(height=2000, width=2000, file="correlation matrix occdur act all sessions.jpeg", type="cairo")
 corrplot(correlation_od_act, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 
 #Correlations of duration v occurrences without sections
-jpeg(height=2000, width=2000, file="correlation matrix occ v dur act.jpeg", type="cairo")
+jpeg(height=2000, width=2000, file="correlation matrix occ v dur act all sessions.jpeg", type="cairo")
 corrplot(correlation_ovd_act, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=TRUE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 
 #Correlation of occurrences only without sections
-jpeg(height=2000, width=2000, file="correlation matrix occ act.jpeg", type="cairo")
+jpeg(height=2000, width=2000, file="correlation matrix occ act all sessions.jpeg", type="cairo")
 corrplot(correlation_occ_act, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 
 #Correlation of duration only without sections
-jpeg(height=2000, width=2000, file="correlation matrix dur act.jpeg", type="cairo")
+jpeg(height=2000, width=2000, file="correlation matrix dur act all sessions.jpeg", type="cairo")
 corrplot(correlation_dur_act, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
@@ -329,9 +344,31 @@ dev.off()
 
 ```
 
+Running models 
+
+```{r}
+
+#GLM to test duration of moving, first with all individuals, and then excluding the Sept 2023 individuals 
+summary(glm(moving_d ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata))
+summary(glm(moving_d ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata_excl))
+
+
+#GLM to test occurrences of moving, first with all individuals, and then excluding the Sept 2023 individuals
+summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata))
+summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata_excl))
+
+
+
+```
+
+
+
+
 Plotting Goorooyarroo vs MFWS by action over multiple assays
 
 ```{r}
+
+view(megadata)
 
 # Gooroo v Mulligans Moving
 mov <- ggplot(megadata, aes(x = as.character(assay_number), y = moving_d, 
@@ -358,8 +395,42 @@ movo <- ggplot(megadata, aes(x = as.character(assay_number), y = moving_o,
   xlab("Assay number") + ylab("Moving occurrences (n)") + labs("")
 print(movo)
 
-summary(glm(moving_d ~ study_site + temp + assay_number, data=megadata))
-summary(glm(moving_o ~ study_site + temp + assay_number, data=megadata))
+movo_age <- ggplot(megadata, aes(x = as.character(age_estimate), y = moving_o, 
+                        fill = as.character(age_estimate))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Age estimate") + ylab("Moving occurrences (n)") + labs("")
+print(movo_age)
+
+movd_age<- ggplot(megadata, aes(x = as.character(age_estimate), y = moving_d, 
+                        fill = as.character(age_estimate))) + 
+  geom_boxplot() +
+  facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Age estimate") + ylab("Moving duration (s)") + labs("")
+print(movd_age)
+
+movd_ageno<- ggplot(megadata, aes(x = as.character(age_estimate), y = moving_d, 
+                        fill = as.character(age_estimate))) + 
+  geom_boxplot() + 
+  facet_wrap(~assay_number) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Age estimate") + ylab("Moving duration (s)") + labs("")
+print(movd_ageno)
+
 
 #GS v Mulligans moving with random variables 
 mod <- lmer(moving_o ~ study_site + temp + assay_number + 
