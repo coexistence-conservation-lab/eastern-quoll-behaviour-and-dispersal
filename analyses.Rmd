@@ -183,13 +183,16 @@ view(megadata_names)
 #Check if the time columns are in the correct format
 print(class(megadata$snout_in_arena))
 print(class(megadata$process_end))
+print(class(megadata$first_light))
 
 #If not, correct to POSIXct format
 megadata$snout_in_arena <- as.POSIXct(megadata$snout_in_arena)
 megadata$process_end <- as.POSIXct(megadata$process_end)
+megadata$first_light <- as.POSIXct(megadata$first_light)
 
-#Calculate time difference
-megadata$time_difference <- megadata$snout_in_arena - megadata$process_end
+#Calculate time differences
+megadata$time_processtoassay <- megadata$snout_in_arena - megadata$process_end
+megadata$time_assaytolight <-  megadata$snout_in_arena - megadata$first_light
 
 view(megadata)
 
@@ -221,13 +224,49 @@ write.csv(megadata, "megadata.csv")
 #Adding a column to turn study site names into binomial 0 and 1 values 
 megadata$binomial_study_site <- as.numeric(ifelse(megadata$study_site == "MFWS", 0, ifelse(megadata$study_site == "Goorooyarroo", 1, NA)))
 
-#Filtering out the two individuals who were assayed in Sept 2023
+
+```
+
+
+# ** Filtering out the two individuals who were assayed in Sept 2023
+
+```{r}
 megadata_excl <- megadata %>%
   filter(!(quoll_code %in% c("53328", "87DE0")))
 
 view(megadata_excl)
 
 ```
+
+
+# ** Testing environmental variables for influence on behaviour 
+
+```{r}
+
+summary(glm(food_d ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(food_o ~ temp + arena + moon_phase + first_light, data=megadata))
+
+summary(glm(grooming_d ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(grooming_o ~ temp + arena + moon_phase + first_light, data=megadata))
+
+summary(glm(jump_climb_d ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(jump_climb_o ~ temp + arena + moon_phase + first_light, data=megadata))
+
+summary(glm(legs_d ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(legs_o ~ temp + arena + moon_phase + first_light, data=megadata))
+
+summary(glm(moving_d ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(moving_o ~ temp + arena + moon_phase + first_light, data=megadata))
+
+summary(glm(perch_d ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(perch_o ~ temp + arena + moon_phase + first_light, data=megadata))
+
+summary(glm(resting_d ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(resting_o ~ temp + arena + moon_phase + first_light, data=megadata))
+
+```
+
+
 
 
 # **  Correlation analysis
