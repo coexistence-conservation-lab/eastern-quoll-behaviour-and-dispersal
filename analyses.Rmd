@@ -147,6 +147,20 @@ dur <- pivot_wider(data = raw,
 #view(dur)
 
 assays <- left_join(occ, dur, by=c("id", "assay_id", "quoll_code"))
+
+#Adding all sections together to create a column with total section visitations
+assays$sumsect_o <- rowSums(assays[, c("section_1_o", "section_2_o", "section_3_o", "section_4_o")])
+
+#Finding out the locations of the relevant columns 
+colfoodo <- which(colnames(assays) == "food_o")
+print(colfoodo) #4
+
+restingo <- which(colnames(assays) == "resting_o")
+print(restingo) #10
+
+#Adding together all activity occurrences without sections
+assays$totalact_o <- rowSums(assays[, c(4:10)])
+
 #view(assays)
 
 #this filters out animals which were not assayed
@@ -167,12 +181,7 @@ data <- left_join(data, capture, by=c("quoll_code", "session"), relationship = "
 
 megadata <- left_join(data, session, by=c("session"))
 
-
-view(megadata)
-
-megadata_names <- names(megadata)
-
-view(megadata_names)
+#view(megadata)
 
 ```
 
@@ -200,26 +209,7 @@ view(megadata)
 
 
 
-# **Adding together values to create new value columns 
-
 ```{r}
-
-#Adding all sections together to create a column with total section visitations
-megadata$sumsect_o <- rowSums(megadata[, c("section_1_o", "section_2_o", "section_3_o", "section_4_o")])
-
-#Finding out the locations of the relevant columns 
-colfoodo <- which(colnames(megadata) == "food_o")
-print(colfoodo) #22
-
-restingo <- which(colnames(megadata) == "resting_o")
-print(restingo) #28
-
-#Adding together all activity without sections
-megadata$totalact_o <- rowSums(megadata[, c(22:28)])
-
-view(megadata)
-write.csv(megadata, "megadata.csv")
-
 
 #Adding a column to turn study site names into binomial 0 and 1 values 
 megadata$binomial_study_site <- as.numeric(ifelse(megadata$study_site == "MFWS", 0, ifelse(megadata$study_site == "Goorooyarroo", 1, NA)))
@@ -243,29 +233,56 @@ view(megadata_excl)
 
 ```{r}
 
-summary(glm(food_d ~ temp + arena + moon_phase + first_light, data=megadata))
-summary(glm(food_o ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(food_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(food_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(grooming_d ~ temp + arena + moon_phase + first_light, data=megadata))
-summary(glm(grooming_o ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(grooming_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(grooming_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(jump_climb_d ~ temp + arena + moon_phase + first_light, data=megadata))
-summary(glm(jump_climb_o ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(jump_climb_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(jump_climb_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(legs_d ~ temp + arena + moon_phase + first_light, data=megadata))
-summary(glm(legs_o ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(legs_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(legs_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(moving_d ~ temp + arena + moon_phase + first_light, data=megadata))
-summary(glm(moving_o ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(moving_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(moving_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(perch_d ~ temp + arena + moon_phase + first_light, data=megadata))
-summary(glm(perch_o ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(perch_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(perch_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(resting_d ~ temp + arena + moon_phase + first_light, data=megadata))
-summary(glm(resting_o ~ temp + arena + moon_phase + first_light, data=megadata))
+summary(glm(resting_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(resting_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
 
 ```
 
+
+
+# ** Accounting for environmental variables
+
+```{r}
+
+#Mutating the environmental variables in the overall data frame, including animals 53328 and 87DE0
+names(megadata)
+view(megadata)
+
+megadata_mutate <- megadata %>%
+  mutate_at(vars(5, 147, 154), ~ as.vector(scale(.)))
+
+view(megadata_mutate)
+
+write.csv(megadata_mutate, "megadata mutated.csv")
+
+
+#Mutating environmental variables excluding 53328 and 87DE0
+names(megadata_excl)
+
+megadata_ex_mutate <- megadata_excl %>%
+  mutate_at(vars(5, 147, 154), ~ as.vector(scale(.)))
+
+write.csv(megadata_ex_mutate, "megadata mutated excluding sept individuals.csv")
+
+```
 
 
 
@@ -406,21 +423,8 @@ dev.off()
 ```
 
 
-# ** Accounting for environmental variables
 
-```{r}
-
-megadata_mutate <- megadata %>%
-    mutate_at(vars(5, 148), list(scale))
-
-view(megadata_mutate)
-
-write.csv(megadata_mutate, "megadata mutated.csv")
-
-```
-
-
-# ** Running models 
+# ** Running basic models to get the feel of the data
 
 ```{r}
 
@@ -435,6 +439,26 @@ summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_est
 
 
 ```
+
+
+## Code for analysis - see 'Christina mind map' 
+#Step 1 extract predicted values for behaviour with environmental variables
+#Step 2 extract predicted values for behaviour with assay number
+#Step 3 extract personality and plasticity indices
+#Step 4a model personality traits against demographic traits
+#Step 4b model plasticity against demographic traits 
+
+```{r}
+#GS v Mulligans moving with random variables 
+mod <- lmer(moving_o ~ study_site + temp + assay_number + 
+              (1|quoll_code), data=data)
+# Statistics
+summary(mod)
+
+# p-values
+car::Anova(mod)
+```
+
 
 
 # **Plotting Goorooyarroo vs MFWS by action over multiple assays
@@ -518,16 +542,6 @@ movd_sexno<- ggplot(megadata, aes(x = as.character(sex), y = moving_d,
 print(movd_sexno)
 
 
-
-#GS v Mulligans moving with random variables 
-mod <- lmer(moving_o ~ study_site + temp + assay_number + 
-              (1|quoll_code), data=data)
-# Statistics
-summary(mod)
-
-# p-values
-car::Anova(mod)
-
 # Gooroo v Mulligans Grooming
 groom <- ggplot(data, aes(x = as.character(assay_number), y = grooming_d, 
                         fill = as.character(assay_number))) + 
@@ -552,10 +566,6 @@ groomo <- ggplot(data, aes(x = as.character(assay_number), y = grooming_o,
         axis.line.y = element_line(color = "black")) +
   xlab("Assay number") + ylab("Grooming occurrences (n)") + labs("")
 print(groomo)
-
-summary(glm(grooming_d ~ study_site + temp + assay_number, data=data))
-summary(glm(grooming_o ~ study_site + temp + assay_number, data=data))
-
 
 
 # Gooroo v Mulligans Food
@@ -603,12 +613,6 @@ foodd <- ggplot(data, aes(x = as.character(assay_number), y = food_o,
 print(foodd)
 
 
-summary(glm(food_d ~ study_site + temp + assay_number, data=data))
-summary(glm(food_o ~ study_site + temp + assay_number, data=data))
-summary(glm(remaining_bait_g ~ study_site + temp + assay_number, data=data))
-
-
-
 # Gooroo v Mulligans Perching 
 perch <- ggplot(data, aes(x = as.character(assay_number), y = perch_d, 
                         fill = as.character(assay_number))) + 
@@ -638,10 +642,6 @@ percho <- ggplot(data, aes(x = as.character(assay_number), y = perch_o,
   xlab("Assay number") + ylab("Perching occurrence (n)") + labs("")
 
 print(percho)
-
-
-summary(glm(perch_d ~ study_site + temp + assay_number, data=data))
-summary(glm(perch_o ~ study_site + temp + assay_number, data=data))
 
 
 # Gooroo v Mulligans meerkatting 
@@ -674,8 +674,6 @@ legso <- ggplot(data, aes(x = as.character(assay_number), y = legs_o,
 
 print(legso)
 
-summary(glm(legs_d ~ study_site + temp + assay_number, data=data))
-summary(glm(legs_o ~ study_site + temp + assay_number, data=data))
 
 
 # Gooroo v Mulligans jumping/climbing 
@@ -708,9 +706,6 @@ jumpo <- ggplot(data, aes(x = as.character(assay_number), y = jump_climb_o,
 
 print(jumpo)
 
-summary(glm(jump_climb_d ~ study_site + temp + assay_number, data=data))
-summary(glm(jump_climb_o ~ study_site + temp + assay_number, data=data))
-
 
 # Gooroo v Mulligans Section visitation occurrences 
 sect_o <- ggplot(data, aes(x = as.character(assay_number), y = sumsect_o, 
@@ -725,11 +720,6 @@ sect_o <- ggplot(data, aes(x = as.character(assay_number), y = sumsect_o,
   xlab("Assay number") + ylab("Total movements across all sections (n)") + labs("")
 
 print(sect_o)
-
-
-summary(glm(formula = sumsect_o ~ study_site + temp + assay_number, data=data))
-summary(glm(formula = sumsect_o ~ study_site + sex + temp + assay_number, data=sexdata))
-
 
 # Gooroo v Mulligans total activity occurrences minus sections
 act_o <- ggplot(data, aes(x = as.character(assay_number), y = totalact_o, 
@@ -796,12 +786,6 @@ jpeg(file="mfgo_fences_and_surrounds.jpeg",
      width=4750, height=1500, units="px", res=500)
 map
 dev.off()
-```
-
-# **Analysis**
-
-```{r}
-
 ```
 
 
