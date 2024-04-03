@@ -36,16 +36,26 @@ First, we installed the [pacman Package Management Tool](https://cran.r-project.
 
 ```{r, results='hide', warning=FALSE, message=FALSE}
 # Install and load required packages
-pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,  
+pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4, MuMIn,  
                readr, sf, readxl, rstudioapi, tidyverse, viridis)
 
 install.packages("corrplot")
 install.packages("beepr")
 install.packages("lubridate")
+install.packages("broom")
+
+install.packages("sjPlot")
+install.packages("sjmisc")
+install.packages("sjlabelled")
+
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
 
 library(beepr)
 library(corrplot)
 library(lubridate)
+library(broom)
 ```
 
 # **Data preparation**
@@ -68,31 +78,39 @@ raw <- read_excel(raw_data, sheet="Assays", na="N/A") %>%
 
 #Read in the data for all data sheets in excel 
 meta <- read_excel(raw_data, sheet="Metadata", na="N/A") %>% 
+  select(-16, -17) %>%
   clean_names()
 #view(meta)
-
-bin <- read_excel(raw_data, sheet="Binned assays", na="N/A")%>%
-  clean_names()
-#view(bin)
+#names(meta)
 
 quoll <- read_excel(raw_data, sheet="Quoll", na="N/A") %>%
+  select(2, 4, 5) %>%
   clean_names()
 #view(quoll)
+#names(quoll)
 
 capture <- read_excel(raw_data, sheet="Captures") %>%
+   select(2, 4, 8, 9, 10, 11, 12, 13, 14, 24, 26, 27, 28, 30) %>%
   clean_names()
 #view(capture)
-
-sites <- read_excel(raw_data, sheet="Sites") %>%
-  clean_names()
-#view(sites)
+#names(capture)
 
 session <- read_excel(raw_data, sheet="Sessions") %>%
+  select(4, 8, 9, 10, 11) %>%
   clean_names()
 #view(session)
+#names(session)
 
-trap_eff <- read_excel(raw_data, sheet="Trap effectiveness") %>%
-  clean_names()
+#bin <- read_excel(raw_data, sheet="Binned assays", na="N/A")%>%
+ # clean_names()
+#view(bin)
+
+#sites <- read_excel(raw_data, sheet="Sites") %>%
+  #clean_names()
+#view(sites)
+
+#trap_eff <- read_excel(raw_data, sheet="Trap effectiveness") %>%
+ #clean_names()
 #view(trap_eff)
 
 
@@ -163,17 +181,13 @@ assays$totalact_o <- rowSums(assays[, c(4:10)])
 
 #view(assays)
 
-#this filters out animals which were not assayed
-data <- data %>%
-  filter(!is.na(assay_number))
-
 # Append metadata for each assay to dataframe
 data <- left_join(meta, assays, by=c("assay_id", "quoll_code"))
 #view(data)
 
-data <- left_join(data, bin, by=c("assay_id", "quoll_code", "session"), relationship = "many-to-many")
-
-#view(data)
+#this filters out animals which were not assayed
+data <- data %>%
+  filter(!is.na(assay_number))
 
 data <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many")
 
@@ -181,7 +195,8 @@ data <- left_join(data, capture, by=c("quoll_code", "session"), relationship = "
 
 megadata <- left_join(data, session, by=c("session"))
 
-#view(megadata)
+view(megadata)
+names(megadata)
 
 ```
 
@@ -203,10 +218,9 @@ megadata$first_light <- as.POSIXct(megadata$first_light)
 megadata$time_processtoassay <- megadata$snout_in_arena - megadata$process_end
 megadata$time_assaytolight <-  megadata$snout_in_arena - megadata$first_light
 
-view(megadata)
+#view(megadata)
 
 ```
-
 
 
 ```{r}
@@ -216,7 +230,6 @@ megadata$binomial_study_site <- as.numeric(ifelse(megadata$study_site == "MFWS",
 
 
 ```
-
 
 # ** Filtering out the two individuals who were assayed in Sept 2023
 
@@ -233,29 +246,55 @@ view(megadata_excl)
 
 ```{r}
 
-summary(glm(food_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
-summary(glm(food_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+foodd <- glm(food_d ~ temp + moon_phase + time_assaytolight, data=megadata)
+foodo <- glm(food_o ~ temp + moon_phase + time_assaytolight, data=megadata)
 
-summary(glm(grooming_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
-summary(glm(grooming_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(foodd)
+summary(foodo)
 
-summary(glm(jump_climb_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
-summary(glm(jump_climb_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(grooming_d ~ temp + moon_phase + time_assaytolight, data=megadata))
+summary(glm(grooming_o ~ temp + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(legs_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
-summary(glm(legs_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(jump_climb_d ~ temp + moon_phase + time_assaytolight, data=megadata))
+summary(glm(jump_climb_o ~ temp + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(moving_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
-summary(glm(moving_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(legs_d ~ temp + moon_phase + time_assaytolight, data=megadata))
+summary(glm(legs_o ~ temp + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(perch_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
-summary(glm(perch_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(moving_d ~ temp + moon_phase + time_assaytolight, data=megadata))
+summary(glm(moving_o ~ temp + moon_phase + time_assaytolight, data=megadata))
 
-summary(glm(resting_d ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
-summary(glm(resting_o ~ temp + arena + moon_phase + time_assaytolight, data=megadata))
+summary(glm(perch_d ~ temp + moon_phase + time_assaytolight, data=megadata))
+summary(glm(perch_o ~ temp + moon_phase + time_assaytolight, data=megadata))
+
+summary(glm(resting_d ~ temp + moon_phase + time_assaytolight, data=megadata))
+summary(glm(resting_o ~ temp + moon_phase + time_assaytolight, data=megadata))
+
+
+#collect stats into a table
+p_temp <- summary(foodd)$coefficients["temp", "Pr(>|t|)"]
+p_moon <- summary(foodo)$coefficients["moon_phase", "Pr(>|t|)"]
+
+data.frame(Model = c("foodd", "foodo"),
+           Variable = c("Temperature", "Moon phase"),
+           p_value = c(p_temp, p_moon))
+
+
+
+tidy_results <- bind_rows(tidy(foodd))
+
+print(tidy_results)
+
+tab_model(
+  foodd, foodo, 
+  pred.labels = c("Intercept", "Temperature", "Moon phase", "Time to first light"),
+  dv.labels = c("Food interaction duration (s)", "Food interaction occurrences (n)"),
+  string.pred = "Coefficient",
+  string.ci = "Conf. Int (95%)",
+  string.p = "P-Value"
+)
 
 ```
-
 
 
 # ** Accounting for environmental variables
@@ -267,7 +306,7 @@ names(megadata)
 view(megadata)
 
 megadata_mutate <- megadata %>%
-  mutate_at(vars(5, 147, 154), ~ as.vector(scale(.)))
+  mutate_at(vars(5, 110, 117), ~ as.vector(scale(.)))
 
 view(megadata_mutate)
 
@@ -278,12 +317,11 @@ write.csv(megadata_mutate, "megadata mutated.csv")
 names(megadata_excl)
 
 megadata_ex_mutate <- megadata_excl %>%
-  mutate_at(vars(5, 147, 154), ~ as.vector(scale(.)))
+  mutate_at(vars(5, 110, 117), ~ as.vector(scale(.)))
 
 write.csv(megadata_ex_mutate, "megadata mutated excluding sept individuals.csv")
 
 ```
-
 
 
 # **  Correlation analysis
@@ -293,53 +331,41 @@ write.csv(megadata_ex_mutate, "megadata mutated excluding sept individuals.csv")
 #Finding out the locations of the relevant columns 
 colfoodo <- which(colnames(megadata) == "food_o")
 print(colfoodo) #22
-
 restingo <- which(colnames(megadata) == "resting_o")
 print(restingo) #28
-
 colsection4o <- which(colnames(megadata) == "section_4_o")
 print(colsection4o) #32
-
 colfoodd <- which(colnames(megadata) == "food_d")
 print(colfoodd) #33
-
 restingd <- which(colnames(megadata) == "resting_d")
 print(restingd) #39
-
 colsection4d <- which(colnames(megadata) == "section_4_d")
 print(colsection4d) #43
 
 #Selecting the appropriate columns for each correlation matrix
-
 #all occurrence and duration columns including sections
 cor_o_d <- megadata %>% 
   dplyr::select(22:43)
-view(cor_o_d)
 
 #all occurrence columns including sections
 cor_o <- megadata %>%
   dplyr::select(22:32)
-view(cor_o)
 
 #all duration data including sections 
 cor_d <- megadata %>%
   dplyr::select(33:43)
-view(cor_d)
 
 #all duration and occurrence data not including sections
 cor_od_act <- megadata %>%
   dplyr::select(22:28, 33:39)
-view(cor_od_act)
 
 #all occurrence data not including sections
 cor_o_act <- megadata %>%
   dplyr::select(22:28)
-view(cor_o_act)
 
 #all duration data not including sections
 cor_d_act <- megadata %>%
   dplyr::select(33:39)
-view(cor_d_act)
 
 #Running the correlations tests for both, then occurrences, then duration, with sections
 correlation_od <- cor(cor_o_d)
@@ -352,14 +378,6 @@ correlation_ovd_act <- cor(cor_d_act,cor_o_act)
 correlation_occ_act <- cor(cor_o_act)
 correlation_dur_act <- cor(cor_d_act)
 
-view(correlation_od)
-view(correlation_o)
-view(correlation_d)
-view(correlation_od_act)
-view(correlation_ovd_act)
-view(correlation_occ_act)
-view(correlation_dur_act)
-
 #Saving them to a .csv file
 write.csv(correlation_od, "correlation matrix occ dur all sessions.csv")
 write.csv(correlation_o, "correlation matrix occ all sessions.csv")
@@ -368,26 +386,11 @@ write.csv(correlation_ovd_act, "correlation matrix activity occ vs dur all sessi
 write.csv(correlation_occ_act, "correlation matrix activity occ all sessions.csv")
 write.csv(correlation_dur_act, "correlation matrix activity dur all sessions.csv")
 
-
 #Creating and printing correlation matrix .jpgs which colour code the correlations
 
 #Correlation of occurrences and duration with sections
 jpeg(height=2000, width=2000, file="correlation matrix od all sessions.jpeg", type="cairo")
 corrplot(correlation_od, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-dev.off()
-
-#Correlation of occurrences only with sections
-jpeg(height=2000, width=2000, file="correlation matrix occ all sessions.jpeg", type="cairo")
-corrplot(correlation_o, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-dev.off()
-
-#Correlation of duration only with sections
-jpeg(height=2000, width=2000, file="correlation matrix dur all sessions.jpeg", type="cairo")
-corrplot(correlation_d, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
@@ -399,29 +402,7 @@ corrplot(correlation_od_act, method="color", type="upper", #creates a correlatio
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 
-#Correlations of duration v occurrences without sections
-jpeg(height=2000, width=2000, file="correlation matrix occ v dur act all sessions.jpeg", type="cairo")
-corrplot(correlation_ovd_act, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=TRUE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-dev.off()
-
-#Correlation of occurrences only without sections
-jpeg(height=2000, width=2000, file="correlation matrix occ act all sessions.jpeg", type="cairo")
-corrplot(correlation_occ_act, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-dev.off()
-
-#Correlation of duration only without sections
-jpeg(height=2000, width=2000, file="correlation matrix dur act all sessions.jpeg", type="cairo")
-corrplot(correlation_dur_act, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-dev.off()
-
 ```
-
 
 
 # ** Running basic models to get the feel of the data
@@ -442,26 +423,125 @@ summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_est
 
 
 ## Code for analysis - see 'Christina mind map' 
+
 #Step 1 extract predicted values for behaviour with environmental variables
-#Step 2 extract predicted values for behaviour with assay number
-#Step 3 extract personality and plasticity indices
-#Step 4a model personality traits against demographic traits
-#Step 4b model plasticity against demographic traits 
 
 ```{r}
-#GS v Mulligans moving with random variables 
-mod <- lmer(moving_o ~ study_site + temp + assay_number + 
-              (1|quoll_code), data=data)
-# Statistics
+
+mod <- glm(food_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$food_o_pred <- predict(mod, type = "response")
+
+mod <- glm(food_d ~ temp + moon_phase + time_assaytolight,
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$food_d_pred <- predict(mod, type = "response")
+
+mod <- glm(grooming_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$food_o_pred <- predict(mod, type = "response")
+
+mod <- glm(grooming_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$groom_d_pred <- predict(mod, type = "response")
+
+mod <- glm(jump_climb_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$jump_o_pred <- predict(mod, type = "response")
+
+mod <- glm(jump_climb_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$jump_d_pred <- predict(mod, type = "response")
+
+mod <- glm(legs_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$legs_o_pred <- predict(mod, type = "response")
+
+mod <- glm(legs_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$legs_d_pred <- predict(mod, type = "response")
+
+mod <- glm(moving_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$move_o_pred <- predict(mod, type = "response")
+
+mod <- glm(moving_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$move_d_pred <- predict(mod, type = "response")
+
+mod <- glm(perch_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$perch_o_pred <- predict(mod, type = "response")
+
+mod <- glm(perch_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$perch_d_pred <- predict(mod, type = "response")
+
+mod <- glm(resting_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$rest_o_pred <- predict(mod, type = "response")
+
+mod <- glm(resting_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate)
+megadata_mutate$rest_d_pred <- predict(mod, type = "response")
+
+```
+
+Now we have our predicted values, accounting for environmental heterogeneity. 
+
+#Step 2 Analyse behaviour indicators (name?)
+```{r}
+
+#Personality (single response / static etc? figure this out)
+
+#GLM models with random vaiables - then use AICc to assess best model
+
+mod <- lmer(move_o_p_i ~ site + sex + age + body_cond + weight + morph + (1|ID) + (1|arena), family=gaussian, data=data)
+#Model selection (Δ 2 AICc)
+
+mod <- lmer(move_o_p_s ~ site + sex + age + body_cond + weight + morph + (1|ID) + (1|arena), family=gaussian, data=data)
+#Model selection (Δ 2 AICc)
+
+
+```
+
+
+# Collecting statistics for a model table (🚩 this goes at the end of your independent variable modelling).
+
+```{r}
+# Generate a model
+mod <- glm(food_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=megadata_mutate, 
+           na.action = "na.fail")
+
 summary(mod)
 
-# p-values
-car::Anova(mod)
+#collect stats into a table
+p_temp <- summary(mod)$coefficients["temp", "Pr(>|t|)"]
+p_moon <- summary(mod)$coefficients["moon_phase", "Pr(>|t|)"]
+
+data.frame(Variable = c("Temperature", "Moon phase"),
+           p_value = c(p_temp, p_moon))
+
+# Conduct model selection using AICc threshold
+dredge(mod, rank = "AICc")
+
+
+```
+
+
+#Step 3 Run GLMs for assay numbers and if this is significant, do step 3b in mind map plan
+
+```{r}
+
+mod_fo_p <- glm(mod_fo_p ~ assay_number, family=gaussian, data=megadata_mutate)
+mod_fd_p <- glm(mod_fd_p ~ assay_number, family=gaussian, data=megadata_mutate)
+
 ```
 
 
 
-# **Plotting Goorooyarroo vs MFWS by action over multiple assays
+
+# **Plots 
 
 ```{r}
 
@@ -480,262 +560,7 @@ mov <- ggplot(megadata, aes(x = as.character(assay_number), y = moving_d,
   xlab("Assay number") + ylab("Moving duration (s)") + labs("")
 print(mov)
 
-movo <- ggplot(megadata, aes(x = as.character(assay_number), y = moving_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Assay number") + ylab("Moving occurrences (n)") + labs("")
-print(movo)
 
-movo_age <- ggplot(megadata, aes(x = as.character(age_estimate), y = moving_o, 
-                        fill = as.character(age_estimate))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Age estimate") + ylab("Moving occurrences (n)") + labs("")
-print(movo_age)
-
-movd_age<- ggplot(megadata, aes(x = as.character(age_estimate), y = moving_d, 
-                        fill = as.character(age_estimate))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Age estimate") + ylab("Moving duration (s)") + labs("")
-print(movd_age)
-
-movd_ageno<- ggplot(megadata, aes(x = as.character(age_estimate), y = moving_d, 
-                        fill = as.character(age_estimate))) + 
-  geom_boxplot() + 
-  facet_wrap(~assay_number) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Age estimate") + ylab("Moving duration (s)") + labs("")
-print(movd_ageno)
-
-
-movd_sexno<- ggplot(megadata, aes(x = as.character(sex), y = moving_d, 
-                        fill = as.character(sex))) + 
-  geom_boxplot() + 
-  facet_wrap(~study_site) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Sex") + ylab("Moving duration (s)") + labs("")
-print(movd_sexno)
-
-
-# Gooroo v Mulligans Grooming
-groom <- ggplot(data, aes(x = as.character(assay_number), y = grooming_d, 
-                        fill = as.character(assay_number))) + 
-  geom_violin() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  xlab("Assay number") + ylab("Grooming duration (s)") + labs("")
-print(groom)
-
-groomo <- ggplot(data, aes(x = as.character(assay_number), y = grooming_o, 
-                        fill = as.character(assay_number))) + 
-  geom_violin() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  xlab("Assay number") + ylab("Grooming occurrences (n)") + labs("")
-print(groomo)
-
-
-# Gooroo v Mulligans Food
-food <- ggplot(data, aes(x = as.character(assay_number), 
-                         y = -remaining_bait_g+60, 
-                         fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Bait eaten (g)") + labs("")
-print(food)
-
-
-foodd <- ggplot(data, aes(x = as.character(assay_number), y = food_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Food interaction duration (s)") + labs("")
-
-print(foodo)
-
-foodd <- ggplot(data, aes(x = as.character(assay_number), y = food_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Food interaction occurrences (n)") + labs("")
-
-print(foodd)
-
-
-# Gooroo v Mulligans Perching 
-perch <- ggplot(data, aes(x = as.character(assay_number), y = perch_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Perching duration (s)") + labs("")
-
-print(perch)
-
-
-percho <- ggplot(data, aes(x = as.character(assay_number), y = perch_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Perching occurrence (n)") + labs("")
-
-print(percho)
-
-
-# Gooroo v Mulligans meerkatting 
-legs <- ggplot(data, aes(x = as.character(assay_number), y = legs_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Meerkatting duration (s)") + labs("")
-
-print(legs)
-
-
-legso <- ggplot(data, aes(x = as.character(assay_number), y = legs_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Meerkatting occurrences (n)") + labs("")
-
-print(legso)
-
-
-
-# Gooroo v Mulligans jumping/climbing 
-jumpd <- ggplot(data, aes(x = as.character(assay_number), y = jump_climb_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Jumping/climbing duration (s)") + labs("")
-
-print(jumpd)
-
-
-jumpo <- ggplot(data, aes(x = as.character(assay_number), y = jump_climb_o, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_fill_manual(values = c("1" = "pink", "2" = "red")) +
-  xlab("Assay number") + ylab("Jumping/climbing occurrences (n)") + labs("")
-
-print(jumpo)
-
-
-# Gooroo v Mulligans Section visitation occurrences 
-sect_o <- ggplot(data, aes(x = as.character(assay_number), y = sumsect_o, 
-                        fill = as.character(assay_number))) + 
-  geom_violin() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Assay number") + ylab("Total movements across all sections (n)") + labs("")
-
-print(sect_o)
-
-# Gooroo v Mulligans total activity occurrences minus sections
-act_o <- ggplot(data, aes(x = as.character(assay_number), y = totalact_o, 
-                        fill = as.character(assay_number))) + 
-  geom_violin() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Assay number") + ylab("Total activity (n)") + labs("")
-
-print(act_o)
-
-summary(glm(formula = totalact_o ~ study_site + temp + assay_number, data=data))
 
 
 
