@@ -40,6 +40,11 @@ pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,lmerTest, MuMIn,
                readr, sf, readxl, rstudioapi, tidyverse, viridis, beepr, corrplot,
                broom, sjPlot, sjmisc, sjlabelled)
 
+
+install.packages("knitr")
+
+library("knitr")
+
 ```
 
 # *Data preparation
@@ -508,7 +513,7 @@ mod1 <- lmer(bait_pred ~ study_site + sex + age_estimate + condition +
               body_weight_kg + morph + (1|quoll_code) + (1|arena), 
             data=data1_pred, na.action = "na.fail")
 
-mod2 <- lmer(percho_pred ~ study_site + sex + age_estimate + condition + 
+mod2 <- lmer(foodd_pred ~ study_site + sex + age_estimate + condition + 
               body_weight_kg + morph + (1|quoll_code) + (1|arena), 
             data=data1_pred, na.action = "na.fail")
 
@@ -517,32 +522,29 @@ summary(mod1)
 summary(mod2)
 
 # Display model selection table for fixed effects
-dredge(mod, rank = "AICc")
+dredge(mod1, rank = "AICc")
 
 # Preliminary plot
 ggplot(data=data1_pred, aes(x=study_site, y=bait_pred, fill=study_site)) +
   geom_boxplot()
 ```
 
-
 # * Collect LMER stats into a table
 ```{r}
 
 tidy_results <- bind_rows(tidy(bait))
-
 print(tidy_results)
 
-tab_model(mod1, mod2)
+tab_model(mod1)
 
 tab_model(
   mod1,
-  col.order = c("p", "stat", "ci", "df"),
-  pred.labels = c("Intercept", "Study site (MFWS)", "Sex (M)", "Age estimate 1-2yrs", "Age_estimate 2-3yrs", "Body condition (Fair)", "Body condition (Good)", "Weight (kg)", "Morph (Fawn)"),
+  show.se = TRUE,
+  pred.labels = c("Intercept", "Study site (MFWS)", "Sex (M)", "Age estimate 1-2yrs", "Age estimate 2-3yrs", "Body condition (Fair)", "Body condition (Good)", "Weight (kg)", "Morph (Fawn)"),
   dv.labels = c("Bait remaining (g)"),
   string.pred = "Estimates",
   string.ci = "Conf. Int (95%)",
   string.stat = "T-value",
-  string.df = "Degrees of freedom",
   string.p = "P-Value"
 )
 
@@ -599,7 +601,6 @@ bait_plot <- ggplot(data=data1_pred, aes(x = study_site, y = bait_pred,
 
 ```
 
-
 # Collecting statistics for a model table (🚩 this goes at the end of your independent variable modelling).
 ```{r}
 # Generate a model
@@ -624,7 +625,6 @@ dredge(mod, rank = "AICc")
 
 
 #Step 3 Run GLMs for assay numbers and if this is significant, do step 3b in mind map plan
-
 ```{r}
 
 mod_fo_p <- glm(mod_fo_p ~ assay_number, family=gaussian, data=megadata_mutate)
@@ -633,35 +633,7 @@ mod_fd_p <- glm(mod_fd_p ~ assay_number, family=gaussian, data=megadata_mutate)
 ```
 
 
-
-
-# **Plots 
-
-```{r}
-
-view(megadata)
-
-# Gooroo v Mulligans Moving
-mov <- ggplot(megadata, aes(x = as.character(assay_number), y = moving_d, 
-                        fill = as.character(assay_number))) + 
-  geom_boxplot() +
-  facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Assay number") + ylab("Moving duration (s)") + labs("")
-print(mov)
-
-
-
-
-
-```
-
 ## Map
-
 ```{r, warning=FALSE}
 # Read in and project MFWS fence shapefile using rgdal
 mfws <- readOGR(dsn="shapefiles/MFGO_fences_and surrounds.shp", verbose=FALSE) %>% 
@@ -698,8 +670,6 @@ map <- ggplot() +
 print(map)
 ```
 
-
-
 ```{r}
 jpeg(file="mfgo_fences_and_surrounds.jpeg", 
      width=4750, height=1500, units="px", res=500)
@@ -707,9 +677,7 @@ map
 dev.off()
 ```
 
-
 # **Session information**
-
 ```{r}
 # Display version information for R, OS, and packages
 sessionInfo()
