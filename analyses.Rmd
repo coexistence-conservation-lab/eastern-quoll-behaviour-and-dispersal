@@ -20,13 +20,13 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = e
 knitr::opts_chunk$set(echo=TRUE, eval=TRUE)
 ```
 
-# **Background**
+# * Background
 
 Personality can play a crucial role in the survival and dispersal of reintroduced animals. In 2017, we reintroduced a cohort of female-only eastern quolls (*Dasyurus viverrinus*) to a [conservation-fenced haven](https://www.mulligansflat.org.au/) in the Australian Capital Territory, and conducted behavioural assays on each animal prior to their release. We aimed to determine whether personality and plasticity of these animals could predict their post-release performance.
 
 Here we describe the analyses we conducted for our article [Wilson *et al.* (2022) Personality and plasticity predicts post-release performance in a reintroduced mesopredator](https://doi.org/10.1016/j.anbehav.2022.02.019), published in Animal Behaviour.
 
-# **Setup**
+# * Setup
 
 First, we installed the [pacman Package Management Tool](https://cran.r-project.org/web/packages/pacman/index.html), which allows us to install and load subsequent packages in a condensed and efficient way. 
 
@@ -36,29 +36,13 @@ First, we installed the [pacman Package Management Tool](https://cran.r-project.
 
 ```{r, results='hide', warning=FALSE, message=FALSE}
 # Install and load required packages
-pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4, MuMIn,  
-               readr, sf, readxl, rstudioapi, tidyverse, viridis)
+pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,lmerTest, MuMIn,  
+               readr, sf, readxl, rstudioapi, tidyverse, viridis, beepr, corrplot,
+               broom, sjPlot, sjmisc, sjlabelled)
 
-install.packages("corrplot")
-install.packages("beepr")
-install.packages("lubridate")
-install.packages("broom")
-
-install.packages("sjPlot")
-install.packages("sjmisc")
-install.packages("sjlabelled")
-
-library(sjPlot)
-library(sjmisc)
-library(sjlabelled)
-
-library(beepr)
-library(corrplot)
-library(lubridate)
-library(broom)
 ```
 
-# **Data preparation**
+# *Data preparation
 
 ```{r, eval=FALSE}
 # Assign raw data filename to an object
@@ -193,85 +177,81 @@ data <- left_join(data, quoll, by=c("quoll_code"), relationship = "many-to-many"
 
 data <- left_join(data, capture, by=c("quoll_code", "session"), relationship = "many-to-many")
 
-megadata <- left_join(data, session, by=c("session"))
+data <- left_join(data, session, by=c("session"))
 
-view(megadata)
-names(megadata)
+view(data)
 
 ```
 
-
-# ** Calculating time differences 
+# * Calculating time differences 
 ```{r}
 
 #Check if the time columns are in the correct format
-print(class(megadata$snout_in_arena))
-print(class(megadata$process_end))
-print(class(megadata$first_light))
+print(class(data$snout_in_arena))
 
 #If not, correct to POSIXct format
-megadata$snout_in_arena <- as.POSIXct(megadata$snout_in_arena)
-megadata$process_end <- as.POSIXct(megadata$process_end)
-megadata$first_light <- as.POSIXct(megadata$first_light)
+data$snout_in_arena <- as.POSIXct(data$snout_in_arena)
+data$process_end <- as.POSIXct(data$process_end)
+data$first_light <- as.POSIXct(data$first_light)
 
 #Calculate time differences
-megadata$time_processtoassay <- megadata$snout_in_arena - megadata$process_end
-megadata$time_assaytolight <-  megadata$snout_in_arena - megadata$first_light
+data$time_processtoassay <- data$snout_in_arena - data$process_end
+data$time_assaytolight <- data$snout_in_arena - data$first_light
 
-#view(megadata)
-
-```
-
-
-```{r}
-
-#Adding a column to turn study site names into binomial 0 and 1 values 
-megadata$binomial_study_site <- as.numeric(ifelse(megadata$study_site == "MFWS", 0, ifelse(megadata$study_site == "Goorooyarroo", 1, NA)))
-
+#view(data)
 
 ```
 
-# ** Filtering out the two individuals who were assayed in Sept 2023
-
+# * Extracting 1st assay data for 'personality' / 'tendency' analysis
 ```{r}
-megadata_excl <- megadata %>%
+
+data1 <- data %>%
+    filter(assay_number !=2)
+
+view(data1)
+
+```
+
+# * Filtering out the two individuals who were assayed in Sept 2023
+```{r}
+data1_excl <- data1 %>%
   filter(!(quoll_code %in% c("53328", "87DE0")))
 
-view(megadata_excl)
+view(data1_excl)
 
 ```
 
-
-# ** Testing environmental variables for influence on behaviour 
-
+# * Testing environmental variables for influence on behaviour 
 ```{r}
 
-foodd <- glm(food_d ~ temp + moon_phase + time_assaytolight, data=megadata)
-foodo <- glm(food_o ~ temp + moon_phase + time_assaytolight, data=megadata)
+foodd <- glm(food_d ~ temp + moon_phase + time_assaytolight, data=data1)
+foodo <- glm(food_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
-summary(foodd)
-summary(foodo)
+groomd <- glm(grooming_d ~ temp + moon_phase + time_assaytolight, data=data1)
+groomo <- glm(grooming_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
-summary(glm(grooming_d ~ temp + moon_phase + time_assaytolight, data=megadata))
-summary(glm(grooming_o ~ temp + moon_phase + time_assaytolight, data=megadata))
+jumpd <- glm(jump_climb_d ~ temp + moon_phase + time_assaytolight, data=data1)
+jumpo <- glm(jump_climb_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
-summary(glm(jump_climb_d ~ temp + moon_phase + time_assaytolight, data=megadata))
-summary(glm(jump_climb_o ~ temp + moon_phase + time_assaytolight, data=megadata))
+legsd <- glm(legs_d ~ temp + moon_phase + time_assaytolight, data=data1)
+legso <- glm(legs_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
-summary(glm(legs_d ~ temp + moon_phase + time_assaytolight, data=megadata))
-summary(glm(legs_o ~ temp + moon_phase + time_assaytolight, data=megadata))
+moved <- glm(moving_d ~ temp + moon_phase + time_assaytolight, data=data1)
+moveo <- glm(moving_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
-summary(glm(moving_d ~ temp + moon_phase + time_assaytolight, data=megadata))
-summary(glm(moving_o ~ temp + moon_phase + time_assaytolight, data=megadata))
+perchd <- glm(perch_d ~ temp + moon_phase + time_assaytolight, data=data1)
+percho <- glm(perch_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
-summary(glm(perch_d ~ temp + moon_phase + time_assaytolight, data=megadata))
-summary(glm(perch_o ~ temp + moon_phase + time_assaytolight, data=megadata))
+restd <- glm(resting_d ~ temp + moon_phase + time_assaytolight, data=data1)
+resto <- glm(resting_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
-summary(glm(resting_d ~ temp + moon_phase + time_assaytolight, data=megadata))
-summary(glm(resting_o ~ temp + moon_phase + time_assaytolight, data=megadata))
+bait <- glm(remaining_bait_g ~ temp + moon_phase + time_assaytolight, data=data1)
 
+```
 
-#collect stats into a table
+# * Collect evironmental  stats into a table
+```{r}
+
 p_temp <- summary(foodd)$coefficients["temp", "Pr(>|t|)"]
 p_moon <- summary(foodo)$coefficients["moon_phase", "Pr(>|t|)"]
 
@@ -280,15 +260,28 @@ data.frame(Model = c("foodd", "foodo"),
            p_value = c(p_temp, p_moon))
 
 
-
-tidy_results <- bind_rows(tidy(foodd))
+tidy_results <- bind_rows(tidy(bait))
 
 print(tidy_results)
 
 tab_model(
-  foodd, foodo, 
+  restd, 
+  resto, 
   pred.labels = c("Intercept", "Temperature", "Moon phase", "Time to first light"),
-  dv.labels = c("Food interaction duration (s)", "Food interaction occurrences (n)"),
+  dv.labels = c("
+                Resting duration (s)", "
+                Resting occurrences (n)"),
+  string.pred = "Coefficient",
+  string.ci = "Conf. Int (95%)",
+  string.p = "P-Value"
+)
+
+
+tab_model(
+  bait, 
+  pred.labels = c("Intercept", "Temperature", "Moon phase", "Time to first light"),
+  dv.labels = c("
+                Remaining bait (g)"),
   string.pred = "Coefficient",
   string.ci = "Conf. Int (95%)",
   string.p = "P-Value"
@@ -296,36 +289,31 @@ tab_model(
 
 ```
 
-
-# ** Accounting for environmental variables
-
+# * Accounting for environmental variables
 ```{r}
 
-#Mutating the environmental variables in the overall data frame, including animals 53328 and 87DE0
-names(megadata)
-view(megadata)
+#Mutating the environmental variables in the 1st assay df, including animals 53328 and 87DE0
+names(data1)
 
-megadata_mutate <- megadata %>%
-  mutate_at(vars(5, 110, 117), ~ as.vector(scale(.)))
+data1_mutate <- data1 %>%
+  mutate_at(vars(5, 56, 61), ~ as.vector(scale(.)))
 
-view(megadata_mutate)
+view(data1_mutate)
 
-write.csv(megadata_mutate, "megadata mutated.csv")
+write.csv(data1_mutate, "data 1st assay mutated.csv")
 
 
 #Mutating environmental variables excluding 53328 and 87DE0
-names(megadata_excl)
+names(data1_excl)
 
-megadata_ex_mutate <- megadata_excl %>%
-  mutate_at(vars(5, 110, 117), ~ as.vector(scale(.)))
+data1ex_mutate <- data1_excl %>%
+  mutate_at(vars(5, 56, 61), ~ as.vector(scale(.)))
 
-write.csv(megadata_ex_mutate, "megadata mutated excluding sept individuals.csv")
+write.csv(data1ex_mutate, "data 1st assay mutated exl Sept individuals.csv")
 
 ```
 
-
-# **  Correlation analysis
-
+# * Correlation analysis
 ```{r}
 
 #Finding out the locations of the relevant columns 
@@ -404,109 +392,215 @@ dev.off()
 
 ```
 
-
-# ** Running basic models to get the feel of the data
-
+# * Running basic models to get the feel of the data
 ```{r}
 
 #GLM to test duration of moving, first with all individuals, and then excluding the Sept 2023 individuals 
 summary(glm(moving_d ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata))
 summary(glm(moving_d ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata_excl))
 
-
-#GLM to test occurrences of moving, first with all individuals, and then excluding the Sept 2023 individuals
-summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata))
-summary(glm(moving_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata_excl))
-
-
 ```
 
-
-## Code for analysis - see 'Christina mind map' 
-
 #Step 1 extract predicted values for behaviour with environmental variables
-
 ```{r}
 
 mod <- glm(food_o ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$food_o_pred <- predict(mod, type = "response")
-
-mod <- glm(food_d ~ temp + moon_phase + time_assaytolight,
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$food_d_pred <- predict(mod, type = "response")
-
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$foodo_pred <- predict(mod, type = "response")
+mod <- glm(food_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$foodd_pred <- predict(mod, type = "response")
+             
 mod <- glm(grooming_o ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$food_o_pred <- predict(mod, type = "response")
-
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$groomo_pred <- predict(mod, type = "response")
 mod <- glm(grooming_d ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$groom_d_pred <- predict(mod, type = "response")
-
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$groomd_pred <- predict(mod, type = "response")
+             
 mod <- glm(jump_climb_o ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$jump_o_pred <- predict(mod, type = "response")
-
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$jumpo_pred <- predict(mod, type = "response")
 mod <- glm(jump_climb_d ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$jump_d_pred <- predict(mod, type = "response")
-
-mod <- glm(legs_o ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$legs_o_pred <- predict(mod, type = "response")
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$jumpd_pred <- predict(mod, type = "response")
 
 mod <- glm(legs_d ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$legs_d_pred <- predict(mod, type = "response")
-
-mod <- glm(moving_o ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$move_o_pred <- predict(mod, type = "response")
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$legsd_pred <- predict(mod, type = "response")
+mod <- glm(legs_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$legso_pred <- predict(mod, type = "response")
 
 mod <- glm(moving_d ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$move_d_pred <- predict(mod, type = "response")
-
-mod <- glm(perch_o ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$perch_o_pred <- predict(mod, type = "response")
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$moved_pred <- predict(mod, type = "response")
+mod <- glm(moving_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$moveo_pred <- predict(mod, type = "response")
 
 mod <- glm(perch_d ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$perch_d_pred <- predict(mod, type = "response")
-
-mod <- glm(resting_o ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$rest_o_pred <- predict(mod, type = "response")
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$perchd_pred <- predict(mod, type = "response")
+mod <- glm(perch_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$percho_pred <- predict(mod, type = "response")
 
 mod <- glm(resting_d ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate)
-megadata_mutate$rest_d_pred <- predict(mod, type = "response")
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$restd_pred <- predict(mod, type = "response")
+mod <- glm(resting_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$resto_pred <- predict(mod, type = "response")
+
+mod <- glm(remaining_bait_g ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$bait_pred <- predict(mod, type = "response")
+             
+view(data1_mutate)
+names(data1_mutate)
+
+```
+
+# * Creating df that is predicted variables accounting for environmental heterogeneity
+```{r}
+
+data1_pred <- data1_mutate %>%
+              select(-food_o, -food_d, -grooming_o, -grooming_d, -jump_climb_o, -jump_climb_d,
+                     -legs_o, -legs_d, -moving_o, -moving_d, -perch_d, -perch_o, -resting_o,
+                     -resting_d, -remaining_bait_g)
+
+view(data1_pred)
+names(data1_pred)
 
 ```
 
 Now we have our predicted values, accounting for environmental heterogeneity. 
 
 #Step 2 Analyse behaviour indicators (name?)
+
+  1. Test the influence of fixed (e.g., site) and random effects (e.g., arena) on behavioural responses (e.g., food interaction duration) using the `lmer()` function.
+  2. If multiple fixed effects produce significance, perform model selection using the dredge() function to determine which fixed effects are within delta 2 AICc.
+
+*Personality (single response / static etc? figure this out)*
+
 ```{r}
 
-#Personality (single response / static etc? figure this out)
+names(data1_pred)
 
-#GLM models with random vaiables - then use AICc to assess best model
+# Test random effects using LMER 
+mod1 <- lmer(bait_pred ~ study_site + sex + age_estimate + condition + 
+              body_weight_kg + morph + (1|quoll_code) + (1|arena), 
+            data=data1_pred, na.action = "na.fail")
 
-mod <- lmer(move_o_p_i ~ site + sex + age + body_cond + weight + morph + (1|ID) + (1|arena), family=gaussian, data=data)
-#Model selection (Δ 2 AICc)
+mod2 <- lmer(percho_pred ~ study_site + sex + age_estimate + condition + 
+              body_weight_kg + morph + (1|quoll_code) + (1|arena), 
+            data=data1_pred, na.action = "na.fail")
 
-mod <- lmer(move_o_p_s ~ site + sex + age + body_cond + weight + morph + (1|ID) + (1|arena), family=gaussian, data=data)
-#Model selection (Δ 2 AICc)
+# Display summary statistics
+summary(mod1)
+summary(mod2)
 
+# Display model selection table for fixed effects
+dredge(mod, rank = "AICc")
+
+# Preliminary plot
+ggplot(data=data1_pred, aes(x=study_site, y=bait_pred, fill=study_site)) +
+  geom_boxplot()
+```
+
+
+# * Collect LMER stats into a table
+```{r}
+
+tidy_results <- bind_rows(tidy(bait))
+
+print(tidy_results)
+
+tab_model(mod1, mod2)
+
+tab_model(
+  mod1,
+  col.order = c("p", "stat", "ci", "df"),
+  pred.labels = c("Intercept", "Study site (MFWS)", "Sex (M)", "Age estimate 1-2yrs", "Age_estimate 2-3yrs", "Body condition (Fair)", "Body condition (Good)", "Weight (kg)", "Morph (Fawn)"),
+  dv.labels = c("Bait remaining (g)"),
+  string.pred = "Estimates",
+  string.ci = "Conf. Int (95%)",
+  string.stat = "T-value",
+  string.df = "Degrees of freedom",
+  string.p = "P-Value"
+)
+
+```
+
+# * Plots of demographic fixed variables
+```{r}
+
+#Belinda's  Preliminary plot
+ggplot(data=data1_pred, aes(x=study_site, y=bait_pred, fill=study_site)) +
+  geom_boxplot()
+
+perch_plot <- ggplot(data=data1_pred, aes(x = sex, y = percho_pred, 
+                        fill = sex)) + 
+  geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Sex") + ylab("Perching occurrences (n)") + labs("")
+
+print(perch_plot)
+
+
+move_plot <- ggplot(data=data1_pred, aes(x = study_site, y = moveo_pred, 
+                        fill = study_site)) + 
+  geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Study site") + ylab("Quadrupedal movement occurrences (n)") + labs("")
+
+
+print(bait_plot)
+
+bait_plot <- ggplot(data=data1_pred, aes(x = study_site, y = bait_pred, 
+                        fill = study_site)) + 
+  geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Study site") + ylab("Amount of bait not eaten (g)") + labs("")
 
 ```
 
 
 # Collecting statistics for a model table (🚩 this goes at the end of your independent variable modelling).
-
 ```{r}
 # Generate a model
 mod <- glm(food_o ~ temp + moon_phase + time_assaytolight, 
