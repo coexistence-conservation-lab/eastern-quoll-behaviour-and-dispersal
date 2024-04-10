@@ -44,6 +44,9 @@ pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,lmerTest, MuMIn,
 install.packages("kableExtra")
 library(kableExtra)
 
+install.packages("broom.mixed")
+library(broom.mixed)
+
 install.packages("sjPlot")
 library(sjPlot)
 
@@ -255,12 +258,15 @@ resto <- glm(resting_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
 bait <- glm(bait_eaten_g ~ temp + moon_phase + time_assaytolight, data=data1)
 
+sumsecto <- glm(sumsect_o ~ temp + moon_phase + time_assaytolight, data=data1)
+totalacto <- glm(totalact_o ~ temp + moon_phase + time_assaytolight, data=data1)
+
 ```
 
 # Tables: Evironmental stats
 ```{r}
 
-tidy_results <- tidy(bait) %>%
+tidy_results <- tidy(totalacto) %>%
   mutate_if(is.numeric, ~round(., digits = 2))
 
 colnames(tidy_results) <- c("Term", "Estimate", "Std. Error", "T-Value", "p.value")
@@ -274,7 +280,7 @@ tidy_results <- tidy_results %>%
 
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Resting occurrences <em>(n)</em>", escape = FALSE) %>%
+  kbl(caption = "Total activity occurrences <em>(n)</em>", escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 15)
 
@@ -315,9 +321,8 @@ write.csv(data1ex_mutate, "data 1st assay mutated exl Sept individuals.csv")
 Running basic models to get the feel of the data
 ```{r}
 
-#GLM to test duration of moving, first with all individuals, and then excluding the Sept 2023 individuals 
-summary(glm(moving_d ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata))
-summary(glm(moving_d ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=megadata_excl))
+summary(glm(sumsect_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=data))
+summary(glm(totalact_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=data))
 
 ```
 
@@ -392,7 +397,17 @@ mod <- glm(bait_eaten_g ~ temp + moon_phase + time_assaytolight,
            family=gaussian, data=
              data1_mutate)
              data1_mutate$bait_pred <- predict(mod, type = "response")
+ 
+mod <- glm(sumsect_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$sumsecto_pred <- predict(mod, type = "response")            
              
+mod <- glm(totalact_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data1_mutate)
+             data1_mutate$totalacto_pred <- predict(mod, type = "response")
+                        
 view(data1_mutate)
 names(data1_mutate)
 
@@ -408,7 +423,7 @@ data1_mutate <- data1_mutate %>%
 data1_pred <- data1_mutate %>%
               select(-food_o, -food_d, -grooming_o, -grooming_d, -jump_climb_o, -jump_climb_d,
                      -legs_o, -legs_d, -moving_o, -moving_d, -perch_d, -perch_o, -resting_o,
-                     -resting_d, -remaining_bait_g, -bait_eaten_g)
+                     -resting_d, -remaining_bait_g, -bait_eaten_g, -sumsect_o, -totalact_o)
 
 view(data1_pred)
 names(data1_pred)
@@ -433,11 +448,11 @@ names(data1_pred)
 view(data1_pred)
 
 # Test random effects using LMER 
-mod1 <- lmer(percho_pred ~ study_site + sex + age_estimate + condition + 
+mod1 <- lmer(sumsecto_pred ~ study_site + sex + age_estimate + condition + 
               body_weight_kg + morph + (1|quoll_code) + (1|arena), 
             data=data1_pred, na.action = "na.fail")
 
-mod1 <- lmer(perchd_pred ~ study_site + sex + age_estimate + condition + 
+mod2 <- lmer(totalacto_pred ~ study_site + sex + age_estimate + condition + 
               body_weight_kg + morph + (1|quoll_code) + (1|arena), 
             data=data1_pred, na.action = "na.fail")
 
@@ -449,13 +464,13 @@ dredge(mod1, rank = "AICc")
 
 ```
 
-#Tables: LMER stats using tableExtra
+#Tables: LMER stats using kableExtra
 ```{r}
 
 view(tidy_results)
 print(tidy_results)
 
-tidy_results <- tidy(mod1) %>%
+tidy_results <- tidy(mod2) %>%
   mutate_if(is.numeric, ~round(., digits = 2))
 
 tidy_results <- tidy_results %>%
@@ -478,7 +493,7 @@ tidy_results <- tidy_results %>%
 
 table <- tidy_results %>%
     mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Perching occurrences <em>(n)</em>", escape = FALSE) %>%
+  kbl(caption = "Total behaviour activities <em>(n)</em>", escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 15)
 table
@@ -499,7 +514,6 @@ view(data1_pred)
 #Belinda's  Preliminary plot
 #ggplot(data=data1_pred, aes(x=study_site, y=bait_pred, fill=study_site)) +geom_boxplot()
 
-#data1_pred$sex <- factor(data1_pred$sex, levels = c("F", "M"), labels = c("Female", "Male"))
 
 #Plot with formatting
 
@@ -664,25 +678,11 @@ ggsave(filename = "adjusted behaviour plots.jpeg", behaviour, width=300, height=
 ```
 
 
-#Collecting statistics for a model table (🚩 this goes at the end of your independent variable modelling).
+#AICc test (🚩 this goes at the end of your independent variable modelling).
 ```{r}
-# Generate a model
-mod <- glm(food_o ~ temp + moon_phase + time_assaytolight, 
-           family=gaussian, data=megadata_mutate, 
-           na.action = "na.fail")
-
-summary(mod)
-
-#collect stats into a table
-p_temp <- summary(mod)$coefficients["temp", "Pr(>|t|)"]
-p_moon <- summary(mod)$coefficients["moon_phase", "Pr(>|t|)"]
-
-data.frame(Variable = c("Temperature", "Moon phase"),
-           p_value = c(p_temp, p_moon))
 
 # Conduct model selection using AICc threshold
 dredge(mod, rank = "AICc")
-
 
 ```
 
@@ -697,6 +697,7 @@ data2 <- data %>%
   mutate(study_site = if_else(study_site == "MFWS", "Mulligans Flat", study_site))
 
 view(data2)
+names(data2)
 
 ```
 
@@ -726,6 +727,10 @@ resto2 <- glm(resting_o ~ temp + moon_phase + time_assaytolight, data=data2)
 
 bait2 <- glm(bait_eaten_g ~ temp + moon_phase + time_assaytolight, data=data2)
 
+sumsect2 <- glm(sumsect_o ~ temp + moon_phase + time_assaytolight, data=data2)
+totalact2 <- glm(totalact_o ~ temp + moon_phase + time_assaytolight, data=data2)
+
+
 ```
 
 # Tables: Evironmental stats
@@ -733,7 +738,7 @@ bait2 <- glm(bait_eaten_g ~ temp + moon_phase + time_assaytolight, data=data2)
 
 print(tidy_results)
 
-tidy_results <- tidy(bait2) %>%
+tidy_results <- tidy(totalact2) %>%
   mutate_if(is.numeric, ~round(., digits = 2))
 
 colnames(tidy_results) <- c("Term", "Estimate", "Std. Error", "T-Value", "p.value")
@@ -747,7 +752,7 @@ tidy_results <- tidy_results %>%
 
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Perching occurrences <em>(n)</em>", escape = FALSE) %>%
+  kbl(caption = "Total occurrences of activity <em>(n)</em>", escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 15)
 table
@@ -758,9 +763,7 @@ table <- tidy_results %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 15)
 table
-
 ```
-
 
 # Mutate data: accounting for environmental variables over both assays
 ```{r}
@@ -783,16 +786,286 @@ write.csv(data2_mutate, "data both assays mutated.csv")
 
 ```
 
-
-#Step 3 Run GLMs for assay numbers and if this is significant, do step 3b in mind map plan
+#Extract predictor/adjusted variables for both assays
 ```{r}
 
-mod_fo_p <- glm(mod_fo_p ~ assay_number, family=gaussian, data=megadata_mutate)
-mod_fd_p <- glm(mod_fd_p ~ assay_number, family=gaussian, data=megadata_mutate)
+mod <- glm(food_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$foodo_p <- predict(mod, type = "response")
+             
+mod <- glm(food_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$foodd_p <- predict(mod, type = "response")
+             
+mod <- glm(grooming_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$groomo_p <- predict(mod, type = "response")
+
+mod <- glm(grooming_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$groomd_p <- predict(mod, type = "response")
+             
+mod <- glm(jump_climb_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$jumpo_p <- predict(mod, type = "response")
+
+mod <- glm(jump_climb_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$jumpd_p <- predict(mod, type = "response")
+
+mod <- glm(legs_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$legsd_p <- predict(mod, type = "response")
+
+mod <- glm(legs_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$legso_p <- predict(mod, type = "response")
+
+mod <- glm(moving_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$moved_p <- predict(mod, type = "response")
+             
+mod <- glm(moving_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$moveo_p <- predict(mod, type = "response")
+
+mod <- glm(perch_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$perchd_p <- predict(mod, type = "response")
+             
+mod <- glm(perch_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$percho_p <- predict(mod, type = "response")
+
+mod <- glm(resting_d ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$restd_p <- predict(mod, type = "response")
+             
+mod <- glm(resting_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$resto_p <- predict(mod, type = "response")
+
+mod <- glm(bait_eaten_g ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$bait_p <- predict(mod, type = "response")
+ 
+mod <- glm(sumsect_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$sumsecto_p <- predict(mod, type = "response")            
+             
+mod <- glm(totalact_o ~ temp + moon_phase + time_assaytolight, 
+           family=gaussian, data=
+             data2_mutate)
+             data2_mutate$totalacto_p <- predict(mod, type = "response")
+
+view(data2_mutate)
+             
+```
+
+#Create df of predicted variables 
+Accounting for environmental heterogeneity for both assays
+```{r}
+
+view(data2_mutate)
+
+data2_pred <- data2_mutate %>%
+              select(-food_o, -food_d, -grooming_o, -grooming_d, -jump_climb_o, -jump_climb_d,
+                     -legs_o, -legs_d, -moving_o, -moving_d, -perch_d, -perch_o, -resting_o,
+                     -resting_d, -remaining_bait_g, -bait_eaten_g, -sumsect_o, -totalact_o)
+
+view(data2_pred)
+names(data2_pred)
+
+write.csv(data1_pred,"both assays predicted variables.csv")
 
 ```
 
+#Test adjusted behaviours against assay number
+```{r}
+
+fooddmod <- glm(foodd_p ~ assay_number, family=gaussian, data=data2_pred)
+foodpmod <- glm(foodo_p ~ assay_number, family=gaussian, data=data2_pred)
+
+groomdmod <- glm(groomd_p ~ assay_number, family=gaussian, data=data2_pred)
+groomomod <- glm(groomo_p ~ assay_number, family=gaussian, data=data2_pred)
+
+jumpdmod <- glm(jumpd_p ~ assay_number, family=gaussian, data=data2_pred)
+jumpomod <- glm(jumpo_p ~ assay_number, family=gaussian, data=data2_pred)
+
+legsdmod <- glm(legsd_p ~ assay_number, family=gaussian, data=data2_pred)
+legsomod <- glm(legso_p ~ assay_number, family=gaussian, data=data2_pred)
+
+movedmod <- glm(moved_p ~ assay_number, family=gaussian, data=data2_pred)
+moveomod <- glm(moveo_p ~ assay_number, family=gaussian, data=data2_pred)
+
+perchdmod <- glm(perchd_p ~ assay_number, family=gaussian, data=data2_pred)
+perchomod <- glm(percho_p ~ assay_number, family=gaussian, data=data2_pred)
+
+baitmod <- glm(bait_p ~ assay_number, family=gaussian, data=data2_pred)
+
+sumsectomod <- glm(sumsecto_p ~ assay_number, family=gaussian, data=data2_pred)
+
+totalactomod <- glm(totalacto_p ~ assay_number, family=gaussian, data=data2_pred)
+
+```
+
+# Tables: Assay number stats
+```{r}
+
+print(tidy_results)
+
+tidy_results <- tidy(totalactomod)%>%
+ mutate_if(is.numeric, ~round(., digits = 4))
+
+colnames(tidy_results) <- c("Term", "Estimate", "Std. Error", "T-Value", "p.value")
+
+tidy_results <- tidy_results %>%
+  mutate(Term = case_when(
+    Term == "(Intercept)" ~ "Intercept", 
+    Term == "assay_number" ~ "Assay number",
+    #Term == "moon_phase" ~ "Moon phase",
+    #Term == "time_assaytolight" ~ "Time from assay to first light"
+    ))
+
+table <- tidy_results %>%
+  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Total behaviour activity occurrences <em>(n)</em>", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 15)
+table
+
+table <- tidy_results %>%
+  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Bait eaten (g)", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 15)
+table
+
+```
+
+#Plots: significant results for assay number
+```{r}
+
+data2_pred$assay_number <- factor(data2_pred$assay_number)
+
+
+jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p, 
+                        fill = assay_number)) + 
+  geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab(expression(paste("Jumping and climbing occurrences ", italic("(n) ")))) + labs("") 
+print(jo_plot)
+ggsave(filename = "2 assays - assay number - jump occ.jpeg", jumpo_plot, width=200, height= 150, units = "mm")
+
+jd_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p, 
+                        fill = assay_number)) + 
+  geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab(expression(paste("Jumping and climbing duration (s)" ))) + labs("") 
+print(jd_plot)
+ggsave(filename = "2 assays - assay number - jump occ.jpeg", jumpo_plot, width=200, height= 150, units = "mm")
+
+acto_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = totalacto_p, 
+                        fill = assay_number)) + 
+  geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Assay number") + ylab(expression(paste("Total behaviour activity occurrences ", italic("(n) ")))) + labs("") 
+print(acto_plot)
+
+ggsave(filename = "2 assays - assay number - jump occ.jpeg", jumpo_plot, width=200, height= 150, units = "mm")
+
+```
+
+
+
+#Activity over time - prepping data
+```{r}
+
+bin <- read_excel(raw_data, sheet="Binned assays", na="N/A")%>%
+ clean_names() 
+ view(bin)
+
+ # Append metadata for each assay to dataframe
+bin_data <- left_join(meta, bin, by=c("assay_id", "quoll_code"), relationship = "many-to-many")
+#view(data)
+ 
+bin_data <- left_join(meta, bin, by=c("session", "assay_id", "quoll_code"), relationship = "many-to-many")%>%
+ filter(!assay_id %in% c("MulligansA_4", "MulligansA_9", "MulligansB_19")) %>%
+  select(-initial_repeat_assay, -trap_location, -time_to_emerge_s, -remaining_bait_g, -bait_eaten_g)
+
+bin_data <- bin_data %>%
+  mutate(minute_integer = as.integer(gsub("\\D", "", minute)))
+
+names(bin_data)
+view(bin_data)
+ 
+```
+
+
+```{r}
+
+bin_data$assay_number <- factor(bin_data$assay_number)
+
+plot <- ggplot(data = bin_data, 
+       mapping = aes(x = minute_integer, y = moving_occ_binned))
+
+plot <- ggplot(bin_data, aes(x = minute_integer, y = moving_occ_binned, color = study_site)) +
+  geom_smooth() + # Add line
+  labs(x = "Assay minute", y = "Moving Occurrences", title = "Line Plot") + # Add labels
+  theme_minimal() # Choose a theme
+
+plot <- ggplot(bin_data, aes(x = minute_integer, y = moving_occ_binned, color = assay_number)) +
+  geom_smooth() + # Add line
+  labs(x = "Assay minute", y = "Moving Occurrences", title = "Line Plot") + # Add labels
+  theme_minimal() # Choose a theme
+
+plot <- ggplot(bin_data, aes(x = minute_integer, y = moving_occ_binned, 
+                             color = study_site, fill=study_site)) +
+  geom_smooth() + # Add line
+  ggtitle(label="Assay number", vjust=0.5) +
+  labs(x="Assay minute", y="moving occ") + # Add labels
+  theme_minimal() + # Choose a theme
+  facet_wrap(~assay_number)
+
+print(plot)
+```
+
 # Correlation analysis
+
 ```{r}
 
 #Finding out the locations of the relevant columns 
@@ -872,6 +1145,7 @@ dev.off()
 ```
 
 ## Map
+
 ```{r, warning=FALSE}
 # Read in and project MFWS fence shapefile using rgdal
 mfws <- readOGR(dsn="shapefiles/MFGO_fences_and surrounds.shp", verbose=FALSE) %>% 
@@ -916,6 +1190,7 @@ dev.off()
 ```
 
 # **Session information**
+
 ```{r}
 # Display version information for R, OS, and packages
 sessionInfo()
