@@ -69,19 +69,19 @@ raw <- read_excel(raw_data, sheet="Assays", na="N/A") %>%
 #Read in the data for all data sheets in excel 
 meta <- read_excel(raw_data, sheet="Metadata", na="N/A") %>% 
   clean_names()
-#view(meta)
+view(meta)
 #names(meta)
 
 quoll <- read_excel(raw_data, sheet="Quoll", na="N/A") %>%
   select(2, 4, 5) %>%
   clean_names()
-#view(quoll)
+view(quoll)
 #names(quoll)
 
 capture <- read_excel(raw_data, sheet="Captures") %>%
    select(2, 4, 8, 9, 10, 11, 12, 13, 14, 24, 26, 27, 28, 30) %>%
   clean_names()
-#view(capture)
+view(capture)
 #names(capture)
 
 session <- read_excel(raw_data, sheet="Sessions") %>%
@@ -235,7 +235,9 @@ write.csv(data1, "first assay data raw.csv")
 # Testing influence of environmental variables on behaviour
 ```{r}
 
-foodd <- glm(food_d ~ temp + moon_phase + time_assaytolight, data=data1)
+foodd <- glm(food_d ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
+summary(foodd)
+
 foodo <- glm(food_o ~ temp + moon_phase + time_assaytolight, data=data1)
 
 groomd <- glm(grooming_d ~ temp + moon_phase + time_assaytolight, data=data1)
@@ -266,7 +268,7 @@ totalacto <- glm(totalact_o ~ temp + moon_phase + time_assaytolight, data=data1)
 # Tables: Evironmental stats
 ```{r}
 
-tidy_results <- tidy(totalacto) %>%
+tidy_results <- tidy(groomd) %>%
   mutate_if(is.numeric, ~round(., digits = 2))
 
 colnames(tidy_results) <- c("Term", "Estimate", "Std. Error", "T-Value", "p.value")
@@ -280,13 +282,13 @@ tidy_results <- tidy_results %>%
 
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Total activity occurrences <em>(n)</em>", escape = FALSE) %>%
+  kbl(caption = "Food interaction occurrences <em>(n)</em>", escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 15)
 
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Bait eaten (g)", escape = FALSE) %>%
+  kbl(caption = "Grooming cumulative duration (s)", escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 15)
 
@@ -885,12 +887,18 @@ Accounting for environmental heterogeneity for both assays
 view(data2_mutate)
 
 data2_pred <- data2_mutate %>%
-              select(-food_o, -food_d, -grooming_o, -grooming_d, -jump_climb_o, -jump_climb_d,
-                     -legs_o, -legs_d, -moving_o, -moving_d, -perch_d, -perch_o, -resting_o,
-                     -resting_d, -remaining_bait_g, -bait_eaten_g, -sumsect_o, -totalact_o)
+  select(-food_o, -food_d, -grooming_o, -grooming_d, 
+                     -jump_climb_o, -jump_climb_d, -legs_o, -legs_d, 
+                     -moving_o, -moving_d, -perch_d, -perch_o, -resting_o,
+                     -resting_d, -remaining_bait_g, -bait_eaten_g, 
+                     -sumsect_o, -totalact_o) %>%
+  mutate(assay_number = as.factor(assay_number))
+  
 
 view(data2_pred)
 names(data2_pred)
+
+
 
 write.csv(data1_pred,"both assays predicted variables.csv")
 
@@ -900,6 +908,7 @@ write.csv(data1_pred,"both assays predicted variables.csv")
 ```{r}
 
 fooddmod <- glm(foodd_p ~ assay_number, family=gaussian, data=data2_pred)
+summary(fooddmod)
 foodpmod <- glm(foodo_p ~ assay_number, family=gaussian, data=data2_pred)
 
 groomdmod <- glm(groomd_p ~ assay_number, family=gaussian, data=data2_pred)
@@ -962,7 +971,6 @@ table
 #Plots: significant results for assay number
 ```{r}
 
-data2_pred$assay_number <- factor(data2_pred$assay_number)
 
 
 jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p, 
@@ -1007,6 +1015,75 @@ acto_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = totalacto_p,
 print(acto_plot)
 
 ggsave(filename = "2 assays - assay number - jump occ.jpeg", jumpo_plot, width=200, height= 150, units = "mm")
+
+```
+
+#Prep data for coefficient left_join 
+```{r}
+
+names(data2)
+view(data2)
+
+quoll2 <- data2 %>%
+  filter(!assay_number %in% 1) %>%
+  mutate(study_site = if_else(study_site == "MFWS", "Mulligans Flat", study_site))
+
+
+```
+
+
+
+#Extracting adjusted values for intercept (personality) and  slope (plasticity) over both assays
+```{r}
+
+# Create a list of dependent behavioural variables
+dependent <- c("bait_eaten_g","food_o","food_d","grooming_o",
+               "grooming_d","jump_climb_o","jump_climb_d","legs_o", "legs_d",
+               "moving_o", "moving_d", "perch_o", "perch_d", "sumsect_o", "totalact_o")
+
+# Define the levels in an object
+quolls <- levels(factor(data2$quoll_code))
+
+# Create a blank dataframe with four columns
+coefficients <- data.frame(individual=NULL, intercept=NULL, 
+                           slope=NULL, variable=NULL)
+
+# Loop to extract the intercept and slope of each behavioural response
+for(v in 1:NROW(dependent)) {
+  for(i in 1:NROW(quolls)){
+    individual <- quolls[i]
+    variable <- dependent[v]
+    mod <- lm(eval(as.name(paste0(variable))) ~ 
+                assay_number + temp + moon_phase + time_assaytolight, 
+              data=subset(data2, individual==quolls[i]))
+    i <- coef(mod)[1]
+    s <- coef(mod)[2]
+    results <- data.frame(cbind(individual, i, s, variable))
+    coefficients <- rbind(coefficients, results)
+  }
+}
+
+# Convert the df to wide format
+coefficients <- reshape(coefficients, idvar="individual", 
+                        timevar="variable", direction="wide")
+
+# Define names of the coefficients
+names(coefficients) <- gsub("\\.", "_", names(coefficients))
+
+# Remove duplicated coefficients
+coefficients <- coefficients[ , !duplicated(colnames(coefficients))]
+
+view(coefficients)
+
+# Join behavioural df with post-release df
+post <- read_excel(raw_data, sheet="post-release performance") %>%
+  left_join(coefficients, by="quoll_code")
+
+# Remove duplicated column names
+post <- post[ , !duplicated(colnames(post))]
+
+# Write to csv file
+write_csv(post, "processed data/post-release performance.csv")
 
 ```
 
