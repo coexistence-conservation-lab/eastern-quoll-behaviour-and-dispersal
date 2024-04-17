@@ -50,6 +50,9 @@ library(broom.mixed)
 install.packages("AICcmodavg")
 library(AICcmodavg)
 
+install.packages("glmmTMB")
+library(glmmTMB)
+
 ```
 
 # Data preparation
@@ -181,9 +184,18 @@ quolldata <- left_join(capture, quoll, by=c("quoll_code"))
 #names(quolldata)
 
 data <- left_join(behavdata, quolldata, by=c("session", "quoll_code"))
-data$assay_number <- factor(data$assay_number)
+  
+data <- data %>%
+  select(-min_temp, -session_desc, -capture_date, -new_animal) %>%
+  mutate(assay_number = as.factor(assay_number),
+         cond_n = as.numeric(ifelse(condition=="Excellent", 4,
+                            ifelse(condition=="Good", 3,
+                                   ifelse(condition=="Fair", 2, NA)))),
+         age_n = as.numeric(ifelse(age_estimate=="<1yr", 0,
+                               ifelse(age_estimate=="1-2yrs", 1,
+                                      ifelse(age_estimate=="2-3yrs", 2, NA)))))
 
-#view(data)
+#iew(data)
 #names(data)
 
 ```
@@ -232,7 +244,6 @@ write.csv(data1, "first assay data raw.csv")
 # Testing influence of environmental variables on arena behaviour
 ```{r}
 
-
 foodd <- glm(food_d ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 foodo <- glm(food_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 
@@ -265,7 +276,7 @@ tablestress <- glm(stress_on_table ~ temp + moon_phase + time_assaytolight + tim
 # Tables: Evironmental stats
 ```{r}
 
-tidy_results <- tidy(tablestress) %>%
+tidy_results <- tidy(foodd) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
 
 table <- tidy_results %>%
@@ -688,12 +699,11 @@ table
 # Mutate data: accounting for environmental variables over both assays
 ```{r}
 
-#Mutating the environmental variables in the 1st assay df, including animals 53328 and 87DE0
-names(data2)
-view(data2)
+names(data2      )
 
+#Mutating the environmental variables 
 data2_mutate <- data2 %>%
-  mutate_at(vars(5, 46, 67, 68), ~ as.vector(scale(.)))
+  mutate_at(vars(5, 44, 65, 65), ~ as.vector(scale(.)))
 
 view(data2_mutate)
 write.csv(data2_mutate, "data2_mutate - both assays env vars adjusted.csv")
@@ -797,32 +807,28 @@ mod <- glm(emerge_max ~ temp + moon_phase + time_assaytolight + time_processtoas
            family=gaussian, data=
              data2_mutate)
              data2_mutate$emerge_p <- predict(mod, type = "response")
-             
-                          
-view(data2_mutate)
-names(data2_mutate)
-             
+
 ```
 
 #Create df of predicted variables 
 Accounting for environmental heterogeneity for both assays
 ```{r}
 
-view(data2_mutate)
+#view(data2_mutate)
+#names(data2_mutate)
 
 data2_pred <- data2_mutate %>%
   select(-food_o, -food_d, -grooming_o, -grooming_d, 
                      -jump_climb_o, -jump_climb_d, -legs_o, -legs_d, 
                      -moving_o, -moving_d, -perch_d, -perch_o, -resting_o,
                      -resting_d, -bait_eaten_g, 
-                     -sumsect_o, -totalact_o, -min_temp,-emerge_max, -time_to_emerge_s, -arena_entry) %>%
-  mutate(assay_number = as.factor(assay_number))
+                     -sumsect_o, -totalact_o, -emerge_max, -time_to_emerge_s, -arena_entry)
   
 
-view(data2_pred)
-names(data2_pred)
+#view(data2_pred)
+#names(data2_pred)
 
-write.csv(data1_pred,"data1_pred - both assays adjusted env variables.csv")
+write.csv(data2_pred,"data2_pred - both assays adjusted env variables.csv")
 
 ```
 
@@ -830,6 +836,7 @@ write.csv(data1_pred,"data1_pred - both assays adjusted env variables.csv")
 ```{r}
 
 mod1 <- glm(foodd_p ~ assay_number, family=gaussian, data=data2_pred)
+
 mod2 <- glm(foodo_p ~ assay_number, family=gaussian, data=data2_pred)
 mod1 <- glm(bait_p ~ assay_number, family=gaussian, data=data2_pred)
 
@@ -899,9 +906,10 @@ ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p,
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
   xlab("") + 
-  ylab(expression(paste("Adjusted latency to emerge (s)" )))+
-  annotate("text", x = "2", y =50, label = parse(text = "bold('a')"), size = 5, hjust = -7) + labs("") 
-print(ed_plot)
+  ylab(expression(paste("Latency to emerge (s)")))+
+  annotate("text", x = "2", y =50, label = "a", size = 5, hjust = -3) + 
+  labs("") 
+#print(ed_plot)
 #ggsave(filename = "assay number - emerge - site.jpeg", ed_plot, width=200, height= 150, units = "mm")
 
 
@@ -915,9 +923,10 @@ fo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = foodo_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted food interaction occurrences ", italic("(n) ")))) +
-  annotate("text", x = "2", y =30, label = parse(text = "bold('b')"), size = 5, hjust = -6) + labs("") 
-print(fo_plot)
+  xlab("") + ylab(expression(paste("Food interaction occurrences ", italic("(n) ")))) +
+  annotate("text", x = "2", y =30, label = "b", size = 5, hjust = -3) 
+  labs("") 
+#print(fo_plot)
 #ggsave(filename = "assay number - food occ - site.jpeg", fo_plot, width=200, height= 150, units = "mm")
 
 
@@ -931,9 +940,10 @@ jd_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted jumping and climbing duration (s)" )))  +
-  annotate("text", x = "2", y =200, label = parse(text = "bold('c')"), size = 5, hjust = -6) + labs("") 
-print(jd_plot)
+  xlab("") + ylab(expression(paste("Jumping and climbing duration (s)" )))  +
+  annotate("text", x = "2", y =200, label = "c", size = 5, hjust = -3)
+  labs("") 
+#print(jd_plot)
 #ggsave(filename = "assay number - jump dur - site.jpeg", jd_plot, width=200, height= 150, units = "mm")
 
 
@@ -947,9 +957,10 @@ jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted jumping and climbing occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =85, label = parse(text = "bold('d')"), size = 5, hjust = -6) + labs("") 
-print(jo_plot)
+  xlab("") + ylab(expression(paste("Jumping and climbing occurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =80, label = "d", size = 5, hjust = -3) + 
+  labs("") 
+#print(jo_plot)
 #ggsave(filename = "assay number - jump occ - site.jpeg", jo_plot, width=200, height= 150, units = "mm")
 
 
@@ -963,9 +974,10 @@ md_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moved_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted quadrupedal movement duration (s)" ))) +
-  annotate("text", x = "2", y =160, label = parse(text = "bold('e')"), size = 5, hjust = -6) + labs("") 
-print(md_plot)
+  xlab("") + ylab(expression(paste("Quadrupedal movement duration (s)" ))) +
+  annotate("text", x = "2", y =160, label = "e", size = 5, hjust = -3) + 
+  labs("") 
+#print(md_plot)
 #ggsave(filename = "assay number - move dur - site.jpeg", md_plot, width=200, height= 150, units = "mm")
 
 
@@ -979,9 +991,10 @@ mo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moveo_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted quadrupedal movement occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =160, label = parse(text = "bold('f')"), size = 5, hjust = -8) + labs("") 
-print(mo_plot)
+  xlab("") + ylab(expression(paste("Quadrupedal movement occurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =140, label = "f", size = 5, hjust = -3) + 
+  labs("") 
+#print(mo_plot)
 #ggsave(filename = "assay number - move occ - site.jpeg", mo_plot, width=200, height= 150, units = "mm")
 
 
@@ -995,9 +1008,10 @@ sum_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = sumsecto_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted total different section visits", italic(" (n) ")))) +
-  annotate("text", x = "2", y =70, label = parse(text = "bold('g')"), size = 5, hjust = -8) + labs("") 
-print(sum_plot)
+  xlab("") + ylab(expression(paste("Total different section visits", italic(" (n) ")))) +
+  annotate("text", x = "2", y =65, label = "g", size = 5, hjust = -3) +
+  labs("") 
+#print(sum_plot)
 #ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
 
 
@@ -1011,9 +1025,10 @@ act_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = totalacto_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted total activity occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =350, label = parse(text = "bold('h')"), size = 5, hjust = -8)  + labs("") 
-print(act_plot)
+  xlab("") + ylab(expression(paste("Total activity occurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =350, label = "h", size = 5, hjust = -3) + 
+  labs("") 
+#print(act_plot)
 #ggsave(filename = "assay number - tot sect - site.jpeg", act_plot, width=200, height= 150, units = "mm")
 
 
@@ -1027,12 +1042,27 @@ lo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = legso_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted standing on hind legs occurrences", italic("(n) ")))) +
-  annotate("text", x = "2", y =110, label = parse(text = "bold('i')"), size = 5, hjust = -8) +
+  xlab("") + ylab(expression(paste("Standing on hind legs occurrences", italic("(n) ")))) +
+  annotate("text", x = "2", y =100, label = "i", size = 5, hjust = -3) +
   labs("") 
-print(lo_plot)
-ggsave(filename = "assay number - legs occ - site.jpeg", lo_plot, width=200, height= 150, units = "mm")
-#
+#print(lo_plot)
+#ggsave(filename = "assay number - legs occ - site.jpeg", lo_plot, width=200, height= 150, units = "mm")
+
+
+#po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p, 
+                        #fill = assay_number)) + 
+  #geom_boxplot() +
+  #scale_fill_manual (values = c("#25798F","#7BD151")) +
+  #facet_wrap(~study_site) + 
+  #theme_minimal() +
+  #theme(legend.position = "none", 
+        #panel.grid = element_blank(),
+        #axis.line.x = element_line(color = "black"),
+        #axis.line.y = element_line(color = "black")) + 
+  #xlab("") + ylab(expression(paste("Perching occurrences", italic(" (n) ")))) + 
+  #annotate("text", x = "2", y =35, label = parse(text = "bold('j')"), size = 5, hjust = -1) +
+  #labs("") 
+
 
 po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p, 
                         fill = assay_number)) + 
@@ -1044,32 +1074,42 @@ po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Adjusted perching occurrences", italic(" (n) ")))) + 
-  annotate("text", x = "2", y =35, label = parse(text = "bold('j')"), size = 5, hjust = -8) +
+  xlab("") + ylab(expression(paste("Perching occurrences", italic(" (n) ")))) + 
+  annotate("text", x = "2", y =30, label ="j", size = 5, hjust = -3) +
   labs("") 
+
 print(po_plot)
 #ggsave(filename = "assay number - perch occ  - site.jpeg", po_plot, width=200, height= 150, units = "mm")
 
 
 ```
 
-
-
 #Arranging jpegs into one plot
 ```{r}
 
-behaviour <- ggarrange(ed_plot, fo_plot, jd_plot, jo_plot, md_plot, mo_plot, sum_plot, act_plot, lo_plot, po_plot, font.label=list(size=6, face="bold", color ="black",
-ncol=2, nrow=5, #h=align, arranging matrix
-label.x=0.89, label.y=0.99, hjust=-0.1, vjust=1.5))
+behav <- ggarrange(
+  ed_plot, fo_plot, jd_plot, jo_plot, md_plot, mo_plot, sum_plot, act_plot, lo_plot, po_plot,
+  font.label = list(
+    size = 6,
+    face = "bold",
+    color = "black",
+    ncol = 2,
+    label.x = 0.89,
+    label.y = 0.99,
+    hjust = -0.1,
+    vjust = 1.5
+  )
+)
 
-print(behaviour)
+behav <- annotate_figure(behav, 
+        left = text_grob("Adjusted behaviours over two assays", rot=90, size = 16, face = "bold"),
+        bottom = text_grob("Assay number", size = 16, face = "bold"))
 
-behaviour <- annotate_figure(behaviour, left=text_grob("Adjusted assay behaviours", rot=90, size = 18, face = "bold"))
+print(behav)
 
-ggsave(filename = "adjusted behaviour plots.jpeg", behaviour, width=300, height= 300, units = "mm")
+ggsave(filename = "adjusted behaviour plots.jpeg", behav, width=300, height= 300, units = "mm")
 
 ```
-
 
 #Prep data for coefficient left_join 
 ```{r}
@@ -1079,13 +1119,16 @@ view(data2)
 
 quoll2 <- data2 %>%
   filter(!assay_number %in% 1) %>%
-  mutate(study_site = if_else(study_site == "MFWS", "Mulligans Flat", study_site))
+  select(-assay_date, -initial_repeat_assay, -trap_location, -snout, 
+                     -haunches, -time_to_emerge_s,-arena_entry, -trap_session_date, 
+                     -trap_session_morning, -first_light,
+                     -ssr, -process_start, -process_end, -pouch, -teeth_colour, -teeth_sharpness,
+                     -teeth_shine)
 
-view(quoll2)
+ view(quoll2)
+ write.csv(quoll2, "quoll2.csv")
 
 ```
-
-
 
 #Extracting adjusted values for intercept (personality) and  slope (plasticity) over both assays
 ```{r}
@@ -1093,32 +1136,33 @@ view(quoll2)
 # Create a list of dependent behavioural variables
 dependent <- c("bait_eaten_g","food_o","food_d","grooming_o",
                "grooming_d","jump_climb_o","jump_climb_d","legs_o", "legs_d",
-               "moving_o", "moving_d", "perch_o", "perch_d", "sumsect_o", "totalact_o")
+               "moving_o", "moving_d", "perch_o", "perch_d", "sumsect_o", "totalact_o", 
+               "emerge_max", "stress_in_trap", "stress_in_bag", "stress_on_table")
 
 # Define the levels in an object
 quolls <- levels(factor(data2$quoll_code))
 
 # Create a blank dataframe with four columns
-coefficients <- data.frame(individual=NULL, intercept=NULL, 
+coefficients <- data.frame(quoll_code=NULL, intercept=NULL, 
                            slope=NULL, variable=NULL)
 
 # Loop to extract the intercept and slope of each behavioural response
 for(v in 1:NROW(dependent)) {
   for(i in 1:NROW(quolls)){
-    individual <- quolls[i]
+    quoll_code <- quolls[i]
     variable <- dependent[v]
     mod <- lm(eval(as.name(paste0(variable))) ~ 
                 assay_number + temp + moon_phase + time_assaytolight + time_processtoassay, 
-              data=subset(data2, individual==quolls[i]))
+              data=subset(data2, quoll_code==quolls[i]))
     i <- coef(mod)[1]
     s <- coef(mod)[2]
-    results <- data.frame(cbind(individual, i, s, variable))
+    results <- data.frame(cbind(quoll_code, i, s, variable))
     coefficients <- rbind(coefficients, results)
   }
 }
 
 # Convert the df to wide format
-coefficients <- reshape(coefficients, idvar="individual", 
+coefficients <- reshape(coefficients, idvar="quoll_code", 
                         timevar="variable", direction="wide")
 
 # Define names of the coefficients
@@ -1127,19 +1171,174 @@ names(coefficients) <- gsub("\\.", "_", names(coefficients))
 # Remove duplicated coefficients
 coefficients <- coefficients[ , !duplicated(colnames(coefficients))]
 
-view(coefficients)
+# Check structure of coefficients
+str(coefficients)
+
+#If they are being read as characters, change to numeric 
+cols_to_convert <- setdiff(names(coefficients), "quoll_code")
+coefficients[cols_to_convert] <- lapply(coefficients[cols_to_convert], as.numeric)
 
 # Join behavioural df with post-release df
-post <- read_excel(raw_data, sheet="post-release performance") %>%
-  left_join(coefficients, by="quoll_code")
+ppdata <- left_join(quoll2, coefficients, by="quoll_code", "session")
 
 # Remove duplicated column names
-post <- post[ , !duplicated(colnames(post))]
+ppdata <- ppdata[ , !duplicated(colnames(ppdata))]
+
+#view(ppdata)
+#str(ppdata)
 
 # Write to csv file
-write_csv(post, "processed data/post-release performance.csv")
+write_csv(ppdata, "pp data - intercept and slope data.csv")
+
+#str(ppdata)
 
 ```
+
+# Analyse behaviour indicators for personality and plasticity 
+
+  1. Test the influence of fixed (e.g., site) and random effects (e.g., arena) on behavioural responses (e.g., food interaction duration) using the `lmer()` function.
+  2. If multiple fixed effects produce significance, perform model selection using the dredge() function to determine which fixed effects are within delta 2 AICc.
+
+#Testing behaviour intercept against independent variables using GLMMs
+```{r}
+names(ppdata)
+
+mod <- lmer(i_bait_eaten_g ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_food_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_food_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_grooming_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_grooming_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_jump_climb_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_jump_climb_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_legs_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_legs_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_moving_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_moving_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_perch_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_perch_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_stress_in_bag ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_stress_in_trap ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_stress_on_table ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_sumsect_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_totalact_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+summary(mod)
+
+```
+
+#Tables: Summaries of GLMMs using kableExtra
+```{r}
+tidy_results <- tidy(mod) %>%
+  mutate_if(is.numeric, ~round(., digits = 3))
+
+table <- tidy_results %>%
+  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Table stress rating intercept", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 12)
+table
+
+table <- tidy_results %>%
+    mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Total activity occurrences <em>(n)</em> intercept", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 12)
+table
+
+
+```
+
+#AICc model selection test (🚩 this goes at the end of your independent variable modelling).
+```{r}
+
+COPIED FROM 1ST ASSAY - REWRITE FOR 2 
+
+mod_g_site <- lmer(grooming_o ~ study_site + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_g_temp <- lmer(grooming_o ~ temp + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+
+mod_e_site <- lmer(emerge_max ~ study_site + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_e_temp <- lmer(emerge_max ~ temp + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_e_head <- lmer(emerge_max ~ head_length_mm + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+
+mod_j_cond <- lmer(jump_climb_d ~ condition + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_j_morph <- lmer(jump_climb_d ~ morph + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+
+mod_p_moon <- lmer(perch_d ~ moon_phase + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_p_temp <- lmer(perch_d ~ temp + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+
+# Conduct model selection using AICc threshold
+dredge(mod1, rank = "AICc")
+
+models <- list(mod_p_moon, mod_p_temp)
+model.names <- c("Perching moon phase", "Perching temperature")
+aictab(cand.set = models, modnames = model.names)
+
+summary(mod)
+
+```
+
 
 
 
@@ -1199,79 +1398,26 @@ print(plot)
 
 ```{r}
 
-#Finding out the locations of the relevant columns 
-colfoodo <- which(colnames(megadata) == "food_o")
-print(colfoodo) #22
-restingo <- which(colnames(megadata) == "resting_o")
-print(restingo) #28
-colsection4o <- which(colnames(megadata) == "section_4_o")
-print(colsection4o) #32
-colfoodd <- which(colnames(megadata) == "food_d")
-print(colfoodd) #33
-restingd <- which(colnames(megadata) == "resting_d")
-print(restingd) #39
-colsection4d <- which(colnames(megadata) == "section_4_d")
-print(colsection4d) #43
 
-#Selecting the appropriate columns for each correlation matrix
-#all occurrence and duration columns including sections
-cor_o_d <- megadata %>% 
-  dplyr::select(22:43)
+cor <- ppdata %>% 
+  dplyr::select(age_n, body_weight_kg, cond_n, pes_mean_mm, head_length_mm)
 
-#all occurrence columns including sections
-cor_o <- megadata %>%
-  dplyr::select(22:32)
-
-#all duration data including sections 
-cor_d <- megadata %>%
-  dplyr::select(33:43)
-
-#all duration and occurrence data not including sections
-cor_od_act <- megadata %>%
-  dplyr::select(22:28, 33:39)
-
-#all occurrence data not including sections
-cor_o_act <- megadata %>%
-  dplyr::select(22:28)
-
-#all duration data not including sections
-cor_d_act <- megadata %>%
-  dplyr::select(33:39)
-
-#Running the correlations tests for both, then occurrences, then duration, with sections
-correlation_od <- cor(cor_o_d)
-correlation_o <- cor(cor_o)
-correlation_d <- cor(cor_d)
-
-#Running the correlations for both, then occurrences v duration, then occurrences, then duration, without sections
-correlation_od_act <- cor(cor_od_act)
-correlation_ovd_act <- cor(cor_d_act,cor_o_act)
-correlation_occ_act <- cor(cor_o_act)
-correlation_dur_act <- cor(cor_d_act)
+#Running the correlation test
+cor <- cor(cor)
+view(cor)
 
 #Saving them to a .csv file
-write.csv(correlation_od, "correlation matrix occ dur all sessions.csv")
-write.csv(correlation_o, "correlation matrix occ all sessions.csv")
-write.csv(correlation_d, "correlation matrix dur all sessions.csv")
-write.csv(correlation_ovd_act, "correlation matrix activity occ vs dur all sessions.csv")
-write.csv(correlation_occ_act, "correlation matrix activity occ all sessions.csv")
-write.csv(correlation_dur_act, "correlation matrix activity dur all sessions.csv")
+write.csv(cor, "ppdata - correlation matrix.csv")
 
 #Creating and printing correlation matrix .jpgs which colour code the correlations
 
 #Correlation of occurrences and duration with sections
-jpeg(height=2000, width=2000, file="correlation matrix od all sessions.jpeg", type="cairo")
-corrplot(correlation_od, method="color", type="upper", #creates a correlation matrix
+jpeg(height=2000, width=2000, file="pp data corplot.jpeg", type="cairo")
+corrplot(cor, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 
-#Correlations of duration and occurrences without sections
-jpeg(height=2000, width=2000, file="correlation matrix occdur act all sessions.jpeg", type="cairo")
-corrplot(correlation_od_act, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-dev.off()
 
 ```
 
@@ -1329,162 +1475,6 @@ sessionInfo()
 
 
 #***OLD CODE***
-
-# Mutate data: accounting for environmental variables for first assays
-```{r}
-
-#Mutating the environmental variables in the 1st assay df, including animals 53328 and 87DE0
-names(data1)
-
-data1_mutate <- data1 %>%
-  mutate_at(vars(5, 46, 67, 68), ~ as.vector(scale(.)))
-
-view(data1_mutate)
-
-write.csv(data1_mutate, "data 1st assay mutated.csv")
-
-```
-
-
-
-# Step 1 extract predicted values 
-Of behaviour with accounted-for environmental variables
-```{r}
-
-mod <- glm(food_o ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$foodo_pred <- predict(mod, type = "response")
-             
-mod <- glm(food_d ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$foodd_pred <- predict(mod, type = "response")
-             
-mod <- glm(grooming_o ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$groomo_pred <- predict(mod, type = "response")
-             
-mod <- glm(grooming_d ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$groomd_pred <- predict(mod, type = "response")
-             
-mod <- glm(jump_climb_o ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$jumpo_pred <- predict(mod, type = "response")
-             
-mod <- glm(jump_climb_d ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$jumpd_pred <- predict(mod, type = "response")
-
-mod <- glm(legs_d ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$legsd_pred <- predict(mod, type = "response")
-             
-mod <- glm(legs_o ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$legso_pred <- predict(mod, type = "response")
-
-mod <- glm(moving_d ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$moved_pred <- predict(mod, type = "response")
-             
-mod <- glm(moving_o ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$moveo_pred <- predict(mod, type = "response")
-
-mod <- glm(perch_d ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$perchd_pred <- predict(mod, type = "response")
-             
-mod <- glm(perch_o ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$percho_pred <- predict(mod, type = "response")
-
-mod <- glm(bait_eaten_g ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$bait_pred <- predict(mod, type = "response")
- 
-mod <- glm(sumsect_o ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$sumsecto_pred <- predict(mod, type = "response")            
-             
-mod <- glm(totalact_o ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-             data1_mutate)
-             data1_mutate$totalacto_pred <- predict(mod, type = "response")
-             
-mod <- glm(stress_in_trap ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-            data1_mutate)
-             data1_mutate$traps_pred <- predict(mod, type = "response")
-
-mod <- glm(stress_in_bag ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-            data1_mutate)
-             data1_mutate$bags_pred <- predict(mod, type = "response")
-  
-mod <- glm(stress_on_table ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-            data1_mutate)
-             data1_mutate$tables_pred <- predict(mod, type = "response")
-             
-mod <- glm(emerge_max ~ temp + moon_phase + time_assaytolight +  
-           time_processtoassay, 
-           family=gaussian, data=
-            data1_mutate)
-             data1_mutate$emerge_pred <- predict(mod, type = "response")
-
-#view(data1_mutate)
-names(data1_mutate)
-
-```
-
-
-#Create df of predicted variables 
-Accounting for environmental heterogeneity for first assays
-```{r}
-
-data1_pred <- data1_mutate %>%
-              select(-food_o, -food_d, -grooming_o, -grooming_d, -jump_climb_o, -jump_climb_d,
-                     -legs_o, -legs_d, -moving_o, -moving_d, -perch_d, -perch_o, -resting_o,
-                     -resting_d, -bait_eaten_g, -sumsect_o, -totalact_o,
-                     -stress_in_trap, -stress_in_bag, -stress_on_table, -time_to_emerge_s, -emerge_max)
-
-write.csv(data1_pred,"first assay predicted variables.csv")
-
-```
-
 
 Running basic models to get the feel of the data
 ```{r}
