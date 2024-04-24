@@ -41,16 +41,16 @@ pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,lmerTest, MuMIn,
                readr, sf, readxl, rstudioapi, tidyverse, viridis, beepr, corrplot,
                broom, sjPlot, sjmisc, sjlabelled, knitr)
 
-install.packages("kableExtra")
+#install.packages("kableExtra")
 library(kableExtra)
 
-install.packages("broom.mixed")
+#install.packages("broom.mixed")
 library(broom.mixed)
 
-install.packages("AICcmodavg")
+#install.packages("AICcmodavg")
 library(AICcmodavg)
 
-install.packages("glmmTMB")
+#install.packages("glmmTMB")
 library(glmmTMB)
 
 ```
@@ -224,14 +224,42 @@ data <- data %>%
 
 ```
 
-# ** SINGLE ASSAYS
+
+# Correlation analysis
+```{r}
+
+cor <- data  %>% 
+  dplyr::select(age_n, body_weight_kg, cond_n, pes_mean_mm, head_length_mm)
+
+#Running the correlation test
+cor <- cor(cor)
+view(cor)
+
+#Saving them to a .csv file
+write.csv(cor, "data - morphometric correlation matrix.csv")
+
+#Creating and printing correlation matrix .jpgs which colour code the correlations
+col_names <- c("Age estimate", "Body weight (kg)", "Condition", "Pes length (mm)", "Head length (mm)")
+row_names <- c("Age estimate", "Body weight (kg)", "Condition", "Pes length (mm)", "Head length (mm)")
+colnames(cor) <- col_names
+rownames(cor) <- row_names
+
+#Correlation of occurrences and duration with sections
+jpeg(height=2000, width=2000, file="data corplot.jpeg", type="cairo")
+corrplot(cor, method="color", type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+         tl.col="black", tl.srt=45, addCoef.col="black")
+dev.off()
+
+```
+
+#** SINGLE ASSAYS
 
 # Subsetting data to include first assays only 
-For 'personality' / 'tendency' analysis
+For morphometric and demographic analysis, and 'static behaviour' analysis
 ```{r}
 
 #view(data)
-
 data1 <- data %>%
     filter(assay_number !=2)
 view(data1)
@@ -239,6 +267,147 @@ view(data1)
 write.csv(data1, "first assay data raw.csv")
 
 ```
+
+#** DEMOGRAPHIC AND MORPHORMETRIC analysis
+```{r}
+
+data1$site01 <- ifelse(data1$study_site == "Goorooyarroo", 1, 0)
+
+mod <- glm(site01 ~ sex, data=data1, family = binomial)
+mod <- glm(site01 ~ body_weight_kg, data=data1, family = binomial)
+mod <- glm(site01 ~ cond_n, data=data1, family = binomial)
+mod <- glm(site01 ~ age_n, data=data1, family = binomial)
+mod <- glm(site01 ~ pes_mean_mm, data=data1, family = binomial)
+mod <- glm(site01 ~ head_length_mm, data=data1, family = binomial)
+
+
+mod <- glm(site01 ~ sex + body_weight_kg + cond_n + age_n, data=data1, family=binomial)
+
+summary(mod)
+
+```
+
+
+#Tables with kableExtra
+```{r}
+tidy_results <- tidy(mod) %>%
+  mutate_if(is.numeric, ~round(., digits = 3))
+
+table <- tidy_results %>%
+  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Study site", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 15)
+table
+
+```
+
+#Plots for morphometric and demographic analysis
+```{r}
+
+
+pes_plot  <- ggplot(data=data1, aes(x = study_site, y = pes_mean_mm, fill=study_site)) + 
+ geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("") + ylab("Pes mean length (mm)") + labs("") 
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
+print(pes_plot)
+ggsave(filename = "morpho - pes v study site.jpeg", pes_plot, width=200, height= 150, units = "mm")
+
+data1$condition <- factor(data1$condition, levels = c("Poor", "Fair", "Good", "Excellent"))
+
+cond_plot  <- ggplot(data=data1, aes(x = study_site, fill=condition)) + 
+ geom_bar(position="dodge") +
+  scale_fill_manual (values = c("#3f4288", "#25798F", "#1caa85","#7BD151"), name = "Body condition score") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  scale_y_continuous(breaks=seq(0,20,5),labels=seq(0,20,5), limits=c(0,20)) +
+  xlab("Study site") + ylab("Number of eastern quolls") + labs("") 
+
+print(cond_plot)
+ggsave(filename = "morpho - cond v study site", cond_plot, width=200, height= 150, units = "mm")
+
+
+cond_plot  <- ggplot(data=data1, aes(x = study_site, fill=condition)) + 
+ geom_bar(position="dodge") +
+  scale_fill_manual (values = c("#3f4288", "#25798F", "#1caa85","#7BD151"), name = "Body condition score") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  scale_y_continuous(breaks=seq(0,20,5),labels=seq(0,20,5), limits=c(0,20)) +
+  xlab("Study site") + ylab("Number of eastern quolls") + labs("") 
+
+print(cond_plot)
+ggsave(filename = "morpho - cond v study site", cond_plot, width=200, height= 150, units = "mm")
+
+
+
+head_plot  <- ggplot(data=data1, aes(x = study_site, y = head_length_mm, fill=study_site)) + 
+ geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("") + ylab("Head length (mm)") + labs("") 
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
+print(head_plot)
+ggsave(filename = "morpho - head v study site", head_plot, width=200, height= 150, units = "mm")
+
+
+kg_plot  <- ggplot(data=data1, aes(x = study_site, y = body_weight_kg, fill=study_site)) + 
+ geom_boxplot() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("") + ylab("Body weight (kg)") + labs("") 
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
+print(kg_plot)
+ggsave(filename = "morpho - kg v study site", kg_plot, width=200, height= 150, units = "mm")
+
+
+```
+
+```{r}
+
+demo <- ggarrange(pes_plot, head_plot, kg_plot, cond_plot, ncol = 2, nrow = 2,
+  font.label = list(
+    size = 6,
+    face = "bold",
+    color = "black",
+    label.x = 0.89,
+    label.y = 0.99,
+    hjust = -0.1,
+    vjust = 1.5
+  )
+)
+
+demo <- annotate_figure(demo, 
+        left = text_grob("Morphometric and demographic variables", rot=90, size = 16, face = "bold"),
+        bottom = text_grob("Study site", size = 16, face = "bold"))
+
+print(demo)
+
+ggsave(filename = "site vs demographic plots.jpeg", demo, width=300, height= 300, units = "mm")
+
+```
+
+
 
 # Testing influence of environmental variables on arena behaviour
 ```{r}
@@ -269,6 +438,27 @@ emerge <- glm(emerge_max ~ temp + moon_phase + time_assaytolight + time_processt
 trapstress <- glm(stress_in_trap ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 bagstress <- glm(stress_in_bag ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 tablestress <- glm(stress_on_table ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
+
+summary(foodd)
+summary(foodo)
+summary(groomd)
+summary(groomo)
+summary(jumpd)
+summary(jumpo)
+summary(legsd)
+summary(legso)
+summary(moved)
+summary(moveo)
+summary(perchd)
+summary(percho)
+summary(bait)
+summary(sumsecto)
+summary(totalacto)
+summary(emerge)
+summary(trapstress)
+summary(bagstress)
+summary(tablestress)
+
 
 ```
 
@@ -302,8 +492,7 @@ table
 # Testing behaviour in GLMMs including environmental variables as competing factors in fixed effects model.
 ```{r}
 
-mod <- lmer(bait_eaten_g ~ study_site + sex + age_n + cond_n +
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(bait_eaten_g ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -316,9 +505,7 @@ table <- tidy_results %>%
 table
 
 
-mod <- lmer(emerge_max ~ study_site + sex + age_n + cond_n +
-              body_weight_kg + pes_mean_mm + head_length_mm + temp + (1|arena), 
-            data=data1, na.action = "na.fail")
+mod <- lmer(emerge_max ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
@@ -329,8 +516,7 @@ table <- tidy_results %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
 
-mod <- lmer(food_d ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(food_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -342,8 +528,7 @@ table <- tidy_results %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
 
-mod <- lmer(food_o ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(food_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -356,8 +541,7 @@ table <- tidy_results %>%
 table 
 
 
-mod <- lmer(grooming_d ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + temp + (1|arena), 
+mod <- lmer(grooming_d ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -370,7 +554,7 @@ table <- tidy_results %>%
 table 
 
 mod <- lmer(grooming_o ~ study_site + sex + age_n + cond_n +
-              body_weight_kg + pes_mean_mm + head_length_mm + temp + (1|arena), 
+              body_weight_kg + temp + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -383,8 +567,7 @@ table <- tidy_results %>%
 table 
 
 
-mod <- lmer(jump_climb_d ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(jump_climb_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -397,8 +580,7 @@ table <- tidy_results %>%
 table 
 
 
-mod <- lmer(jump_climb_o ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(jump_climb_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -410,8 +592,7 @@ table <- tidy_results %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table 
 
-mod <- lmer(legs_d ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(legs_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -424,8 +605,7 @@ table <- tidy_results %>%
 table 
 
 
-mod <- lmer(legs_o ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(legs_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -438,8 +618,7 @@ table <- tidy_results %>%
 table 
 
 
-mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + time_assaytolight
+mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight
             + (1|arena), 
             data=data1, na.action = "na.fail")
 
@@ -453,8 +632,7 @@ table <- tidy_results %>%
 table 
 
 
-mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + time_assaytolight
+mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight
             + (1|arena), 
             data=data1, na.action = "na.fail")
 
@@ -467,8 +645,7 @@ table <- tidy_results %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table 
 
-mod <- lmer(perch_d ~ study_site + sex + age_n + cond_n +
-              body_weight_kg  + pes_mean_mm + head_length_mm + temp + moon_phase
+mod <- lmer(perch_d ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + moon_phase
             + time_assaytolight + time_processtoassay
             + (1|arena), 
             data=data1, na.action = "na.fail")
@@ -482,8 +659,7 @@ table <- tidy_results %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table 
 
-mod <- lmer(perch_o ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(perch_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -495,8 +671,7 @@ table <- tidy_results %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
 
-mod <- lmer(stress_in_bag ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(stress_in_bag ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -508,8 +683,7 @@ table <- tidy_results %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
 
-mod <- lmer(stress_in_trap ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(stress_in_trap ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -522,10 +696,8 @@ table <- tidy_results %>%
 table
 
 
-mod <- lmer(stress_on_table ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(stress_on_table ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
-
 
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
@@ -537,8 +709,7 @@ table <- tidy_results %>%
 table
 
 
-mod <- lmer(sumsect_o ~ study_site + sex + age_n + cond_n +
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+mod <- lmer(sumsect_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -551,7 +722,7 @@ table <- tidy_results %>%
 table
 
 mod <- lmer(totalact_o ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + pes_mean_mm + head_length_mm + (1|arena), 
+              body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 tidy_results <- tidy(mod) %>%
@@ -566,24 +737,10 @@ table
 
 ```
 
-#AICc model selection test (🚩 this goes at the end of your independent variable modelling).
+#AICc model selection test
 ```{r}
 
 control_ml <- lmerControl(optimizer = "Nelder_Mead")
-
-mod_e_site <- lmer(emerge_max ~ study_site + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_e_age  <- lmer(emerge_max ~ age_n + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_e_con <- lmer(emerge_max ~ cond_n + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_e_head <- lmer(emerge_max ~ head_length_mm + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_e_temp <- lmer(emerge_max ~ temp + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-models <- list(mod_e_site, mod_e_age, mod_e_con, mod_e_head, mod_e_temp)
-model.names <- c("Site", "Age", "Condition", "Head length", "Temp")
-aictab(cand.set = models, modnames = model.names)
 
 
 mod_gd_site <- lmer(grooming_d ~ study_site + (1|arena), 
@@ -603,77 +760,48 @@ models <- list(mod_go_site, mod_go_temp)
 model.names <- c("Site", "Temp")
 aictab(cand.set = models, modnames = model.names)
 
-
-mod_jo_sex <- lmer(jump_climb_o ~ sex + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_jo_pes <- lmer(jump_climb_o ~ pes_mean_mm + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-models <- list(mod_jo_sex, mod_jo_pes)
-model.names <- c("Sex", "Pes mean length")
-aictab(cand.set = models, modnames = model.names)
-
-
-# Conduct model selection using AICc threshold
-dredge(mod1, rank = "AICc")
-
-models <- list(mod_p_moon, mod_p_temp)
-model.names <- c("Perching moon phase", "Perching temperature")
-aictab(cand.set = models, modnames = model.names)
-
 ```
 
 #Plots: Significant results for first assays
 ```{r}
 
-#Belinda's  Preliminary plot
-#ggplot(data=data1_pred, aes(x=study_site, y=bait_pred, fill=study_site)) +geom_boxplot()
-
-#groomd_plot <- ggplot(data=data1, aes(x = temp, y = grooming_d)) + 
- # geom_smooth() +
-  #scale_fill_manual (values = c("#25798F","#7BD151")) +
-  #facet_wrap(~study_site) + 
-  #theme_minimal() +
-  #theme(legend.position = "none", 
-        #panel.grid = element_blank(),
-        #axis.line.x = element_line(color = "black"),
-        #axis.line.y = element_line(color = "black")) + 
- # scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  #xlab("Temperature") + ylab("Grooming duration (s)") + labs("")
-    #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-#print(groomd_plot)
-#ggsave(filename = "study site - food dur.jpeg", foodd_plot, width=200, height= 150, units = "mm")
-
-#Plot with formatting
-#Grooming 
-
-ggplot(data1, aes(x = temp)) +
-  geom_smooth(aes(y = grooming_o), method = "auto", color = "blue") +
-  geom_smooth(aes(y = grooming_d), method = "auto", color = "red") +
-  labs(x = "Temperature", y = "Grooming") +
-  scale_color_manual(name = "Variable",
-                     values = c("grooming_o" = "blue", "grooming_d" = "red")) +
-  theme_minimal()
-
-groomd_plot <- ggplot(data=data1, aes(x = temp, y = grooming_d)) + 
-  geom_smooth() +
-  #scale_fill_manual (values = c("#25798F","#7BD151")) +
-  #facet_wrap(~study_site) + 
+#Grooming duration v study site plot
+groomd_site <- ggplot(data=data1, aes(x = study_site, y = grooming_d, fill=study_site)) + 
+ geom_violin() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
- # scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Temperature") + ylab("Grooming duration (s)") + labs("")
-    #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-  print(groomd_plot)
-#ggsave(filename = "study site - food dur.jpeg", foodd_plot, width=200, height= 150, units = "mm")
+  scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Study site") + ylab("Grooming duration (s)") + labs("") 
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
+print(groomd_sitet)
+ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_site, width=200, height= 150, units = "mm")
 
-groomo_plot <- ggplot(data=data1, aes(x = study_site, y = grooming_o, 
-                        fill = study_site)) + 
-  geom_boxplot() +
+
+#Grooming duration v temp plot
+groomd_temp <- ggplot(data=data1, aes(x = temp, y = grooming_d, fill=temp)) + 
+ geom_smooth() +
   scale_fill_manual (values = c("#25798F","#7BD151")) +
-  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Temperature") + ylab("Grooming duration (s)") + labs("") 
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
+print(groomd_temp)
+ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_plot, width=200, height= 150, units = "mm")
+
+
+#Grooming occurrences v study site plot
+groomo_site <- ggplot(data=data1, aes(x = study_site, y = grooming_o, 
+                        fill = study_site)) + 
+  geom_violin() +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -681,123 +809,29 @@ groomo_plot <- ggplot(data=data1, aes(x = study_site, y = grooming_o,
         axis.line.y = element_line(color = "black")) + 
   scale_y_continuous(breaks=seq(0,8,2),labels=seq(0,8,2), limits=c(0,8)) +
   xlab("Study site") + ylab(expression(paste("Grooming occurrences ", italic(" (n)")))) + labs("")
-  #annotate("text", x = "Mulligans Flat", y = 160, label = parse(text = "bold('b')"), size = 5, hjust = -5)
-  
-print(groomo_plot)
-#ggsave(filename = "study site - move occ.jpeg", moveo_plot, width=200, height= 150, units = "mm")
+print(groomo_site)
+ggsave(filename = "1st assay - study site v grooming occ.jpeg", groomo_site, width=200, height= 150, units = "mm")
 
-
-
-#Latency to emerge
-
-emerge_plot <- ggplot(data=data1, aes(x = study_site, y = emerge_max, 
-                        fill = study_site)) + 
-  geom_boxplot() +
+#Grooming occurrences v temp plot
+groomd_temp <- ggplot(data=data1, aes(x = temp, y = grooming_o)) + 
+ geom_smooth() +
   scale_fill_manual (values = c("#25798F","#7BD151")) +
-  #facet_wrap(~study_site) + 
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,8,2),labels=seq(0,8,2), limits=c(0,8)) +
-  xlab("Study site") + ylab(expression(paste("Latency to emerge ", italic(" (s)")))) + labs("")
-  #annotate("text", x = "Mulligans Flat", y = 160, label = parse(text = "bold('b')"), size = 5, hjust = -5)
-  
-print(emerge_plot)
-#ggsave(filename = "study site - move occ.jpeg", moveo_plot, width=200, height= 150, units = "mm")
-
-
-emerge_temp_plot <- ggplot(data=data1, aes(x = emerge_max, y = temp)) + 
-  geom_smooth() +
-  #scale_fill_manual (values = c("#25798F","#7BD151")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
- # scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Latency to emerge") + ylab("Temperature") + labs("")
-    #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-  print(emerge_temp_plot)
-#ggsave(filename = "study site - food dur.jpeg", foodd_plot, width=200, height= 150, units = "mm")
-
-
-emerge_head_plot <- ggplot(data=data1, aes(x = emerge_max, y = head_length_mm)) + 
-  geom_smooth() +
-  #scale_fill_manual (values = c("#25798F","#7BD151")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
- # scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Latency to emerge") + ylab("Head length mm") + labs("")
-    #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-  print(emerge_head_plot)
-#ggsave(filename = "study site - food dur.jpeg", foodd_plot, width=200, height= 150, units = "mm")
-  
-
-#Jumping and climbing duration 
-  
-jump_cond_plot <- ggplot(data=data1, aes(x = condition, y = jump_climb_d, 
-                        fill = condition)) + 
-  geom_boxplot() +
-  scale_fill_manual (values = c("#25798F","#7BD151", "#420053")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,8,2),labels=seq(0,8,2), limits=c(0,8)) +
-  xlab("Condition") + ylab(expression(paste("Jumping and climbing duration ", italic(" (s)")))) + labs("")
-  #annotate("text", x = "Mulligans Flat", y = 160, label = parse(text = "bold('b')"), size = 5, hjust = -5)
-  
-print(jump_cond_plot)
-#ggsave(filename = "study site - move occ.jpeg", moveo_plot, width=200, height= 150, units = "mm")
-  
-
-jump_morph_plot <- ggplot(data=data1, aes(x = morph, y = jump_climb_d, 
-                        fill = morph)) + 
-  geom_boxplot() +
-  scale_fill_manual (values = c("#7BD151", "#420053")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,8,2),labels=seq(0,8,2), limits=c(0,8)) +
-  xlab("Morph") + ylab(expression(paste("Jumping and climbing duration ", italic(" (s)")))) + labs("")
-  #annotate("text", x = "Mulligans Flat", y = 160, label = parse(text = "bold('b')"), size = 5, hjust = -5)
-  
-print(jump_morph_plot)
-#ggsave(filename = "study site - move occ.jpeg", moveo_plot, width=200, height= 150, units = "mm")
-  
-```
-
-#Arranging jpegs into one plot
-```{r}
-
-behaviour <- ggarrange(moved_plot, moveo_plot, jumpo_plot, legsd_plot, legso_plot, percho_plot, groomd_plot, foodd_plot, bait_plot, font.label=list(size=6, face="bold", color ="black",
-ncol=3, nrow=3, #h=align, arranging matrix
-label.x=0.89, label.y=0.99, hjust=-0.1, vjust=1.5))
-
-behaviour <- annotate_figure(behaviour, left=text_grob("Adjusted assay behaviours", rot=90, size = 18, face = "bold"))
-
-ggsave(filename = "adjusted behaviour plots.jpeg", behaviour, width=300, height= 300, units = "mm")
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Temperature") + ylab(expression(paste("Grooming occurrences ", italic(" (n)")))) + labs("") 
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
+print(groomd_temp)
+ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_plot, width=200, height= 150, units = "mm")
 
 ```
-
 
 ## **REPEATED ASSAYS**
-
 #Subsetting data to animals with repeated assays
 ```{r}
-
 values_to_exclude <- c("524E3", "53221", "53511", "53512", "53515", "53526", "563A6", "56ABE", "56EB2", "5FC08", "6D409" , "6D53F" , "6E990" , "71A4D" , "71B69" , "86E19" , "86FFC" , "87F61", "BCA09")
 
 data2 <- data %>%
@@ -1103,8 +1137,8 @@ ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p,
   ylab(expression(paste("Latency to emerge (s)")))+
   annotate("text", x = "2", y =50, label = "a", size = 5, hjust = -3) + 
   labs("") 
-#print(ed_plot)
-#ggsave(filename = "assay number - emerge - site.jpeg", ed_plot, width=200, height= 150, units = "mm")
+print(ed_plot)
+ggsave(filename = "assay number - emerge - site.jpeg", ed_plot, width=200, height= 150, units = "mm")
 
 
 fo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = foodo_p, 
@@ -1140,6 +1174,10 @@ jd_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p,
 #print(jd_plot)
 #ggsave(filename = "assay number - jump dur - site.jpeg", jd_plot, width=200, height= 150, units = "mm")
 
+  
+assayplot1 <- ggarrange(ed_plot, fo_plot, jd_plot, ncol = 3)
+print(assayplot1)  
+  
 
 jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p, 
                         fill = assay_number)) + 
@@ -1192,6 +1230,10 @@ mo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moveo_p,
 #ggsave(filename = "assay number - move occ - site.jpeg", mo_plot, width=200, height= 150, units = "mm")
 
 
+assayplot2 <- ggarrange(jo_plot, md_plot, mo_plot, ncol = 3)
+print(assayplot2) 
+
+
 sum_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = sumsecto_p, 
                         fill = assay_number)) + 
   geom_boxplot() +
@@ -1242,6 +1284,8 @@ lo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = legso_p,
 #print(lo_plot)
 #ggsave(filename = "assay number - legs occ - site.jpeg", lo_plot, width=200, height= 150, units = "mm")
 
+assayplot3 <- ggarrange(sum_plot, act_plot, lo_plot, ncol = 3)
+print(assayplot3) 
 
 #po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p, 
                         #fill = assay_number)) + 
@@ -1281,13 +1325,12 @@ print(po_plot)
 #Arranging jpegs into one plot
 ```{r}
 
-behav <- ggarrange(
-  ed_plot, fo_plot, jd_plot, jo_plot, md_plot, mo_plot, sum_plot, act_plot, lo_plot, po_plot,
+behav <- ggarrange(ed_plot, fo_plot, jd_plot, jo_plot, md_plot, mo_plot,
+  sum_plot, act_plot, lo_plot, po_plot, ncol = 2, nrow = 5,
   font.label = list(
     size = 6,
     face = "bold",
     color = "black",
-    ncol = 2,
     label.x = 0.89,
     label.y = 0.99,
     hjust = -0.1,
@@ -1301,7 +1344,7 @@ behav <- annotate_figure(behav,
 
 print(behav)
 
-ggsave(filename = "adjusted behaviour plots.jpeg", behav, width=300, height= 300, units = "mm")
+ggsave(filename = "adjusted behaviour plots.jpeg", behav, width=300, height= 500, units = "mm")
 
 ```
 
@@ -1473,7 +1516,17 @@ mod <- lmer(i_totalact_o ~ sex + study_site + age_n +
               body_weight_kg + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-summary(mod)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
 
 ```
 
@@ -1792,6 +1845,10 @@ aictab(cand.set = models, modnames = model.names)
 
 
 
+
+
+
+
 #Activity over time - prepping data
 ```{r}
 
@@ -1844,32 +1901,6 @@ plot <- ggplot(bin_data, aes(x = minute_integer, y = moving_occ_binned,
 print(plot)
 ```
 
-# Correlation analysis
-
-```{r}
-
-
-cor <- ppdata %>% 
-  dplyr::select(age_n, body_weight_kg, cond_n, pes_mean_mm, head_length_mm)
-
-#Running the correlation test
-cor <- cor(cor)
-view(cor)
-
-#Saving them to a .csv file
-write.csv(cor, "ppdata - correlation matrix.csv")
-
-#Creating and printing correlation matrix .jpgs which colour code the correlations
-
-#Correlation of occurrences and duration with sections
-jpeg(height=2000, width=2000, file="pp data corplot.jpeg", type="cairo")
-corrplot(cor, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
-         tl.col="black", tl.srt=45, addCoef.col="black")
-dev.off()
-
-
-```
 
 ## Map
 
