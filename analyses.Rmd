@@ -72,36 +72,25 @@ raw <- read_excel(raw_data, sheet="Assays", na="N/A") %>%
 #Read in the data for all data sheets in excel 
 meta <- read_excel(raw_data, sheet="Metadata", na="N/A") %>% 
   clean_names()
-#view(meta)
-#names(meta)
 
 quoll <- read_excel(raw_data, sheet="Quoll", na="N/A") %>%
   clean_names()
-#view(quoll)
-#names(quoll)
 
 capture <- read_excel(raw_data, sheet="Captures") %>%
   clean_names()
-#view(capture)
-#names(capture)
 
 session <- read_excel(raw_data, sheet="Sessions") %>%
     clean_names()
-#view(session)
-#names(session)
+
 
 #bin <- read_excel(raw_data, sheet="Binned assays", na="N/A")%>%
  # clean_names()
-#view(bin)
 
 #sites <- read_excel(raw_data, sheet="Sites") %>%
   #clean_names()
-#view(sites)
 
 #trap_eff <- read_excel(raw_data, sheet="Trap effectiveness") %>%
  #clean_names()
-#view(trap_eff)
-
 
 #Clean up behaviour data from long to wide format 
 occ <- pivot_wider(data = raw, 
@@ -122,8 +111,6 @@ occ <- pivot_wider(data = raw,
          grooming_o = "grooming", 
          resting_o = "resting", 
          perch_o = "perch")
-#view(occ)
-
 
 raw <- read_excel(raw_data, sheet="Assays", , na="N/A") %>% 
   clean_names() %>%
@@ -151,19 +138,11 @@ dur <- pivot_wider(data = raw,
          grooming_d = "grooming", 
          resting_d = "resting", 
          perch_d = "perch")
-#view(dur)
 
 assays <- left_join(occ, dur, by=c("obs_id", "assay_id", "quoll_code"))
-#view(assays)
 
 #Adding all sections together to create a column with total section visitations
 assays$sumsect_o <- rowSums(assays[, c("section_1_o", "section_2_o", "section_3_o", "section_4_o")])
-
-#Finding out the locations of the relevant columns 
-#colfoodo <- which(colnames(assays) == "food_o")
-#print(colfoodo) #4
-#restingo <- which(colnames(assays) == "resting_o")
-#print(restingo) #10
 
 #Adding together all activity occurrences without sections
 assays$totalact_o <- rowSums(assays[, c(4:10)])
@@ -176,12 +155,7 @@ behavdata <- left_join(meta, assays, by=c("assay_id", "quoll_code"))%>%
 behavdata <- left_join(behavdata, session, by=c("session"))%>%
   filter(!is.na(assay_number))
 
-#view(behavdata)
-#names(behavdata)
-
 quolldata <- left_join(capture, quoll, by=c("quoll_code"))
-#view(quolldata)
-#names(quolldata)
 
 data <- left_join(behavdata, quolldata, by=c("session", "quoll_code"))
   
@@ -195,18 +169,12 @@ data <- data %>%
                                ifelse(age_estimate=="1-2yrs", 1,
                                       ifelse(age_estimate=="2-3yrs", 2, NA)))))
 
-#iew(data)
-#names(data)
-
 ```
 
 # Calculating time differences 
 ```{r}
 
-#Check if the time columns are in the correct format
-#print(class(data$snout))
-
-#If not, correct to POSIXct format
+#Change time columns to correct POSIXct format
 data$snout <- as.POSIXct(data$snout)
 data$process_end <- as.POSIXct(data$process_end)
 data$first_light <- as.POSIXct(data$first_light)
@@ -219,11 +187,7 @@ data$time_assaytolight <- data$first_light - data$snout
 data <- data %>%
   filter(!(quoll_code %in% c("53328", "87DE0")))
 
-#names(data)
-#view(data)
-
 ```
-
 
 # Correlation analysis
 ```{r}
@@ -259,36 +223,34 @@ dev.off()
 For morphometric and demographic analysis, and 'static behaviour' analysis
 ```{r}
 
-#view(data)
 data1 <- data %>%
-    filter(assay_number !=2)
-view(data1)
-
-write.csv(data1, "first assay data raw.csv")
-
-```
-
-#** DEMOGRAPHIC AND MORPHORMETRIC analysis
-```{r}
+      filter(assay_number !=2)
 
 data1$site01 <- ifelse(data1$study_site == "Goorooyarroo", 1, 0)
 
-mod <- glm(site01 ~ sex, data=data1, family = binomial)
-mod <- glm(site01 ~ body_weight_kg, data=data1, family = binomial)
-mod <- glm(site01 ~ cond_n, data=data1, family = binomial)
-mod <- glm(site01 ~ age_n, data=data1, family = binomial)
-mod <- glm(site01 ~ pes_mean_mm, data=data1, family = binomial)
-mod <- glm(site01 ~ head_length_mm, data=data1, family = binomial)
-
-
-mod <- glm(site01 ~ sex + body_weight_kg + cond_n + age_n, data=data1, family=binomial)
-
-summary(mod)
+write.csv(data1, "data1 - first assay data raw.csv")
 
 ```
 
+#Demo/morpho GLM analysis
+```{r}
 
-#Tables with kableExtra
+#Generalised linear model
+mod <- glm(site01 ~ sex*body_weight_kg + cond_n + age_n, data=data1, family=binomial)
+summary(mod)
+
+#AICc 
+mod_cn_site <- lmer(site01 ~ cond_n + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_an_temp <- lmer(site01 ~ age_n + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+models <- list(mod_cn_site, mod_an_temp)
+model.names <- c("Condition", "Age")
+aictab(cand.set = models, modnames = model.names)
+
+```
+
+#Demo/morpho tables with kableExtra
 ```{r}
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
@@ -302,114 +264,48 @@ table
 
 ```
 
-#Plots for morphometric and demographic analysis
+#Demo/morpho plots
 ```{r}
 
-
-pes_plot  <- ggplot(data=data1, aes(x = study_site, y = pes_mean_mm, fill=study_site)) + 
- geom_boxplot() +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("") + ylab("Pes mean length (mm)") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-print(pes_plot)
-ggsave(filename = "morpho - pes v study site.jpeg", pes_plot, width=200, height= 150, units = "mm")
-
-data1$condition <- factor(data1$condition, levels = c("Poor", "Fair", "Good", "Excellent"))
+#Condition plot
+data1$condition <- factor(data1$condition, levels = c("Excellent", "Good", "Fair", "Poor"))
 
 cond_plot  <- ggplot(data=data1, aes(x = study_site, fill=condition)) + 
- geom_bar(position="dodge") +
+ geom_bar(position="fill") +
+  stat_count(aes(label = ..count..), geom = "text", position = position_fill(vjust = 0.5), size = 3.5, 
+             color = "white") +
   scale_fill_manual (values = c("#3f4288", "#25798F", "#1caa85","#7BD151"), name = "Body condition score") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  scale_y_continuous(breaks=seq(0,20,5),labels=seq(0,20,5), limits=c(0,20)) +
-  xlab("Study site") + ylab("Number of eastern quolls") + labs("") 
-
+  #scale_y_continuous(breaks=seq(0,20,5),labels=seq(0,20,5), limits=c(0,20)) +
+  xlab("Study site") + ylab("Proportion of eastern quolls") + labs("") 
 print(cond_plot)
-ggsave(filename = "morpho - cond v study site", cond_plot, width=200, height= 150, units = "mm")
+ggsave(filename = "morpho - cond v study site.jpeg", cond_plot, width=200, height= 150, units = "mm")
 
+#Age plot 
+data1$age_n <- factor(data1$age_n, levels = c("2", "1", "0"))
 
-cond_plot  <- ggplot(data=data1, aes(x = study_site, fill=condition)) + 
- geom_bar(position="dodge") +
-  scale_fill_manual (values = c("#3f4288", "#25798F", "#1caa85","#7BD151"), name = "Body condition score") +
+age_plot  <- ggplot(data=data1, aes(x = study_site, fill=age_n)) + 
+ geom_bar(position="fill") +
+  stat_count(aes(label = ..count..), geom = "text", position = position_fill(vjust = 0.5), size = 3.5, 
+             color = "white") +
+  scale_fill_manual (values = c("#3f4288", "#25798F", "#1caa85"), 
+                     name = "Age estimate",
+                     labels = c("2-3 years", "1-2 years", "< 1 year")) +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  scale_y_continuous(breaks=seq(0,20,5),labels=seq(0,20,5), limits=c(0,20)) +
-  xlab("Study site") + ylab("Number of eastern quolls") + labs("") 
-
-print(cond_plot)
-ggsave(filename = "morpho - cond v study site", cond_plot, width=200, height= 150, units = "mm")
-
-
-
-head_plot  <- ggplot(data=data1, aes(x = study_site, y = head_length_mm, fill=study_site)) + 
- geom_boxplot() +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("") + ylab("Head length (mm)") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-print(head_plot)
-ggsave(filename = "morpho - head v study site", head_plot, width=200, height= 150, units = "mm")
-
-
-kg_plot  <- ggplot(data=data1, aes(x = study_site, y = body_weight_kg, fill=study_site)) + 
- geom_boxplot() +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("") + ylab("Body weight (kg)") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-print(kg_plot)
-ggsave(filename = "morpho - kg v study site", kg_plot, width=200, height= 150, units = "mm")
-
+  #scale_y_continuous(breaks=seq(0,20,5),labels=seq(0,20,5), limits=c(0,20)) +
+  xlab("Study site") + ylab("Proportion of eastern quolls") + labs("") 
+print(age_plot)
+ggsave(filename = "morpho - age v study site.jpeg", age_plot, width=200, height= 150, units = "mm")
 
 ```
 
-```{r}
-
-demo <- ggarrange(pes_plot, head_plot, kg_plot, cond_plot, ncol = 2, nrow = 2,
-  font.label = list(
-    size = 6,
-    face = "bold",
-    color = "black",
-    label.x = 0.89,
-    label.y = 0.99,
-    hjust = -0.1,
-    vjust = 1.5
-  )
-)
-
-demo <- annotate_figure(demo, 
-        left = text_grob("Morphometric and demographic variables", rot=90, size = 16, face = "bold"),
-        bottom = text_grob("Study site", size = 16, face = "bold"))
-
-print(demo)
-
-ggsave(filename = "site vs demographic plots.jpeg", demo, width=300, height= 300, units = "mm")
-
-```
-
-
-
-# Testing influence of environmental variables on arena behaviour
+#Environmental vars influence GLM analysis
 ```{r}
 
 foodd <- glm(food_d ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
@@ -439,41 +335,13 @@ trapstress <- glm(stress_in_trap ~ temp + moon_phase + time_assaytolight + time_
 bagstress <- glm(stress_in_bag ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 tablestress <- glm(stress_on_table ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 
-summary(foodd)
-summary(foodo)
-summary(groomd)
-summary(groomo)
-summary(jumpd)
-summary(jumpo)
-summary(legsd)
-summary(legso)
-summary(moved)
-summary(moveo)
-summary(perchd)
-summary(percho)
-summary(bait)
-summary(sumsecto)
-summary(totalacto)
-summary(emerge)
-summary(trapstress)
-summary(bagstress)
-summary(tablestress)
-
-
 ```
 
-# Tables: Evironmental stats
+#Environmental vars tables  with kabelExtra
 ```{r}
 
 tidy_results <- tidy(groomd) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
-
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Table stress rating", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 15)
-table
 
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
@@ -484,247 +352,107 @@ table
 
 ```
 
-# Analyse behaviour indicators
+#Environmental vars plots
+```{r}
 
+#Grooming duration v temp
+gdtemp_plot <- ggplot(data=data1, aes(x = grooming_d, y = temp)) + 
+ geom_smooth() +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  xlab("Grooming duration (s)") + ylab("Temperature") + labs("") 
+
+print(gdtemp_plot)
+ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_site, width=200, height= 150, units = "mm")
+
+#Grooming occurrences v temp
+gotemp_plot <- ggplot(data=data1, aes(x = grooming_o, y = temp)) + 
+ geom_smooth() +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  xlab("Grooming occurrences (n)") + ylab("Temperature") + labs("") 
+
+print(gotemp_plot)
+ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_site, width=200, height= 150, units = "mm")
+
+```
+
+Analyse behaviour indicators
   1. Test the influence of fixed (e.g., site) and random effects (e.g., arena) on behavioural responses (e.g., food interaction duration) using the `lmer()` function.
   2. If multiple fixed effects produce significance, perform model selection using the dredge() function to determine which fixed effects are within delta 2 AICc.
 
-# Testing behaviour in GLMMs including environmental variables as competing factors in fixed effects model.
+#Static behaviour GLMMS
+Testing behaviour in GLMMs including environmental variables as competing factors in fixed effects model.
 ```{r}
 
 mod <- lmer(bait_eaten_g ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Bait eaten (g)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-
 mod <- lmer(emerge_max ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),             data=data1, na.action = "na.fail")
-
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Latency to emerge (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
 
 mod <- lmer(food_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Food interaction duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
 mod <- lmer(food_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Food interaction occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
-
-
 mod <- lmer(grooming_d ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),
             data=data1, na.action = "na.fail")
-
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Grooming duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
 
 mod <- lmer(grooming_o ~ study_site + sex + age_n + cond_n +
               body_weight_kg + temp + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Grooming occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
-
-
 mod <- lmer(jump_climb_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
-
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Jumping and climbing duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
-
 
 mod <- lmer(jump_climb_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Jumping and climbing occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
-
 mod <- lmer(legs_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Standing on hind legs duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
-
-
 mod <- lmer(legs_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
-
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Standing on hind legs occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
-
 
 mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight
             + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Quadrupedal movement duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
-
-
 mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight
             + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Quadrupedal movement occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
-
 mod <- lmer(perch_d ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + moon_phase
-            + time_assaytolight + time_processtoassay
-            + (1|arena), 
+            + time_assaytolight + time_processtoassay + (1|arena), 
             data=data1, na.action = "na.fail")
-
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Perching duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table 
 
 mod <- lmer(perch_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Perching occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
 mod <- lmer(stress_in_bag ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
-
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Bag stress rating", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
 
 mod <- lmer(stress_in_trap ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Trap stress rating", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-
 mod <- lmer(stress_on_table ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Table stress rating", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-
 mod <- lmer(sumsect_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
-
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Total different section visits (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
 
 mod <- lmer(totalact_o ~ study_site + sex + age_n + cond_n + 
               body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
+#Tables with kableExtra
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
 table <- tidy_results %>%
@@ -734,15 +462,14 @@ table <- tidy_results %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
 
-
 ```
 
-#AICc model selection test
+#Static behaviour AICc model selection
 ```{r}
 
 control_ml <- lmerControl(optimizer = "Nelder_Mead")
 
-
+#Grooming duration 
 mod_gd_site <- lmer(grooming_d ~ study_site + (1|arena), 
             data=data1, control = control_ml, na.action = "na.fail")
 mod_gd_temp <- lmer(grooming_d ~ temp + (1|arena), 
@@ -751,7 +478,7 @@ models <- list(mod_gd_site, mod_gd_temp)
 model.names <- c("Site", "Temp")
 aictab(cand.set = models, modnames = model.names)
 
-
+#Grooming occurrences
 mod_go_site <- lmer(grooming_o ~ study_site + (1|arena), 
             data=data1, control = control_ml, na.action = "na.fail")
 mod_go_temp <- lmer(grooming_o ~ temp + (1|arena), 
@@ -760,9 +487,29 @@ models <- list(mod_go_site, mod_go_temp)
 model.names <- c("Site", "Temp")
 aictab(cand.set = models, modnames = model.names)
 
+#Jumping and climbing occurrences
+mod_jo_sex <- lmer(jump_climb_o ~ sex + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_jo_age <- lmer(jump_climb_o ~ age_n + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+models <- list(mod_jo_sex, mod_jo_age)
+model.names <- c("Sex", "Age")
+aictab(cand.set = models, modnames = model.names)
+
+#Perching occurrences
+mod_po_sex <- lmer(perch_o ~ sex + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_po_age <- lmer(perch_o ~ age_n + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_po_site <- lmer(perch_o ~ study_site + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+models <- list(mod_po_sex, mod_po_age, mod_po_site)
+model.names <- c("Sex", "Age", "Study site")
+aictab(cand.set = models, modnames = model.names)
+
 ```
 
-#Plots: Significant results for first assays
+#Static behaviour plots
 ```{r}
 
 #Grooming duration v study site plot
@@ -777,25 +524,8 @@ groomd_site <- ggplot(data=data1, aes(x = study_site, y = grooming_d, fill=study
   scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab("Study site") + ylab("Grooming duration (s)") + labs("") 
 #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-print(groomd_sitet)
+print(groomd_site)
 ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_site, width=200, height= 150, units = "mm")
-
-
-#Grooming duration v temp plot
-groomd_temp <- ggplot(data=data1, aes(x = temp, y = grooming_d, fill=temp)) + 
- geom_smooth() +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Temperature") + ylab("Grooming duration (s)") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-print(groomd_temp)
-ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_plot, width=200, height= 150, units = "mm")
-
 
 #Grooming occurrences v study site plot
 groomo_site <- ggplot(data=data1, aes(x = study_site, y = grooming_o, 
@@ -812,24 +542,53 @@ groomo_site <- ggplot(data=data1, aes(x = study_site, y = grooming_o,
 print(groomo_site)
 ggsave(filename = "1st assay - study site v grooming occ.jpeg", groomo_site, width=200, height= 150, units = "mm")
 
-#Grooming occurrences v temp plot
-groomd_temp <- ggplot(data=data1, aes(x = temp, y = grooming_o)) + 
- geom_smooth() +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+#Jumping and climbing v age plot 
+joage_plot  <- ggplot(data=data1, aes(x = age_estimate, y = jump_climb_o, fill = age_estimate)) + 
+ geom_boxplot() +
+  scale_fill_manual (values = c("#3f4288", "#25798F", "#1caa85")) +
   theme_minimal() +
-  theme(legend.position = "none", 
+  theme(legend.position = "none",
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Temperature") + ylab(expression(paste("Grooming occurrences ", italic(" (n)")))) + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-print(groomd_temp)
-ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_plot, width=200, height= 150, units = "mm")
+  xlab("Age estimate") + ylab(expression(paste("Jumping and climbing occurrences ", italic(" (n) ")))) + 
+  labs("") 
+print(joage_plot)
+ggsave(filename = "morpho - age v jumping.jpeg", joage_plot, width=200, height= 150, units = "mm")
+
+#Perching v age plot 
+page_plot  <- ggplot(data=data1, aes(x = age_estimate, y = perch_o, fill = age_estimate)) + 
+ geom_boxplot() +
+  scale_fill_manual (values = c("#3f4288", "#25798F", "#1caa85")) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Age estimate") + ylab(expression(paste("Perching occurrences ", italic(" (n) ")))) + 
+  labs("") 
+print(page_plot)
+
+ggsave(filename = "morpho - age v perching.jpeg", page_plot, width=200, height= 150, units = "mm")
+
+#Perching v sex plot 
+psex_plot  <- ggplot(data=data1, aes(x = sex, y = perch_o, fill = sex)) + 
+ geom_boxplot() +
+  scale_fill_manual (values = c("#25798F", "#1caa85")) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Sex") + ylab(expression(paste("Perching occurrences ", italic(" (n) ")))) + 
+  labs("") +
+  scale_x_discrete(labels = c("Female", "Male"))
+print(psex_plot)
+ggsave(filename = "morpho - sex v perching.jpeg", psex_plot, width=200, height= 150, units = "mm")
 
 ```
 
-## **REPEATED ASSAYS**
+## ** MULTIPLE ASSAYS
 #Subsetting data to animals with repeated assays
 ```{r}
 values_to_exclude <- c("524E3", "53221", "53511", "53512", "53515", "53526", "563A6", "56ABE", "56EB2", "5FC08", "6D409" , "6D53F" , "6E990" , "71A4D" , "71B69" , "86E19" , "86FFC" , "87F61", "BCA09")
@@ -841,7 +600,7 @@ write.csv(data2, "data2 - individuals with two assays raw data.csv")
 
 ```
 
-# Testing influence of environmental variables on behaviour over repeated assays
+# Environmental vars GLM analysis
 ```{r}
 
 bait2 <- glm(bait_eaten_g ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
@@ -864,6 +623,7 @@ perchd2 <- glm(perch_d ~ temp + moon_phase + time_assaytolight + time_processtoa
 percho2 <- glm(perch_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
 
 emerge2 <- glm(emerge_max ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
+summary(emerge2)
 
 sumsect2 <- glm(sumsect_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
 totalact2 <- glm(totalact_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
@@ -871,18 +631,19 @@ totalact2 <- glm(totalact_o ~ temp + moon_phase + time_assaytolight + time_proce
 trapstress2 <- glm(stress_in_trap ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
 bagstress2 <- glm(stress_in_bag ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
 tablestress2 <- glm(stress_on_table ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
+summary(tablestress2)
 
 ```
 
-# Tables: Evironmental stats
+# Environmental vars tables with kableExtra
 ```{r}
 
-tidy_results <- tidy(tablestress2) %>%
+tidy_results <- tidy(bait2) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
 
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Table stress rating", escape = FALSE) %>%
+  kbl(caption = "Bait eaten (g)", escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 15)
 table
@@ -896,21 +657,22 @@ table
 
 ```
 
-# Mutate data: accounting for environmental variables over both assays
+# Environmental vars data mutated
 ```{r}
-
-names(data2)
 
 #Mutating the environmental variables 
 data2_mutate <- data2 %>%
   mutate_at(vars(5, 44, 65, 66), ~ as.vector(scale(.)))
+
+data2$condition <- factor(data2$condition, levels = c("Excellent", "Good", "Fair", "Poor"))
+data2$age_n <- factor(data2$age_n, levels = c("2", "1", "0"))
 
 view(data2_mutate)
 write.csv(data2_mutate, "data2_mutate - both assays env vars adjusted.csv")
 
 ```
 
-#Extract predictor/adjusted variables for both assays
+#Adjusted behaviour variables - extracting values
 ```{r}
 
 mod <- glm(food_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, 
@@ -1010,7 +772,7 @@ mod <- glm(emerge_max ~ temp + moon_phase + time_assaytolight + time_processtoas
 
 ```
 
-#Create df of predicted variables 
+#Adjusted behaviour variables - create df 
 Accounting for environmental heterogeneity for both assays
 ```{r}
 
@@ -1020,86 +782,23 @@ data2_pred <- data2_mutate %>%
                      -moving_o, -moving_d, -perch_d, -perch_o, -resting_o,
                      -resting_d, -bait_eaten_g, 
                      -sumsect_o, -totalact_o, -emerge_max, -time_to_emerge_s, -arena_entry)
-  
-#view(data2_pred)
-#names(data2_pred)
 
 write.csv(data2_pred,"data2_pred - both assays adjusted env variables.csv")
 
 ```
 
-#Test adjusted behaviours against assay number
+#Adjusted behaviour variables - test vs assay number
 ```{r}
 
 mod <- glm(foodd_p ~ assay_number, family=gaussian, data=data2_pred)
-tidy_results <- tidy(mod)%>%
- mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted food interaction duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 15)
-table
-
 mod <- glm(foodo_p ~ assay_number, family=gaussian, data=data2_pred)
-tidy_results <- tidy(mod)%>%
- mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted food interaction occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 15)
-table
-
 mod <- glm(bait_p ~ assay_number, family=gaussian, data=data2_pred)
-tidy_results <- tidy(mod)%>%
- mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted bait eaten (g)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 15)
-table
 
 mod <- glm(groomd_p ~ assay_number, family=gaussian, data=data2_pred)
-tidy_results <- tidy(mod)%>%
- mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted grooming duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 15)
-table
-
 mod <- glm(groomo_p ~ assay_number, family=gaussian, data=data2_pred)
-tidy_results <- tidy(mod)%>%
- mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted grooming occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 15)
-table
 
 mod <- glm(jumpd_p ~ assay_number, family=gaussian, data=data2_pred)
-tidy_results <- tidy(mod)%>%
- mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted jumping and climbing duration (s)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 15)
-table
-
 mod <- glm(jumpo_p ~ assay_number, family=gaussian, data=data2_pred)
-tidy_results <- tidy(mod)%>%
- mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted jumping and climbing occurrences (n)", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 15)
-table
 
 mod <- glm(legsd_p ~ assay_number, family=gaussian, data=data2_pred)
 mod <- glm(legso_p ~ assay_number, family=gaussian, data=data2_pred)
@@ -1118,9 +817,19 @@ mod1 <- glm(bagstress_p ~ assay_number, family=gaussian, data=data2_pred)
 mod1 <- glm(trapstress_p ~ assay_number, family=gaussian, data=data2_pred)
 mod1 <- glm(tablestress_p ~ assay_number, family=gaussian, data=data2_pred)
 
+#Tables with kableExtra
+tidy_results <- tidy(mod)%>%
+ mutate_if(is.numeric, ~round(., digits = 3))
+table <- tidy_results %>%
+  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Adjusted jumping and climbing occurrences (n)", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 15)
+table
+
 ```
 
-#Plots: significant results for assay number
+#Adjusted behaviour variables vs assay number plots
 ```{r}
 
 ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p, 
@@ -1135,7 +844,7 @@ ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p,
         axis.line.y = element_line(color = "black")) + 
   xlab("") + 
   ylab(expression(paste("Latency to emerge (s)")))+
-  annotate("text", x = "2", y =50, label = "a", size = 5, hjust = -3) + 
+  annotate("text", x = "2", y =50, label = "a", size = 5, hjust = -5) + 
   labs("") 
 print(ed_plot)
 ggsave(filename = "assay number - emerge - site.jpeg", ed_plot, width=200, height= 150, units = "mm")
@@ -1151,10 +860,10 @@ fo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = foodo_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Food interaction occurrences ", italic("(n) ")))) +
-  annotate("text", x = "2", y =30, label = "b", size = 5, hjust = -3) 
+  xlab("") + ylab(expression(paste("Food interaction occurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =30, label = "b", size = 5, hjust = -5) 
   labs("") 
-#print(fo_plot)
+print(fo_plot)
 #ggsave(filename = "assay number - food occ - site.jpeg", fo_plot, width=200, height= 150, units = "mm")
 
 
@@ -1169,9 +878,9 @@ jd_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p,
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
   xlab("") + ylab(expression(paste("Jumping and climbing duration (s)" )))  +
-  annotate("text", x = "2", y =200, label = "c", size = 5, hjust = -3)
+  annotate("text", x = "2", y =200, label = "c", size = 5, hjust = -5)
   labs("") 
-#print(jd_plot)
+print(jd_plot)
 #ggsave(filename = "assay number - jump dur - site.jpeg", jd_plot, width=200, height= 150, units = "mm")
 
   
@@ -1189,10 +898,10 @@ jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Jumping and climbing occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =80, label = "d", size = 5, hjust = -3) + 
+  xlab("") + ylab(expression(paste("Jumping and climbing occurrences ", italic(" (n) ")))) +
+  annotate("text", x = "2", y =80, label = "d", size = 5, hjust = -5) + 
   labs("") 
-#print(jo_plot)
+print(jo_plot)
 #ggsave(filename = "assay number - jump occ - site.jpeg", jo_plot, width=200, height= 150, units = "mm")
 
 
@@ -1207,9 +916,9 @@ md_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moved_p,
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
   xlab("") + ylab(expression(paste("Quadrupedal movement duration (s)" ))) +
-  annotate("text", x = "2", y =160, label = "e", size = 5, hjust = -3) + 
+  annotate("text", x = "2", y =160, label = "e", size = 5, hjust = -5) + 
   labs("") 
-#print(md_plot)
+print(md_plot)
 #ggsave(filename = "assay number - move dur - site.jpeg", md_plot, width=200, height= 150, units = "mm")
 
 
@@ -1224,15 +933,10 @@ mo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moveo_p,
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
   xlab("") + ylab(expression(paste("Quadrupedal movement occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =140, label = "f", size = 5, hjust = -3) + 
+  annotate("text", x = "2", y =140, label = "f", size = 5, hjust = -5) + 
   labs("") 
-#print(mo_plot)
+print(mo_plot)
 #ggsave(filename = "assay number - move occ - site.jpeg", mo_plot, width=200, height= 150, units = "mm")
-
-
-assayplot2 <- ggarrange(jo_plot, md_plot, mo_plot, ncol = 3)
-print(assayplot2) 
-
 
 sum_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = sumsecto_p, 
                         fill = assay_number)) + 
@@ -1245,9 +949,9 @@ sum_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = sumsecto_p,
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
   xlab("") + ylab(expression(paste("Total different section visits", italic(" (n) ")))) +
-  annotate("text", x = "2", y =65, label = "g", size = 5, hjust = -3) +
+  annotate("text", x = "2", y =65, label = "g", size = 5, hjust = -5) +
   labs("") 
-#print(sum_plot)
+print(sum_plot)
 #ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
 
 
@@ -1262,9 +966,9 @@ act_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = totalacto_p,
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
   xlab("") + ylab(expression(paste("Total activity occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =350, label = "h", size = 5, hjust = -3) + 
+  annotate("text", x = "2", y =350, label = "h", size = 5, hjust = -5) + 
   labs("") 
-#print(act_plot)
+print(act_plot)
 #ggsave(filename = "assay number - tot sect - site.jpeg", act_plot, width=200, height= 150, units = "mm")
 
 
@@ -1279,13 +983,11 @@ lo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = legso_p,
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
   xlab("") + ylab(expression(paste("Standing on hind legs occurrences", italic("(n) ")))) +
-  annotate("text", x = "2", y =100, label = "i", size = 5, hjust = -3) +
+  annotate("text", x = "2", y =100, label = "i", size = 5, hjust = -6) +
   labs("") 
-#print(lo_plot)
+print(lo_plot)
 #ggsave(filename = "assay number - legs occ - site.jpeg", lo_plot, width=200, height= 150, units = "mm")
 
-assayplot3 <- ggarrange(sum_plot, act_plot, lo_plot, ncol = 3)
-print(assayplot3) 
 
 #po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p, 
                         #fill = assay_number)) + 
@@ -1312,8 +1014,8 @@ po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p,
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Perching occurrences", italic(" (n) ")))) + 
-  annotate("text", x = "2", y =30, label ="j", size = 5, hjust = -3) +
+  xlab("") + ylab(expression(paste("Perching occurrences ", italic(" (n) ")))) + 
+  annotate("text", x = "2", y =30, label ="j", size = 5, hjust = -5) +
   labs("") 
 
 print(po_plot)
@@ -1322,7 +1024,7 @@ print(po_plot)
 
 ```
 
-#Arranging jpegs into one plot
+Arrange individual plots into one. 
 ```{r}
 
 behav <- ggarrange(ed_plot, fo_plot, jd_plot, jo_plot, md_plot, mo_plot,
@@ -1334,50 +1036,46 @@ behav <- ggarrange(ed_plot, fo_plot, jd_plot, jo_plot, md_plot, mo_plot,
     label.x = 0.89,
     label.y = 0.99,
     hjust = -0.1,
-    vjust = 1.5
-  )
-)
+    vjust = 1.5  ))
 
 behav <- annotate_figure(behav, 
         left = text_grob("Adjusted behaviours over two assays", rot=90, size = 16, face = "bold"),
         bottom = text_grob("Assay number", size = 16, face = "bold"))
 
 print(behav)
-
 ggsave(filename = "adjusted behaviour plots.jpeg", behav, width=300, height= 500, units = "mm")
 
 ```
 
-#Prep data for coefficient left_join 
+#** PERSONALITY AND PLASTICITY 
+Prep data for coefficient left_join 
 ```{r}
 
-names(data2)
-view(data2)
-
-quoll2 <- data2 %>%
-  filter(!assay_number %in% 1) %>%
+quoll2 <- data2_pred %>%
   select(-assay_date, -initial_repeat_assay, -trap_location, -snout, 
-                     -haunches, -time_to_emerge_s,-arena_entry, -trap_session_date, 
-                     -trap_session_morning, -first_light,
-                     -ssr, -process_start, -process_end, -pouch, -teeth_colour, -teeth_sharpness,
-                     -teeth_shine)
+                     -haunches, -trap_session_date, -trap_session_morning, -first_light,
+                     -ssr, -process_start, -process_end, -pouch, -teeth_colour, 
+                     -teeth_sharpness, -teeth_shine, stress_in_trap, stress_in_bag, stress_on_table)
 
- view(quoll2)
- write.csv(quoll2, "quoll2.csv")
+quoll2$condition <- factor(quoll2$condition, levels = c("Excellent", "Good", "Fair", "Poor"))
+quoll2$cond_n <- factor(quoll2$cond_n, levels = c("4", "3", "2", "1"))
+quoll2$age_n <- factor(quoll2$age_n, levels = c("2", "1", "0"))
+
+write.csv(quoll2, "2nd try quoll2.csv")
 
 ```
 
-#Extracting adjusted values for intercept (personality) and  slope (plasticity) over both assays
+#Intercept and slope - extracting adjusted values for intercept (personality) and  slope (plasticity) over both assays
 ```{r}
 
 # Create a list of dependent behavioural variables
-dependent <- c("bait_eaten_g","food_o","food_d","grooming_o",
-               "grooming_d","jump_climb_o","jump_climb_d","legs_o", "legs_d",
-               "moving_o", "moving_d", "perch_o", "perch_d", "sumsect_o", "totalact_o", 
-               "emerge_max", "stress_in_trap", "stress_in_bag", "stress_on_table")
+dependent <- c("foodd_p","foodo_p","groomd_p","groomo_p",
+               "jumpd_p","jumpo_p","legsd_p","legso_p", "moved_p",
+               "moveo_p", "perchd_p", "percho_p", "bait_p", "sumsecto_p", "totalacto_p", 
+               "trapstress_p", "bagstress_p", "tablestress_p", "emerge_p")
 
 # Define the levels in an object
-quolls <- levels(factor(data2$quoll_code))
+quolls <- levels(factor(quoll2$quoll_code))
 
 # Create a blank dataframe with four columns
 coefficients <- data.frame(quoll_code=NULL, intercept=NULL, 
@@ -1390,7 +1088,7 @@ for(v in 1:NROW(dependent)) {
     variable <- dependent[v]
     mod <- lm(eval(as.name(paste0(variable))) ~ 
                 assay_number + temp + moon_phase + time_assaytolight + time_processtoassay, 
-              data=subset(data2, quoll_code==quolls[i]))
+              data=subset(quoll2, quoll_code==quolls[i]))
     i <- coef(mod)[1]
     s <- coef(mod)[2]
     results <- data.frame(cbind(quoll_code, i, s, variable))
@@ -1425,7 +1123,7 @@ view(ppdata)
 #str(ppdata)
 
 # Write to csv file
-write_csv(ppdata, "ppdata - intercept and slope data.csv")
+write_csv(ppdata, "2nd try ppdata - intercept and slope data.csv")
 
 #str(ppdata)
 
@@ -1436,108 +1134,76 @@ write_csv(ppdata, "ppdata - intercept and slope data.csv")
   1. Test the influence of fixed (e.g., site) and random effects (e.g., arena) on behavioural responses (e.g., food interaction duration) using the `lmer()` function.
   2. If multiple fixed effects produce significance, perform model selection using the dredge() function to determine which fixed effects are within delta 2 AICc.
 
-#Testing behaviour intercept (personality) against independent variables using GLMMs
+#Intercept GLMMs - testing behaviour intercept (personality) against independent variables
 ```{r}
-names(ppdata)
 
-mod <- lmer(i_bait_eaten_g ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_bait_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_emerge_max ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_emerge_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_food_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_foodd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_food_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_foodo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_grooming_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_groomd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_grooming_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_groomo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_jump_climb_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_jumpd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_jump_climb_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_jumpo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_legs_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_legsd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_legs_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_legso_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_moving_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_moved_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_moving_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_moveo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_perch_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_perchd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_perch_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_percho_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_stress_in_bag ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_sumsecto_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_stress_in_trap ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_totalacto_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_stress_on_table ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_trapstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_sumsect_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_bagstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_totalact_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(i_tablestress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
-
-summary(mod1)
-summary(mod1)
-summary(mod1)
-summary(mod1)
-summary(mod1)
-summary(mod1)
-summary(mod1)
-summary(mod1)
-summary(mod1)
-summary(mod1)
-summary(mod1)
 
 ```
 
-#Tables: Summaries of GLMMs using kableExtra
+#Intercept tables
 ```{r}
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
 
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Latency to emerge (s) intercept", escape = FALSE) %>%
+  kbl(caption = "Adjusted table stress rating intercept", escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
@@ -1551,295 +1217,229 @@ table
 
 ```
 
-#AICc model selection test (🚩 this goes at the end of your independent variable modelling).
+#Intercept AICc model selection
 ```{r}
 
-mod_md_site <- lmer(i_grooming_o ~ study_site + (1|arena), 
+#Grooming duration
+mod_gdi_site <- lmer(i_groomd_p ~ study_site + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-mod_md_weight <- lmer(i_grooming_o ~ body_weight_kg  + (1|arena), 
+mod_gdi_weight <- lmer(i_groomd_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_gdi_sex <- lmer(i_groomd_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_gdi_site, mod_gdi_weight, mod_gdi_sex)
+model.names <- c("Study site", "Body weight kg", "Sex")
+aictab(cand.set = models, modnames = model.names)
+
+#Grooming occurrences
+mod_goi_site <- lmer(i_groomo_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_goi_weight <- lmer(i_groomo_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_goi_sex <- lmer(i_groomo_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_goi_site, mod_goi_weight, mod_goi_sex)
+model.names <- c("Study site", "Body weight kg", "Sex")
+aictab(cand.set = models, modnames = model.names)
+
+#Jump/climb duration
+mod_jdi_site <- lmer(i_jumpd_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_jdi_weight <- lmer(i_jumpd_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_jdi_site, mod_jdi_weight)
+model.names <- c("Study site", "Body weight kg")
+aictab(cand.set = models, modnames = model.names)
+
+#Latency to emerge
+mod_ei_site <- lmer(i_emerge_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_ei_weight <- lmer(i_emerge_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_ei_site, mod_ei_weight)
+model.names <- c("Study site", "Body weight kg")
+aictab(cand.set = models, modnames = model.names)
+
+#Perching duration
+mod_pdi_site <- lmer(i_perchd_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_pdi_weight <- lmer(i_perchd_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_pdi_sex <- lmer(i_perchd_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_pdi_site, mod_pdi_weight, mod_pdi_sex)
+model.names <- c("Study site", "Body weight kg", "Sex")
+aictab(cand.set = models, modnames = model.names)
+
+#Quadrupedal movement duration 
+mod_md_site <- lmer(i_moved_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_md_weight <- lmer(i_moved_p ~ body_weight_kg  + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
 models <- list(mod_md_site, mod_md_weight)
 model.names <- c("Study site", "Body weight kg")
 aictab(cand.set = models, modnames = model.names)
 
-mod_e_site <- lmer(i_emerge_max ~ study_site + (1|arena), 
+#Perching duration
+mod_tsi_site <- lmer(i_tablestress_p ~ study_site + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-mod_e_weight <- lmer(i_emerge_max ~ body_weight_kg  + (1|arena), 
+mod_tsi_weight <- lmer(i_tablestress_p ~ body_weight_kg  + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-models <- list(mod_e_site, mod_e_weight)
-model.names <- c("Study site", "Body weight kg")
+mod_tsi_sex <- lmer(i_tablestress_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_tsi_site, mod_tsi_weight, mod_tsi_sex)
+model.names <- c("Study site", "Body weight kg", "Sex")
 aictab(cand.set = models, modnames = model.names)
 
 ```
 
-#Testing behaviour slope (plasticity) against independent variables using GLMMs 
+#Slope GLMMs - testing behaviour slope (plasticity) against independent variables
 ```{r}
 
-names(ppdata)
-
-mod <- lmer(s_bait_eaten_g ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
+mod <- lmer(s_bait_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_emerge_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_foodd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_foodo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_groomd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_groomo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_jumpd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_jumpo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_legsd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_legso_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_moved_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_moveo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_perchd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_percho_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_sumsecto_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_totalacto_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_bagstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_trapstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_tablestress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+#Tables with kableExtra
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Bait eaten (g) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_food_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Food interaction duration (s) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_emerge_max ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Latency to emerge (s) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_food_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Food interaction occurrences (n) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_grooming_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Grooming duration (s) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_grooming_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Grooming occurrences (n) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-
-mod <- lmer(s_jump_climb_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Jumping and climbing duration (s) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_jump_climb_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Jumping and climbing occurrences (n) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-
-mod <- lmer(s_legs_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Standing on hind legs duration (s) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_legs_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Standing on hind legs occurrences (n) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_moving_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Quadrupedal movement duration (s) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_moving_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Quadrupedal movement occurrences (n) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_perch_d ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Perching duration (s) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_perch_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Perching occurrences (n) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_stress_in_bag ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Bag stress rating slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_stress_in_trap ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Trap stress rating slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-
-mod <- lmer(s_stress_on_table ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Table stress rating slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_sumsect_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Total section visits (n) slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-mod <- lmer(s_totalact_o ~ sex + study_site + age_n +
-              body_weight_kg + (1|arena), 
-            data=ppdata, na.action = "na.fail")
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits = 3))
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Total activity occurrences (n) slope", escape = FALSE) %>%
+  kbl(caption = "Adjusted table stress rating slope", escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
 
 ```
 
-
-#AICc model selection test (🚩 this goes at the end of your independent variable modelling).
+#Slope AICc model selection 
 ```{r}
-
-mod_e_site <- lmer(s_emerge_max ~ study_site + (1|arena), 
+#Jumping climbing duration
+mod_jds_site <- lmer(s_jumpd_p ~ study_site + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-mod_e_weight <- lmer(s_emerge_max ~ body_weight_kg  + (1|arena), 
+mod_jds_weight <- lmer(s_jumpd_p ~ body_weight_kg  + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-models <- list(mod_e_site, mod_e_weight)
+models <- list(mod_jds_site, mod_jds_weight)
 model.names <- c("Study site", "Body weight kg")
 aictab(cand.set = models, modnames = model.names)
 
-
-mod_go_age <- lmer(s_grooming_o ~ age_n + (1|arena), 
+#Jumping climbing occurrences
+mod_jos_site <- lmer(s_jumpo_p ~ study_site + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-mod_go_weight <- lmer(s_grooming_o ~ body_weight_kg  + (1|arena), 
+mod_jos_weight <- lmer(s_jumpo_p ~ body_weight_kg  + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-models <- list(mod_go_age, mod_go_weight)
-model.names <- c("Age", "Body weight kg")
+models <- list(mod_jos_site, mod_jos_weight)
+model.names <- c("Study site", "Body weight kg")
 aictab(cand.set = models, modnames = model.names)
 
-
-mod_gd_age <- lmer(s_grooming_d ~ age_n + (1|arena), 
+#Perching duration
+mod_pds_site <- lmer(s_perchd_p ~ study_site + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-mod_gd_weight <- lmer(s_grooming_d ~ body_weight_kg  + (1|arena), 
+mod_pds_weight <- lmer(s_perchd_p ~ body_weight_kg  + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-models <- list(mod_gd_age, mod_gd_weight)
-model.names <- c("Age", "Body weight kg")
+mod_pds_sex <- lmer(s_perchd_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_pds_site, mod_pds_weight, mod_pds_sex)
+model.names <- c("Study site", "Body weight kg", "Sex")
 aictab(cand.set = models, modnames = model.names)
 
+#Perching occurrences
+mod_pos_site <- lmer(s_percho_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_pos_sex <- lmer(s_percho_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_pos_site, mod_pos_sex)
+model.names <- c("Study site", "Sex")
+aictab(cand.set = models, modnames = model.names)
+
+#Quadrupedal movement duration
+mod_mds_site <- lmer(s_moved_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_mds_weight <- lmer(s_moved_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_mds_site, mod_mds_weight)
+model.names <- c("Study site", "Weight")
+aictab(cand.set = models, modnames = model.names)
+
+#Quadrupedal movement occurrences
+mod_mos_site <- lmer(s_moveo_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_mos_weight <- lmer(s_moveo_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_mos_site, mod_mos_weight)
+model.names <- c("Study site", "Weight")
+aictab(cand.set = models, modnames = model.names)
+
+#Quadrupedal movement occurrences
+mod_los_site <- lmer(s_legso_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_los_weight <- lmer(s_legso_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_los_site, mod_los_weight)
+model.names <- c("Study site", "Weight")
+aictab(cand.set = models, modnames = model.names)
+
+#Table stress rating
+mod_tbls_site <- lmer(s_tablestress_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_tbls_weight <- lmer(s_tablestress_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_tbls_site, mod_tbls_weight)
+model.names <- c("Study site", "Weight")
+aictab(cand.set = models, modnames = model.names)
 
 ```
 
@@ -1957,27 +1557,323 @@ sessionInfo()
 
 #***OLD CODE***
 
-Running basic models to get the feel of the data
+**1st try  PERSONALITY AND PLASTICITY
+Prep data for coefficient left_join 
 ```{r}
 
-summary(glm(sumsect_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=data))
-summary(glm(totalact_o ~ study_site + temp + assay_number + morph + sex +  age_estimate, data=data))
+names(data2)
+view(data2)
+
+quoll2 <- data2 %>%
+  filter(!assay_number %in% 1) %>%
+  select(-assay_date, -initial_repeat_assay, -trap_location, -snout, 
+                     -haunches, -time_to_emerge_s,-arena_entry, -trap_session_date, 
+                     -trap_session_morning, -first_light,
+                     -ssr, -process_start, -process_end, -pouch, -teeth_colour, 
+                     -teeth_sharpness, -teeth_shine)
+
+ view(quoll2)
+ names(quoll2)
+ write.csv(quoll2, "quoll2.csv")
 
 ```
 
-
+#Intercept and slope - extracting adjusted values for intercept (personality) and  slope (plasticity) over both assays
 ```{r}
 
+# Create a list of dependent behavioural variables
+dependent <- c("bait_eaten_g","food_o","food_d","grooming_o",
+               "grooming_d","jump_climb_o","jump_climb_d","legs_o", "legs_d",
+               "moving_o", "moving_d", "perch_o", "perch_d", "sumsect_o", "totalact_o", 
+               "emerge_max", "stress_in_trap", "stress_in_bag", "stress_on_table")
 
-colnames(tidy_results) <- c("Term", "Estimate", "Std. Error", "T-Value", "p.value")
+# Define the levels in an object
+quolls <- levels(factor(data2$quoll_code))
 
-tidy_results <- tidy_results %>%
-  mutate(Term = case_when(
-    Term == "(Intercept)" ~ "Intercept", 
-    Term == "temp" ~ "Temperature",
-    Term == "moon_phase" ~ "Moon phase",
-    Term == "time_assaytolight" ~ "Time from assay to first light",
-    Term == "time_processtoassay" ~ "Time from processing to assay"))
+# Create a blank dataframe with four columns
+coefficients <- data.frame(quoll_code=NULL, intercept=NULL, 
+                           slope=NULL, variable=NULL)
+
+# Loop to extract the intercept and slope of each behavioural response
+for(v in 1:NROW(dependent)) {
+  for(i in 1:NROW(quolls)){
+    quoll_code <- quolls[i]
+    variable <- dependent[v]
+    mod <- lm(eval(as.name(paste0(variable))) ~ 
+                assay_number + temp + moon_phase + time_assaytolight + time_processtoassay, 
+              data=subset(data2, quoll_code==quolls[i]))
+    i <- coef(mod)[1]
+    s <- coef(mod)[2]
+    results <- data.frame(cbind(quoll_code, i, s, variable))
+    coefficients <- rbind(coefficients, results)
+  }
+}
+
+# Convert the df to wide format
+coefficients <- reshape(coefficients, idvar="quoll_code", 
+                        timevar="variable", direction="wide")
+
+# Define names of the coefficients
+names(coefficients) <- gsub("\\.", "_", names(coefficients))
+
+# Remove duplicated coefficients
+coefficients <- coefficients[ , !duplicated(colnames(coefficients))]
+
+# Check structure of coefficients
+str(coefficients)
+
+#If they are being read as characters, change to numeric 
+cols_to_convert <- setdiff(names(coefficients), "quoll_code")
+coefficients[cols_to_convert] <- lapply(coefficients[cols_to_convert], as.numeric)
+
+# Join behavioural df with post-release df
+ppdata <- left_join(quoll2, coefficients, by="quoll_code", "session")
+
+# Remove duplicated column names
+ppdata <- ppdata[ , !duplicated(colnames(ppdata))]
+
+view(ppdata)
+#str(ppdata)
+
+# Write to csv file
+write_csv(ppdata, "ppdata - intercept and slope data.csv")
+
+#str(ppdata)
 
 ```
+
+# Analyse behaviour indicators for personality and plasticity 
+
+  1. Test the influence of fixed (e.g., site) and random effects (e.g., arena) on behavioural responses (e.g., food interaction duration) using the `lmer()` function.
+  2. If multiple fixed effects produce significance, perform model selection using the dredge() function to determine which fixed effects are within delta 2 AICc.
+
+#Intercept GLMMs - testing behaviour intercept (personality) against independent variables
+```{r}
+names(ppdata)
+
+mod <- lmer(i_bait_eaten_g ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_emerge_max ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_food_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_food_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_grooming_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_grooming_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_jump_climb_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_jump_climb_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_legs_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_legs_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_moving_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_moving_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_perch_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_perch_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_stress_in_bag ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_stress_in_trap ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_stress_on_table ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_sumsect_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(i_totalact_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+summary(mod1)
+
+```
+
+#Intercept tables
+```{r}
+tidy_results <- tidy(mod) %>%
+  mutate_if(is.numeric, ~round(., digits = 3))
+
+table <- tidy_results %>%
+  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Latency to emerge (s) intercept", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 12)
+table
+
+table <- tidy_results %>%
+    mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Total activity occurrences <em>(n)</em> intercept", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 12)
+table
+
+```
+
+#Intercept AICc model selection
+```{r}
+
+mod_md_site <- lmer(i_grooming_o ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_md_weight <- lmer(i_grooming_o ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_md_site, mod_md_weight)
+model.names <- c("Study site", "Body weight kg")
+aictab(cand.set = models, modnames = model.names)
+
+mod_e_site <- lmer(i_emerge_max ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_e_weight <- lmer(i_emerge_max ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_e_site, mod_e_weight)
+model.names <- c("Study site", "Body weight kg")
+aictab(cand.set = models, modnames = model.names)
+
+```
+
+#Slope GLMMs - testing behaviour slope (plasticity) against independent variables
+```{r}
+
+names(ppdata)
+
+mod <- lmer(s_bait_eaten_g ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_food_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_emerge_max ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_food_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_grooming_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_grooming_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_jump_climb_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_jump_climb_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_legs_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_legs_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_moving_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_moving_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_perch_d ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_perch_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_stress_in_bag ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_stress_in_trap ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_stress_on_table ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_sumsect_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+mod <- lmer(s_totalact_o ~ sex + study_site + age_n +
+              body_weight_kg + (1|arena), 
+            data=ppdata, na.action = "na.fail")
+
+
+tidy_results <- tidy(mod) %>%
+  mutate_if(is.numeric, ~round(., digits = 3))
+table <- tidy_results %>%
+  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = "Total activity occurrences (n) slope", escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 12)
+table
+
+```
+
 
