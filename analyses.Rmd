@@ -1444,11 +1444,6 @@ aictab(cand.set = models, modnames = model.names)
 ```
 
 
-
-
-
-
-
 #Activity over time - prepping data
 ```{r}
 
@@ -1876,4 +1871,108 @@ table
 
 ```
 
+#Plasticity slope plots 
+```{r}
 
+#Jumping duration v study site
+plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p, fill=study_site
+                                    )) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_x_continuous(breaks = c(0, 1, 2, 3), labels = c("0", "1", "2", "3")) +
+  xlab("Assay number") + ylab("Perching duration (s) adjusted") + labs("")
+print(plot)
+
+#Jumping occurrences v study site
+plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p, fill=study_site
+                                    )) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_x_continuous(breaks = c(0, 1, 2, 3), labels = c("0", "1", "2", "3")) +
+  xlab("Assay number") + ylab("Perching occurrences (n) adjusted") + labs("")
+print(plot)
+
+#Perching duration v study site
+plot <- ggplot(data=data2_pred, aes(x = assay_number, y = perchd_p, fill=study_site)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_x_continuous(breaks = c(0, 1, 2, 3), labels = c("0", "1", "2", "3")) +
+  xlab("Assay number") + ylab("Perching duration (s) adjusted") + labs("")
+print(plot)
+
+#Perching occurrences v study site
+plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p, fill=study_site)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  scale_x_continuous(breaks = c(0, 1, 2, 3), labels = c("0", "1", "2", "3")) +
+  xlab("Assay number") + ylab("Perching occurrences (n) adjusted") + labs("")
+print(plot)
+
+#Moving duration v study site
+plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moved_p, fill=study_site
+                                    )) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  #scale_x_continuous(breaks=seq(0,3,1),labels=seq(0,3,1), limits=c(0,3)) +
+  xlab("Assay number") + ylab("Quadrupedal movement duration (s) adjusted") + labs("")
+print(plot)
+
+#Table stress rating v study site
+plot <- ggplot(data=data2_pred, aes(x = assay_number, y = tablestress_p, fill=study_site)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  #scale_x_continuous(breaks=seq(0,3,1),labels=seq(0,3,1), limits=c(0,3)) +
+  xlab("Assay number") + ylab("Table stress rating adjusted") + labs("")
+print(plot)
+
+#Moving vs weight - no idea how to plot this....
+plot <- ggplot(data=data2_pred, aes(x = body_weight_kg, y = moved_p, fill=assay_number
+                                    )) + 
+  #geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  #scale_x_continuous(breaks=seq(0,3,1),labels=seq(0,3,1), limits=c(0,3)) +
+  xlab("Assay number") + ylab("Quadrupedal movement (s) adjusted") + labs("")
+print(plot)
+
+#Hind legs vs weight - no idea how to plot this....
+plot <- ggplot(data=data2_pred, aes(x = body_weight_kg, y = moved_p, fill=assay_number
+                                    )) + 
+  #geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) +
+  #scale_x_continuous(breaks=seq(0,3,1),labels=seq(0,3,1), limits=c(0,3)) +
+  xlab("Assay number") + ylab("Quadrupedal movement (s) adjusted") + labs("")
+print(plot)
+
+```
