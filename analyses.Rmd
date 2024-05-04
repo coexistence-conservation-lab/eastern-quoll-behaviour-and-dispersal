@@ -22,9 +22,11 @@ knitr::opts_chunk$set(echo=TRUE, eval=TRUE)
 
 # * Background
 
-Personality can play a crucial role in the survival and dispersal of reintroduced animals. In 2017, we reintroduced a cohort of female-only eastern quolls (*Dasyurus viverrinus*) to a [conservation-fenced haven](https://www.mulligansflat.org.au/) in the Australian Capital Territory, and conducted behavioural assays on each animal prior to their release. We aimed to determine whether personality and plasticity of these animals could predict their post-release performance.
+Safe havens (also referred to as sanctuaries) are valuable tools for protecting extant species in decline, and reintroducing species into areas from which they were extirpated (Smith et al. 2020). For those with conservation-fencing, designs which prevent entry (by invasive species) but do not prevent exit (of species living inside) can allow reintroduce species to disperse into the surrounding landscape (Wilson et al. 2020). But does every individual have an equal opportunity to disperse, or is this process driven by genetic and/or phenotypic traits?
 
-Here we describe the analyses we conducted for our article [Wilson *et al.* (2022) Personality and plasticity predicts post-release performance in a reintroduced mesopredator](https://doi.org/10.1016/j.anbehav.2022.02.019), published in Animal Behaviour.
+We studied whether behavioural, morphological, and demographic traits drove dispersal in a reintroduced mesopredator (eastern quoll *Dasyurus viverrinus*, ‘murunguny’ in the Indigenous Ngunnawal language) which was reintroduced to a conservation-fenced haven in the Australian Capital Territory in 2016 (Wilson et al. 2020, 2021). The unmanaged dispersal of eastern quolls from the reintroduction site to surrounding areas presented a unique research opportunity to compare the individuals constituting the (1) self-regulating core population (henceforth residents), and the (2) recently founded external population (henceforth dispersers).
+
+Investigating these trends can build our understanding of dispersal behaviour (and its stages of emigration, inter-patch movement, and immigration), how it responds to density-dependence, and how these processes can be managed for metapopulation health.
 
 # * Setup
 
@@ -84,16 +86,6 @@ capture <- read_excel(raw_data, sheet="Captures") %>%
 
 session <- read_excel(raw_data, sheet="Sessions") %>%
     clean_names()
-
-
-#bin <- read_excel(raw_data, sheet="Binned assays", na="N/A")%>%
- # clean_names()
-
-#sites <- read_excel(raw_data, sheet="Sites") %>%
-  #clean_names()
-
-#trap_eff <- read_excel(raw_data, sheet="Trap effectiveness") %>%
- #clean_names()
 
 #Clean up behaviour data from long to wide format 
 occ <- pivot_wider(data = raw, 
@@ -237,6 +229,9 @@ write.csv(data1, "data1 - first assay data raw.csv")
 
 #Demo/morpho GLM analysis
 ```{r}
+
+data1 <- data1 %>%
+  mutate(age_n = as.numeric(as.character(age_n)))
 
 #Generalised linear model
 mod <- glm(site01 ~ sex*body_weight_kg + cond_n + age_n, data=data1, family=binomial)
@@ -438,11 +433,14 @@ mod <- lmer(totalact_o ~ study_site + sex + age_n + cond_n +
             data=data1, na.action = "na.fail")
 
 #Tables with kableExtra
+
+response_var <- all.vars(formula(mod))[1]
+
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Total activity occurrences (n)", escape = FALSE) %>%
+  kbl(caption = response_var, escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
@@ -664,7 +662,113 @@ table
 
 ```
 
-# Environmental vars data mutated
+
+#Multiple assay behaviour GLMMs with environmental vars
+```{r}
+
+data2 <- data2 %>%
+  mutate(age_n = as.numeric(as.character(age_n)))
+
+mod <- lmer(bait_eaten_g ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + (1|arena),
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(emerge_max ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),             data=data2, na.action = "na.fail")
+
+mod <- lmer(food_d ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase +(1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(food_o ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight + time_processtoassay + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(grooming_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena),
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(grooming_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(jump_climb_d ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight+ (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(jump_climb_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(legs_d ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight + time_processtoassay + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(legs_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + time_assaytolight + time_processtoassay + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + time_assaytolight + time_processtoassay + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(perch_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(perch_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(stress_in_bag ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(stress_in_trap ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(stress_on_table ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight + time_processtoassay + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(sumsect_o ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + time_assaytolight +  (1|arena), 
+            data=data2, na.action = "na.fail")
+
+mod <- lmer(totalact_o ~ study_site + sex + age_n + cond_n + 
+              body_weight_kg + moon_phase + time_processtoassay + (1|arena), 
+            data=data2, na.action = "na.fail")
+
+#Tables with kableExtra
+response_var <- all.vars(formula(mod))[1]
+
+tidy_results <- tidy(mod) %>%
+  mutate_if(is.numeric, ~round(., digits = 3))
+table <- tidy_results %>%
+  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
+  kbl(caption = response_var, escape = FALSE) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 12)
+table
+
+```
+
+
+#Plots for two assays
+```{r}
+
+#Total activity
+tot_act <- ggplot(data=data2, aes(x = study_site, y = totalact_o, fill=study_site)) + 
+ geom_violin() +
+ geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab(" ") + 
+  ylab("Total activity occurrences (n)") + labs("") 
+
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
+
+print(tot_act)
+
+```
+
+
+
+#Environmental vars data mutated
 ```{r}
 
 #Mutating the environmental variables 
