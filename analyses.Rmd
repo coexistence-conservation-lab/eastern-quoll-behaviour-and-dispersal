@@ -164,6 +164,7 @@ data <- data %>%
                                ifelse(age_estimate=="1-2yrs", 1,
                                       ifelse(age_estimate=="2-3yrs", 2, NA)))))
 
+
 ```
 
 # Calculating time differences 
@@ -181,6 +182,9 @@ data$time_assaytolight <- data$first_light - data$snout
 #Filtering out the two individuals who were assayed in Sept 2023
 data <- data %>%
   filter(!(quoll_code %in% c("53328", "87DE0")))
+
+view(data)
+str(data)
 
 ```
 
@@ -221,6 +225,8 @@ For morphometric and demographic analysis, and 'static behaviour' analysis
 data1 <- data %>%
       filter(assay_number !=2)
 
+view(data1)
+
 data1$site01 <- ifelse(data1$study_site == "Goorooyarroo", 1, 0)
 
 write.csv(data1, "data1 - first assay data raw.csv")
@@ -233,7 +239,7 @@ write.csv(data1, "data1 - first assay data raw.csv")
 data1 <- data1 %>%
   mutate(age_n = as.numeric(as.character(age_n)))
 
-#Generalised linear model
+#Generalised linear model - with interaction (interactive)
 mod <- glm(site01 ~ sex*body_weight_kg + cond_n + age_n, data=data1, family=binomial)
 
 #AICc 
@@ -283,17 +289,32 @@ cond_plot  <- ggplot(data=data1, aes(x = study_site, fill=condition)) +
   xlab("Study site") + ylab("Proportion of eastern quolls") + labs("") 
 print(cond_plot)
 ggsave(filename = "morpho - cond v study site.jpeg", cond_plot, width=200, height= 150, units = "mm")
+unique(data_b$age_estimate)
+unique(data1$age_n)
+
+
+
+#Condition plot
+data1 <- data1 %>%
+  # assign as factor
+  mutate(age_estimate = as.factor(age_estimate)) %>%
+  # Assign new labels
+  mutate(age_estimate = recode(age_estimate, 
+                               "1-2yrs" = "1–2 years", 
+                               "<1yr" = "<1 year", 
+                               "2-3yrs" = "2–3 years"))  %>%
+  # reorder new labels
+  mutate(age_estimate = factor(age_estimate, 
+                               levels = c("2–3 years", "1–2 years", "<1 year")))
 
 #Age plot 
-data1$age_n <- factor(data1$age_n, levels = c("2", "1", "0"))
-
-age_plot  <- ggplot(data=data1, aes(x = study_site, fill=age_n)) + 
+view(data1)
+age_plot  <- ggplot(data=data1, aes(x = study_site, fill=age_estimate)) +
  geom_bar(position="fill") +
   stat_count(aes(label = ..count..), geom = "text", position = position_fill(vjust = 0.5), size = 3.5, 
              color = "white") +
   scale_fill_manual (values = c("#472F7dFF", "#2a788Eff", "#35B770FF"), 
-                     name = "Age estimate",
-                     labels = c("2-3 years", "1-2 years", "< 1 year")) +
+                     name = "Age estimate") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
