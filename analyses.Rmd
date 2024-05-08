@@ -233,11 +233,29 @@ write.csv(data1, "data1 - first assay data raw.csv")
 
 ```
 
-#Demo/morpho GLM analysis
+Ensure that the data frame is in the format needed
 ```{r}
-
 data1 <- data1 %>%
   mutate(age_n = as.numeric(as.character(age_n)))
+
+data1$condition <- factor(data1$condition, levels = c("Excellent", "Good", "Fair", "Poor"))
+
+data1 <- data1 %>%
+  # assign as factor
+  mutate(age_estimate = as.factor(age_estimate)) %>%
+  # Assign new labels
+  mutate(age_estimate = recode(age_estimate, 
+                               "1-2yrs" = "1–2 years", 
+                               "<1yr" = "<1 year", 
+                               "2-3yrs" = "2–3 years"))  %>%
+  # reorder new labels
+  mutate(age_estimate = factor(age_estimate, 
+                               levels = c("2–3 years", "1–2 years", "<1 year")))
+
+```
+
+#Demo/morpho GLM analysis
+```{r}
 
 #Generalised linear model - with interaction (interactive)
 mod <- glm(site01 ~ sex*body_weight_kg + cond_n + age_n, data=data1, family=binomial)
@@ -272,10 +290,7 @@ table
 
 show_col(viridis(16))
 
-
 #Condition plot
-data1$condition <- factor(data1$condition, levels = c("Excellent", "Good", "Fair", "Poor"))
-
 cond_plot  <- ggplot(data=data1, aes(x = study_site, fill=condition)) + 
  geom_bar(position="fill") +
   stat_count(aes(label = ..count..), geom = "text", position = position_fill(vjust = 0.5), size = 3.5, 
@@ -288,30 +303,13 @@ cond_plot  <- ggplot(data=data1, aes(x = study_site, fill=condition)) +
   #scale_y_continuous(breaks=seq(0,20,5),labels=seq(0,20,5), limits=c(0,20)) +
   xlab("Study site") + ylab("Proportion of eastern quolls") + labs("") 
 print(cond_plot)
-ggsave(filename = "morpho - cond v study site.jpeg", cond_plot, width=200, height= 150, units = "mm")
-unique(data_b$age_estimate)
-unique(data1$age_n)
+ggsave(filename = "morpho - cond v study site.jpeg", cond_plot, width=175, height=125, units = "mm")
 
-
-
-#Condition plot
-data1 <- data1 %>%
-  # assign as factor
-  mutate(age_estimate = as.factor(age_estimate)) %>%
-  # Assign new labels
-  mutate(age_estimate = recode(age_estimate, 
-                               "1-2yrs" = "1–2 years", 
-                               "<1yr" = "<1 year", 
-                               "2-3yrs" = "2–3 years"))  %>%
-  # reorder new labels
-  mutate(age_estimate = factor(age_estimate, 
-                               levels = c("2–3 years", "1–2 years", "<1 year")))
 
 #Age plot 
-view(data1)
 age_plot  <- ggplot(data=data1, aes(x = study_site, fill=age_estimate)) +
  geom_bar(position="fill") +
-  stat_count(aes(label = ..count..), geom = "text", position = position_fill(vjust = 0.5), size = 3.5, 
+  stat_count(aes(label = ..count..), geom = "text", position = position_fill(vjust = 0.5), size = 4, 
              color = "white") +
   scale_fill_manual (values = c("#472F7dFF", "#2a788Eff", "#35B770FF"), 
                      name = "Age estimate") +
@@ -322,7 +320,7 @@ age_plot  <- ggplot(data=data1, aes(x = study_site, fill=age_estimate)) +
   #scale_y_continuous(breaks=seq(0,20,5),labels=seq(0,20,5), limits=c(0,20)) +
   xlab("Study site") + ylab("Proportion of eastern quolls") + labs("") 
 print(age_plot)
-ggsave(filename = "morpho - age v study site.jpeg", age_plot, width=200, height= 150, units = "mm")
+ggsave(filename = "morpho - age v study site.jpeg", age_plot, width=175, height= 125, units = "mm")
 
 
 weight_plot <- ggplot(data = data1, aes(x = study_site, y = body_weight_kg, fill = study_site)) +
@@ -336,9 +334,6 @@ print(weight_plot)
 ```{r}
 
 foodd <- glm(food_d ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
-summary(foodd)
-df.residual(foodd)
-
 foodo <- glm(food_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 
 groomd <- glm(grooming_d ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
@@ -382,12 +377,11 @@ table
 
 ```
 
-
 Analyse behaviour indicators
   1. Test the influence of fixed (e.g., site) and random effects (e.g., arena) on behavioural responses (e.g., food interaction duration) using the `lmer()` function.
   2. If multiple fixed effects produce significance, perform model selection using the dredge() function to determine which fixed effects are within delta 2 AICc.
 
-#Static behaviour GLMMS
+#Capture behaviour GLMMS
 Testing behaviour in GLMMs including environmental variables as competing factors in fixed effects model.
 
 ```{r}
@@ -395,7 +389,8 @@ Testing behaviour in GLMMs including environmental variables as competing factor
 mod <- lmer(bait_eaten_g ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-mod <- lmer(emerge_max ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),             data=data1, na.action = "na.fail")
+mod <- lmer(emerge_max ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),
+            data=data1, na.action = "na.fail")
 
 mod <- lmer(food_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
@@ -406,8 +401,7 @@ mod <- lmer(food_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|are
 mod <- lmer(grooming_d ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),
             data=data1, na.action = "na.fail")
 
-mod <- lmer(grooming_o ~ study_site + sex + age_n + cond_n +
-              body_weight_kg + temp + (1|arena), 
+mod <- lmer(grooming_o ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena), 
             data=data1, na.action = "na.fail")
 
 mod <- lmer(jump_climb_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
@@ -422,16 +416,14 @@ mod <- lmer(legs_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|are
 mod <- lmer(legs_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight
-            + (1|arena), 
+mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight + (1|arena), 
             data=data1, na.action = "na.fail")
 
-mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight
-            + (1|arena), 
+mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight + (1|arena), 
             data=data1, na.action = "na.fail")
 
-mod <- lmer(perch_d ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + moon_phase
-            + time_assaytolight + time_processtoassay + (1|arena), 
+mod <- lmer(perch_d ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + moon_phase + 
+              time_assaytolight + time_processtoassay + (1|arena), 
             data=data1, na.action = "na.fail")
 
 mod <- lmer(perch_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
@@ -449,8 +441,7 @@ mod <- lmer(stress_on_table ~ study_site + sex + age_n + cond_n + body_weight_kg
 mod <- lmer(sumsect_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
-mod <- lmer(totalact_o ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + (1|arena), 
+mod <- lmer(totalact_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data1, na.action = "na.fail")
 
 #Tables with kableExtra
@@ -468,7 +459,7 @@ table
 
 ```
 
-#Static behaviour AICc model selection
+#Capture behaviour AICc model selection
 ```{r}
 
 control_ml <- lmerControl(optimizer = "Nelder_Mead")
@@ -491,29 +482,9 @@ models <- list(mod_go_site, mod_go_temp)
 model.names <- c("Site", "Temp")
 aictab(cand.set = models, modnames = model.names)
 
-#Jumping and climbing occurrences
-mod_jo_sex <- lmer(jump_climb_o ~ sex + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_jo_age <- lmer(jump_climb_o ~ age_n + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-models <- list(mod_jo_sex, mod_jo_age)
-model.names <- c("Sex", "Age")
-aictab(cand.set = models, modnames = model.names)
-
-#Perching occurrences
-mod_po_sex <- lmer(perch_o ~ sex + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_po_age <- lmer(perch_o ~ age_n + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_po_site <- lmer(perch_o ~ study_site + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-models <- list(mod_po_sex, mod_po_age, mod_po_site)
-model.names <- c("Sex", "Age", "Study site")
-aictab(cand.set = models, modnames = model.names)
-
 ```
 
-#Static behaviour plots
+#Capture behaviour plots
 ```{r}
 
 #Grooming duration v study site plot
@@ -532,7 +503,6 @@ groomd_site <- ggplot(data=data1, aes(x = study_site, y = grooming_d, fill=study
   xlab("Study site") + ylab("Grooming duration (s)") + labs("") 
 
 #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-
 print(groomd_site)
 ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_site, width=200, height= 150, units = "mm")
 
@@ -551,7 +521,6 @@ groomo_site <- ggplot(data=data1, aes(x = study_site, y = grooming_o,
         axis.line.y = element_line(color = "black")) + 
   scale_y_continuous(breaks=seq(0,8,2),labels=seq(0,8,2), limits=c(0,8)) +
   xlab("Study site") + ylab(expression(paste("Grooming occurrences ", italic(" (n)")))) + labs("")
-
 print(groomo_site)
 
 ggsave(filename = "1st assay - study site v grooming occ.jpeg", groomo_site, width=200, height= 150, units = "mm")
@@ -570,46 +539,10 @@ joage_plot  <- ggplot(data=data1, aes(x = age_estimate, y = jump_climb_o, fill =
         axis.line.y = element_line(color = "black")) + 
   xlab("Age estimate") + ylab(expression(paste("Jumping and climbing occurrences ", italic(" (n) ")))) + 
   labs("")
-
 print(joage_plot)
 
 ggsave(filename = "1st assay - age v jumping.jpeg", joage_plot, width=200, height= 150, units = "mm")
 
-#Perching v age plot 
-page_plot  <- ggplot(data=data1, aes(x = age_estimate, y = perch_o, fill = age_estimate)) + 
- geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#3f4288", "#25798F", "#1caa85")) +
-  theme_minimal() +
-  theme(legend.position = "none",
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Age estimate") + ylab(expression(paste("Perching occurrences ", italic(" (n) ")))) + 
-  labs("") 
-print(page_plot)
-
-ggsave(filename = "1st assay - age v perching.jpeg", page_plot, width=200, height= 150, units = "mm")
-
-#Perching v sex plot 
-psex_plot  <- ggplot(data=data1, aes(x = sex, y = perch_o, fill = sex)) + 
- geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F", "#1caa85")) +
-  theme_minimal() +
-  theme(legend.position = "none",
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("Sex") + ylab(expression(paste("Perching occurrences ", italic(" (n) ")))) + 
-  labs("") +
-  scale_x_discrete(labels = c("Female", "Male"))
-print(psex_plot)
-ggsave(filename = "1st assay - sex v perching.jpeg", psex_plot, width=200, height= 150, units = "mm")
 
 ```
 
@@ -625,7 +558,7 @@ write.csv(data2, "data2 - individuals with two assays raw data.csv")
 
 ```
 
-# Environmental vars GLM analysis
+#Capture and recapture environmental vars GLM analysis
 ```{r}
 
 bait2 <- glm(bait_eaten_g ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
@@ -661,7 +594,7 @@ summary(tablestress2)
 
 ```
 
-# Environmental vars tables with kableExtra
+#Capture and recapture environmental vars tables with kableExtra
 ```{r}
 
 tidy_results <- tidy(bait2) %>%
@@ -684,14 +617,17 @@ table
 ```
 
 
-#Multiple assay behaviour GLMMs with environmental vars
+#Capture and recapture behaviour GLMMs with environmental vars
 ```{r}
 
 data2 <- data2 %>%
   mutate(age_n = as.numeric(as.character(age_n)))
 
+
 mod <- lmer(bait_eaten_g ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + (1|arena),
             data=data2, na.action = "na.fail")
+
+summary(mod)
 
 mod <- lmer(emerge_max ~ study_site + sex + age_n + cond_n + body_weight_kg + temp + (1|arena),             data=data2, na.action = "na.fail")
 
@@ -713,16 +649,19 @@ mod <- lmer(jump_climb_d ~ study_site + sex + age_n + cond_n + body_weight_kg + 
 mod <- lmer(jump_climb_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data2, na.action = "na.fail")
 
-mod <- lmer(legs_d ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight + time_processtoassay + (1|arena), 
+mod <- lmer(legs_d ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight + 
+              time_processtoassay + (1|arena), 
             data=data2, na.action = "na.fail")
 
 mod <- lmer(legs_o ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data2, na.action = "na.fail")
 
-mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + time_assaytolight + time_processtoassay + (1|arena), 
+mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + 
+              time_assaytolight + time_processtoassay + (1|arena), 
             data=data2, na.action = "na.fail")
 
-mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + time_assaytolight + time_processtoassay + (1|arena), 
+mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + 
+              time_assaytolight + time_processtoassay + (1|arena), 
             data=data2, na.action = "na.fail")
 
 mod <- lmer(perch_d ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
@@ -737,14 +676,16 @@ mod <- lmer(stress_in_bag ~ study_site + sex + age_n + cond_n + body_weight_kg +
 mod <- lmer(stress_in_trap ~ study_site + sex + age_n + cond_n + body_weight_kg + (1|arena), 
             data=data2, na.action = "na.fail")
 
-mod <- lmer(stress_on_table ~ study_site + sex + age_n + cond_n + body_weight_kg + time_assaytolight + time_processtoassay + (1|arena), 
+mod <- lmer(stress_on_table ~ study_site + sex + age_n + cond_n + body_weight_kg + 
+              time_assaytolight + time_processtoassay + (1|arena), 
             data=data2, na.action = "na.fail")
 
-mod <- lmer(sumsect_o ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + time_assaytolight +  (1|arena), 
+mod <- lmer(sumsect_o ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + 
+              time_assaytolight +  (1|arena), 
             data=data2, na.action = "na.fail")
 
-mod <- lmer(totalact_o ~ study_site + sex + age_n + cond_n + 
-              body_weight_kg + moon_phase + time_processtoassay + (1|arena), 
+mod <- lmer(totalact_o ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + 
+              time_processtoassay + (1|arena), 
             data=data2, na.action = "na.fail")
 
 #Tables with kableExtra
@@ -758,6 +699,23 @@ table <- tidy_results %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
+
+```
+
+#Capture and recapture behaviour AICc model selection
+```{r}
+
+control_ml <- lmerControl(optimizer = "Nelder_Mead")
+
+#Total activity  
+mod_tot_site <- lmer(totalact_o ~ study_site + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+mod_tot_moon <- lmer(totalact_o ~ moon_phase + (1|arena), 
+            data=data1, control = control_ml, na.action = "na.fail")
+models <- list(mod_tot_site, mod_tot_moon)
+model.names <- c("Site", "Moon")
+aictab(cand.set = models, modnames = model.names)
+
 
 ```
 
@@ -784,6 +742,55 @@ tot_act <- ggplot(data=data2, aes(x = study_site, y = totalact_o, fill=study_sit
 #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
 
 print(tot_act)
+
+ggsave(filename = "2 assays raw - site v total activity.jpeg", tot_act, width=200, height= 150, units = "mm")
+
+
+str(data2)
+view(data2
+     )
+#Grooming duration
+groomdur <- ggplot(data=data2, aes(x = sex, y = grooming_d, fill=sex)) + 
+ geom_boxplot() +
+ #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Sex") + 
+  ylab("Grooming duration (s)") + labs("") +
+  scale_x_discrete(labels = c("M" = "Male", "F" = "Female"))
+
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
+
+print(groomdur)
+
+ggsave(filename = "2 assays raw - sex v grooming.jpeg", groomdur, width=200, height= 150, units = "mm")
+
+
+
+#Grooming duration
+foodweight <- ggplot(data=data2, aes(x = body_weight_kg, y = food_d)) + 
+ geom_smooth() +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  xlab("Body weight (kg)") + 
+  ylab("Food interaction duration (s)") + labs("")
+
+
+print(foodweight)
+
+ggsave(filename = "2 assays raw - food v weight.jpeg", foodweight, width=200, height= 150, units = "mm")
+
+
 
 ```
 
@@ -923,10 +930,13 @@ write.csv(data2_pred,"data2_pred - both assays adjusted env variables.csv")
 #Adjusted behaviour variables - test vs assay number
 ```{r}
 
+view(data2)
+
 mod <- glm(foodd_p ~ assay_number, family=gaussian, data=data2_pred)
-df.residual(mod)
+
 mod <- glm(foodo_p ~ assay_number, family=gaussian, data=data2_pred)
 mod <- glm(bait_p ~ assay_number, family=gaussian, data=data2_pred)
+summary(mod)
 
 mod <- glm(groomd_p ~ assay_number, family=gaussian, data=data2_pred)
 mod <- glm(groomo_p ~ assay_number, family=gaussian, data=data2_pred)
@@ -965,7 +975,6 @@ table
 
 #Adjusted behaviour variables vs assay number plots
 ```{r}
-
 
 ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p, 
                         fill = assay_number)) + 
@@ -1224,9 +1233,27 @@ quoll2 <- data2_pred %>%
                      -ssr, -process_start, -process_end, -pouch, -teeth_colour, 
                      -teeth_sharpness, -teeth_shine, stress_in_trap, stress_in_bag, stress_on_table)
 
-quoll2$condition <- factor(quoll2$condition, levels = c("Excellent", "Good", "Fair", "Poor"))
-quoll2$cond_n <- factor(quoll2$cond_n, levels = c("4", "3", "2", "1"))
-quoll2$age_n <- factor(quoll2$age_n, levels = c("2", "1", "0"))
+unique(quoll2$age_estimate)
+
+quoll2 <- quoll2 %>%
+  # assign as factor
+  mutate(condition = as.factor(condition), 
+         age_estimate = as.factor(age_estimate)) %>%
+  # Assign new labels
+  mutate(age_estimate = recode(age_estimate, 
+                               "1-2yrs" = "1–2 years", 
+                               "<1yr" = "<1 year", 
+                               "2-3yrs" = "2–3 years"))  %>%
+  # reorder new labels
+   mutate(condition = factor(condition, 
+                               levels = c("Excellent", "Good", 
+                                          "Fair", "Poor")), 
+          age_estimate = factor(age_estimate, 
+                               levels = c("2–3 years", 
+                                          "1–2 years", "<1 year")))
+
+
+str(quoll2)
 
 write.csv(quoll2, "quoll2.csv")
 
@@ -1301,7 +1328,9 @@ view(ppdata)
 #Intercept GLMMs - testing behaviour intercept (personality) against independent variables
 ```{r}
 
-mod <- lmer(i_bait_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+view(ppdata)
+
+mod <- lmer(i_bait_p ~ sex*body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
 mod <- lmer(i_emerge_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
@@ -1362,19 +1391,12 @@ mod <- lmer(i_tablestress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena
 
 #Intercept tables
 ```{r}
+response_var <- all.vars(formula(mod))[1]
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
-
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted table stress rating intercept", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-table <- tidy_results %>%
-    mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted total activity occurrences <em>(n)</em> intercept", escape = FALSE) %>%
+  kbl(caption = response_var, escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
@@ -1384,13 +1406,13 @@ table
 #Intercept AICc model selection
 ```{r}
 
-#Bait eaten
-mod_bi_site <- lmer(i_bait_p ~ study_site + (1|arena), 
+#Perching duration TO DO****
+mod_pdi_site <- lmer(i_perchd_p ~ study_site + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-mod_bi_weight <- lmer(i_bait_p ~ body_weight_kg  + (1|arena), 
+mod_pdi_weight <- lmer(i_perchd_p ~ sex*body_weight_kg  + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-models <- list(mod_bi_site, mod_bi_weight)
-model.names <- c("Study site", "Body weight kg")
+models <- list(mod_pdi_site, mod_pdi_weight)
+model.names <- c("Study site", "Interaction of Sex and body weight kg")
 aictab(cand.set = models, modnames = model.names)
 
 ```
@@ -1699,7 +1721,6 @@ ggsave(filename = "intercept - study site v total activity.jpeg", i_act_site, wi
 ```
 
 Arrange intercept plots into one. 
-
 ```{r}
 
 intercept_plot <- ggarrange(i_md_site, i_gd_site, i_go_site, i_b_site, i_jd_site, i_jo_site, i_e_site, i_pd_site, i_po_site, i_ld_site, i_lo_site, ncol = 3, nrow = 4,
@@ -1711,7 +1732,6 @@ intercept_plot <- ggarrange(i_md_site, i_gd_site, i_go_site, i_b_site, i_jd_site
     label.y = 0.99,
     hjust = -0.1,
     vjust = 1.5  ))
-
 
 intercept_plot <- annotate_figure(intercept_plot, 
         left = text_grob("Adjusted behaviour intercepts a.k.a personality", rot=90, size = 16, face = "bold"),
@@ -1780,26 +1800,36 @@ mod <- lmer(s_trapstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena)
 
 mod <- lmer(s_tablestress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
+```
 
 #Tables with kableExtra
+```{r}
+response_var <- all.vars(formula(mod))[1]
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits = 3))
-
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted table stress rating slope", escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
-table
-
-table <- tidy_results %>%
-  mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
-  kbl(caption = "Adjusted total activity occurrences (n) slope", escape = FALSE) %>%
+  kbl(caption = response_var, escape = FALSE) %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = "striped", font_size = 12)
 table
 
 ```
+
+#Slope AICc model selection
+```{r}
+
+#Perching duration TO DO****
+mod_mds_site <- lmer(s_moved_p ~ study_site + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+mod_mds_weight <- lmer(s_moved_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+models <- list(mod_mds_site, mod_mds_weight)
+model.names <- c("Study site", "Body weight kg")
+aictab(cand.set = models, modnames = model.names)
+
+```
+
 
 
 #Slope plots
@@ -1808,7 +1838,7 @@ table
 view(ppdata)
 names(ppdata)
 
-#Latency to emerge
+#Latency to emerge v site
 s_e_site <- ggplot(data=ppdata, aes(x = study_site, y = s_emerge_p, fill=study_site)) + 
  geom_violin() +
   geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
@@ -1832,7 +1862,7 @@ ggsave(filename = "slope - study site v latency to emerge.jpeg", s_e_site, width
 
 
 
-#Food interaction duration
+#Food interaction duration v site
 s_fd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_foodd_p, fill=study_site)) + 
  geom_violin() +
   geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
@@ -1854,6 +1884,51 @@ print(s_fd_site)
 
 ggsave(filename = "slope - study site v food dur.jpeg", s_fd_site, width=150, height= 150, units = "mm")
 
+
+#Food interaction occurrences v weight
+s_fo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_foodo_p)) + 
+ geom_smooth() +
+  #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+ # stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+  #             shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#420053","#3f4288")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Body weight (kg)") + 
+  ylab("Adjusted food interaction occurrences (n) slope") + labs("") 
+
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
+
+print(s_fo_weight)
+
+ggsave(filename = "slope - weight v food occ.jpeg", s_fo_weight, width=150, height= 150, units = "mm")
+
+
+#Legs occurrences v weight
+s_lo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legso_p, )) + 
+ geom_smooth() +
+  #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  #stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+  #             shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#420053","#3f4288")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Body weight (kg)") + 
+  ylab("Adjusted hind leg stands occurrences (n) slope") + labs("") 
+
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
+
+print(s_lo_weight)
+
+ggsave(filename = "slope - weight v legs occ.jpeg", s_lo_weight, width=150, height= 150, units = "mm")
 
 
 #Movement duration
@@ -2017,6 +2092,55 @@ print(s_ts_site)
 
 ggsave(filename = "slope - study site v table stress.jpeg", s_ts_site, width=150, height= 150, units = "mm")
 
+
+
+#Move occ v weight 
+s_mo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moveo_p)) + 
+ geom_smooth() +
+  #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  #stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+  #             shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#420053","#3f4288")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Body weight (kg) ") + 
+  ylab("Adjusted quadrupedal movement occurrences slope") + labs("") 
+
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
+
+print(s_mo_weight)
+
+ggsave(filename = "slope - weight  v moving occ.jpeg", s_mo_weight, width=150, height= 150, units = "mm")
+
+
+
+#Total activity v weight 
+s_toto_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_totalacto_p)) + 
+ geom_smooth() +
+  #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  #stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+  #             shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#420053","#3f4288")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black")) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Body weight (kg) ") + 
+  ylab("Adjusted total activity occurrences (n) slope") + labs("") 
+
+#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
+
+print(s_toto_weight)
+
+ggsave(filename = "slope - weight  v total activity occr.jpeg", s_toto_weight, width=150, height= 150, units = "mm") 
+
+
 ```
 
 Arrange slope plots into one. 
@@ -2105,11 +2229,14 @@ sessionInfo()
 ```
 
 
-#Plasticity slope plots 
+#Plasticity slope plot
 ```{r}
 
+d2pred <- data2_pred %>%
+  mutate(assay_number = as.numeric(assay_number))
+
 #Jumping duration v study site
-plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p, fill=study_site
+plot <- ggplot(data=d2pred, aes(x=assay_number, y=jumpd_p, fill=study_site
                                     )) + 
   geom_point() +
   geom_smooth(method = "lm", se = TRUE) +
@@ -2117,96 +2244,9 @@ plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p, fill=study_si
   theme(panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black")) +
-  scale_x_continuous(breaks = c(0, 1, 2, 3), labels = c("0", "1", "2", "3")) +
-  xlab("Assay number") + ylab("Perching duration (s) adjusted") + labs("")
-print(plot)
+  xlab("Assay number") + ylab("Jumping + climbing duration (s) adjusted") + labs("") +
+    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number)))
 
-#Jumping occurrences v study site
-plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p, fill=study_site
-                                    )) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_x_continuous(breaks = c(0, 1, 2, 3), labels = c("0", "1", "2", "3")) +
-  xlab("Assay number") + ylab("Perching occurrences (n) adjusted") + labs("")
-print(plot)
-
-#Perching duration v study site
-plot <- ggplot(data=data2_pred, aes(x = assay_number, y = perchd_p, fill=study_site)) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_x_continuous(breaks = c(0, 1, 2, 3), labels = c("0", "1", "2", "3")) +
-  xlab("Assay number") + ylab("Perching duration (s) adjusted") + labs("")
-print(plot)
-
-#Perching occurrences v study site
-plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p, fill=study_site)) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  scale_x_continuous(breaks = c(0, 1, 2, 3), labels = c("0", "1", "2", "3")) +
-  xlab("Assay number") + ylab("Perching occurrences (n) adjusted") + labs("")
-print(plot)
-
-#Moving duration v study site
-plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moved_p, fill=study_site
-                                    )) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  #scale_x_continuous(breaks=seq(0,3,1),labels=seq(0,3,1), limits=c(0,3)) +
-  xlab(" ") + ylab("Quadrupedal movement duration (s) adjusted") + labs("")
-print(plot)
-
-#Table stress rating v study site
-plot <- ggplot(data=data2_pred, aes(x = assay_number, y = tablestress_p, fill=study_site)) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  #scale_x_continuous(breaks=seq(0,3,1),labels=seq(0,3,1), limits=c(0,3)) +
-  xlab(" ") + ylab("Table stress rating adjusted") + labs("")
-print(plot)
-
-#Moving vs weight - no idea how to plot this....
-plot <- ggplot(data=data2_pred, aes(x = body_weight_kg, y = moved_p, fill=assay_number
-                                    )) + 
-  #geom_point() +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  #scale_x_continuous(breaks=seq(0,3,1),labels=seq(0,3,1), limits=c(0,3)) +
-  xlab(" ") + ylab("Quadrupedal movement (s) adjusted") + labs("")
-print(plot)
-
-#Hind legs vs weight - no idea how to plot this....
-plot <- ggplot(data=data2_pred, aes(x = body_weight_kg, y = moved_p, fill=assay_number
-                                    )) + 
-  #geom_point() +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  #scale_x_continuous(breaks=seq(0,3,1),labels=seq(0,3,1), limits=c(0,3)) +
-  xlab(" ") + ylab("Quadrupedal movement (s) adjusted") + labs("")
 print(plot)
 
 ```
