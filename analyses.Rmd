@@ -377,6 +377,146 @@ table
 
 ```
 
+#Environmental vars plots
+```{r}
+
+names(data1)
+
+#Grooming and tempoerature
+groomtemp <- ggplot(data=data1, aes(x = temp, y = grooming_o)) + 
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(-5,10,5),labels=seq(-5,10,5), limits=c(-5,10)) +
+  xlab(expression(paste("Ambient temperature (", degree, "C)"))) + 
+  ylab(expression(paste("Grooming occurrences ", italic("(n) ")))) + labs("")
+
+print(groomtemp)
+#ggsave(filename = "2 assays raw - food v weight.jpeg", groomtemp, width=150, height= 150, units = "mm")
+
+
+#Grooming and tempoerature
+groomtemp <- ggplot(data=data1, aes(x = temp, y = grooming_d)) + 
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(-5,10,5),labels=seq(-5,10,5), limits=c(-5,10)) +
+  xlab(expression(paste("Ambient temperature (", degree, "C)"))) + 
+  ylab("Grooming duration (s)") + labs("")
+
+print(groomtemp)
+#ggsave(filename = "2 assays raw - food v weight.jpeg", groomtemp, width=150, height= 150, units = "mm")
+
+
+#Moving duration and time to first light
+plot <- ggplot(data=data1, aes(x = time_assaytolight, y = moving_d)) + 
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_y_continuous(breaks=seq(-5,10,5),labels=seq(-5,10,5), limits=c(-5,10)) +
+  xlab("Time (mins) from assay to first light") + 
+  ylab("Quadrupedal movement duration (s)") + labs("")
+
+print(plot)
+#ggsave(filename = "2 assays raw - food v weight.jpeg", groomtemp, width=150, height= 150, units = "mm")
+
+#Moving duration and time to first light
+plot <- ggplot(data=data1, aes(x = time_assaytolight, y = legs_o)) + 
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_y_continuous(breaks=seq(-5,10,5),labels=seq(-5,10,5), limits=c(-5,10)) +
+  xlab("Time (mins) from assay to first light") + 
+  ylab("Hind leg stand occurrences (n)") + labs("")
+
+print(plot)
+#ggsave(filename = "2 assays raw - food v weight.jpeg", groomtemp, width=150, height= 150, units = "mm")
+
+
+#Perching duration and all vars
+plot <- ggplot(data=data1, aes(x = time_assaytolight, y = perch_d)) + 
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_y_continuous(breaks=seq(-5,10,5),labels=seq(-5,10,5), limits=c(-5,10)) +
+  xlab("Time (mins) from assay to first light") + 
+  ylab("Perching duration (s)") + labs("")
+print(plot)
+
+
+plot <- ggplot(data=data1, aes(x = time_processtoassay, y = perch_d)) + 
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_y_continuous(breaks=seq(-5,10,5),labels=seq(-5,10,5), limits=c(-5,10)) +
+  xlab("Time (mins) from processing to assay") + 
+  ylab("Perching duration (s)") + labs("")
+print(plot)
+
+plot <- ggplot(data=data1, aes(x = moon_phase, y = perch_d)) + 
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_y_continuous(breaks=seq(-5,10,5),labels=seq(-5,10,5), limits=c(-5,10)) +
+  xlab("Moon illumination (%)") + 
+  ylab("Perching duration (s)") + labs("")
+print(plot)
+
+
+plot <- ggplot(data=data1, aes(x = temp, y = perch_d)) + 
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_y_continuous(breaks=seq(-5,10,5),labels=seq(-5,10,5), limits=c(-5,10)) +
+  xlab("Temp") + 
+  ylab("Perching duration (s)") + labs("")
+print(plot)
+
+
+```
+
+
+
 Analyse behaviour indicators
   1. Test the influence of fixed (e.g., site) and random effects (e.g., arena) on behavioural responses (e.g., food interaction duration) using the `lmer()` function.
   2. If multiple fixed effects produce significance, perform model selection using the dredge() function to determine which fixed effects are within delta 2 AICc.
@@ -487,24 +627,28 @@ aictab(cand.set = models, modnames = model.names)
 #Capture behaviour plots
 ```{r}
 
-#Grooming duration v study site plot
+view(data1)
+
+#Groodata1#Grooming duration v study site plot
 groomd_site <- ggplot(data=data1, aes(x = study_site, y = grooming_d, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#2a788Eff","#35B770FF")) +
+  scale_fill_manual (values = c("#25798F","#7BD151")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
   scale_y_continuous(breaks=seq(0,110,20),labels=seq(0,110,20), limits=c(0,110)) +
-  xlab("Study site") + ylab("Grooming duration (s)") + labs("") 
+  xlab("") + ylab("Grooming duration (s)") + labs("")  +
+  annotate("text", x = "Mulligans Flat", y =110, label = "A", size = 10, hjust = -4)
 
 #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
 print(groomd_site)
-ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_site, width=200, height= 150, units = "mm")
+ggsave(filename = "1st assay - study site v grooming dur.jpeg", groomd_site, width=150, height= 150, units = "mm")
 
 #Grooming occurrences v study site plot
 groomo_site <- ggplot(data=data1, aes(x = study_site, y = grooming_o, 
@@ -518,12 +662,29 @@ groomo_site <- ggplot(data=data1, aes(x = study_site, y = grooming_o,
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
   scale_y_continuous(breaks=seq(0,8,2),labels=seq(0,8,2), limits=c(0,8)) +
-  xlab("Study site") + ylab(expression(paste("Grooming occurrences ", italic(" (n)")))) + labs("")
+  xlab("") + ylab(expression(paste("Grooming occurrences ", italic(" (n)")))) + labs("") +
+  annotate("text", x = "Mulligans Flat", y =8, label = "B", size = 10, hjust = -4)
+
 print(groomo_site)
 
-ggsave(filename = "1st assay - study site v grooming occ.jpeg", groomo_site, width=200, height= 150, units = "mm")
+ggsave(filename = "1st assay - study site v grooming occ.jpeg", groomo_site, width=150, height= 150, units = "mm")
+
+
+plot <- ggarrange(groomd_site, groomo_site)
+plot <- annotate_figure(plot, 
+        #left = text_grob("Adjusted behaviours over two assays", rot=90, size = 16, face = "bold"),
+        bottom = text_grob("Study site", size = 20))
+print(plot)
+ggsave(filename = "1st assay groom site plots.jpeg", plot, width=300, height= 150, units = "mm")
+
+data1$age_estimate
+
+
+custom_order <- c("<1 year", "1–2 years", "2–3 years")
+data1$age_estimate <- factor(data1$age_estimate, levels = custom_order)
 
 #Jumping and climbing v age plot 
 joage_plot  <- ggplot(data=data1, aes(x = age_estimate, y = jump_climb_o, fill = age_estimate)) + 
@@ -536,12 +697,13 @@ joage_plot  <- ggplot(data=data1, aes(x = age_estimate, y = jump_climb_o, fill =
   theme(legend.position = "none",
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
   xlab("Age estimate") + ylab(expression(paste("Jumping and climbing occurrences ", italic(" (n) ")))) + 
   labs("")
 print(joage_plot)
 
-ggsave(filename = "1st assay - age v jumping.jpeg", joage_plot, width=200, height= 150, units = "mm")
+ggsave(filename = "1st assay - age v jumping.jpeg", joage_plot, width=150, height= 150, units = "mm")
 
 
 ```
@@ -723,6 +885,8 @@ aictab(cand.set = models, modnames = model.names)
 #Plots for two assays
 ```{r}
 
+view(data2)
+
 #Total activity
 tot_act <- ggplot(data=data2, aes(x = study_site, y = totalact_o, fill=study_site)) + 
  geom_violin() +
@@ -734,61 +898,60 @@ tot_act <- ggplot(data=data2, aes(x = study_site, y = totalact_o, fill=study_sit
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab(" ") + 
-  ylab("Total activity occurrences (n)") + labs("") 
-
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,550,100),labels=seq(0,550,100), limits=c(0,550)) +
+  xlab("Study site") +  ylab(expression(paste("Jumping and climbing occurrences ", italic("(n) ")))) + labs("") 
 
 print(tot_act)
 
-ggsave(filename = "2 assays raw - site v total activity.jpeg", tot_act, width=200, height= 150, units = "mm")
+ggsave(filename = "2 assays raw - site v total activity.jpeg", tot_act, width=150, height= 150, units = "mm")
 
 
 str(data2)
 view(data2
      )
 #Grooming duration
-groomdur <- ggplot(data=data2, aes(x = sex, y = grooming_d, fill=sex)) + 
- geom_boxplot() +
- #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+groomdur <- ggplot(data=data2, aes(x = sex, y = grooming_d, fill = sex)) + 
+  geom_boxplot() +
+  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+             shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#472F7dFF","#7BD151")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,80)) +
   xlab("Sex") + 
   ylab("Grooming duration (s)") + labs("") +
   scale_x_discrete(labels = c("M" = "Male", "F" = "Female"))
 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
-
 print(groomdur)
 
-ggsave(filename = "2 assays raw - sex v grooming.jpeg", groomdur, width=200, height= 150, units = "mm")
+ggsave(filename = "2 assays raw - sex v grooming.jpeg", groomdur, width=150, height= 150, units = "mm")
 
 
 
-#Grooming duration
+#Food interaction duration
 foodweight <- ggplot(data=data2, aes(x = body_weight_kg, y = food_d)) + 
- geom_smooth() +
+ geom_point() +
+  geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
   theme_minimal() +
-  theme(legend.position = "none", 
+    theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_y_continuous(breaks=seq(0,110,20),labels=seq(0,110,20), limits=c(0,110)) +
   xlab("Body weight (kg)") + 
   ylab("Food interaction duration (s)") + labs("")
 
-
 print(foodweight)
 
-ggsave(filename = "2 assays raw - food v weight.jpeg", foodweight, width=200, height= 150, units = "mm")
+ggsave(filename = "2 assays raw - food v weight.jpeg", foodweight, width=150, height= 150, units = "mm")
 
 
 
@@ -976,6 +1139,7 @@ table
 #Adjusted behaviour variables vs assay number plots
 ```{r}
 
+#Latency to emerge
 ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p, 
                         fill = assay_number)) + 
  geom_violin() +
@@ -983,20 +1147,22 @@ ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p,
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
   scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,50,10),labels=seq(0,50,10), limits=c(0,50)) +
   xlab("") + 
   ylab(expression(paste("Latency to emerge (s)")))+
-  #annotate("text", x = "2", y =50, label = "a", size = 5, hjust = -5) + 
+  annotate("text", x = "2", y =50, label = "A", size = 10, hjust = -3) + 
   labs("") 
 print(ed_plot)
-ggsave(filename = "assay number - emerge - site.jpeg", ed_plot, width=200, height= 150, units = "mm")
+#ggsave(filename = "assay number - emerge - site.jpeg", ed_plot, width=200, height= 150, units = "mm")
 
 
+#Food interaction occurrences
 fo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = foodo_p, 
                         fill = assay_number)) + 
   geom_violin() +
@@ -1004,141 +1170,21 @@ fo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = foodo_p,
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
   scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+    scale_y_continuous(breaks=seq(0,30,10),labels=seq(0,30,10), limits=c(0,30)) +
   xlab("") + ylab(expression(paste("Food interaction occurrences", italic(" (n) ")))) +
-  #annotate("text", x = "2", y =30, label = "b", size = 5, hjust = -5) 
+  annotate("text", x = "2", y =30, label = "B", size = 10, hjust = -3) + 
   labs("") 
 print(fo_plot)
-ggsave(filename = "assay number - food occ - site.jpeg", fo_plot, width=200, height= 150, units = "mm")
+#ggsave(filename = "assay number - food occ - site.jpeg", fo_plot, width=200, height= 150, units = "mm")
 
 
-jd_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p, 
-                        fill = assay_number)) + 
-  geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Jumping and climbing duration (s)" )))  +
-  #annotate("text", x = "2", y =200, label = "c", size = 5, hjust = -5)
-  labs("") 
-print(jd_plot)
-
-ggsave(filename = "assay number - jump dur - site.jpeg", jd_plot, width=200, height= 150, units = "mm")
-
-
-jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p, 
-                        fill = assay_number)) + 
-  geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Jumping and climbing occurrences ", italic(" (n) ")))) +
-  #annotate("text", x = "2", y =80, label = "d", size = 5, hjust = -5) + 
-  labs("") 
-
-print(jo_plot)
-
-ggsave(filename = "assay number - jump occ - site.jpeg", jo_plot, width=200, height= 150, units = "mm")
-
-
-md_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moved_p, 
-                        fill = assay_number)) + 
- geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Quadrupedal movement duration (s)" ))) +
-  #annotate("text", x = "2", y =160, label = "e", size = 5, hjust = -5) + 
-  labs("") 
-print(md_plot)
-ggsave(filename = "assay number - move dur - site.jpeg", md_plot, width=200, height= 150, units = "mm")
-
-
-mo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moveo_p, 
-                        fill = assay_number)) + 
-  geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Quadrupedal movement occurrences", italic(" (n) ")))) +
-  #annotate("text", x = "2", y =140, label = "f", size = 5, hjust = -5) + 
-  labs("") 
-print(mo_plot)
-ggsave(filename = "assay number - move occ - site.jpeg", mo_plot, width=200, height= 150, units = "mm")
-
-sum_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = sumsecto_p, 
-                        fill = assay_number)) + 
-  geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Total different section visits", italic(" (n) ")))) +
-  #annotate("text", x = "2", y =65, label = "g", size = 5, hjust = -5) +
-  labs("") 
-print(sum_plot)
-ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
-
-
-act_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = totalacto_p, 
-                        fill = assay_number)) + 
-  geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  xlab("") + ylab(expression(paste("Total activity occurrences", italic(" (n) ")))) +
-  #annotate("text", x = "2", y =350, label = "h", size = 5, hjust = -5) + 
-  labs("") 
-print(act_plot)
-ggsave(filename = "assay number - tot sect - site.jpeg", act_plot, width=200, height= 150, units = "mm")
-
-
+#Legs occurrences
 lo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = legso_p, 
                         fill = assay_number)) + 
  geom_violin() +
@@ -1146,34 +1192,21 @@ lo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = legso_p,
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
   scale_fill_manual (values = c("#3f4288","#1caa85")) +
-  #facet_wrap(~study_site) + 
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,100,20),labels=seq(0,100,20), limits=c(0,100)) +
   xlab("") + ylab(expression(paste("Standing on hind legs occurrences", italic("(n) ")))) +
-  annotate("text", x = "2", y =100, label = "i", size = 5, hjust = -6) +
+  annotate("text", x = "2", y =100, label = "C", size = 10, hjust = -3) +
   labs("") 
 print(lo_plot)
 ggsave(filename = "assay number - legs occ - site.jpeg", lo_plot, width=200, height= 150, units = "mm")
 
 
-#po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p, 
-                        #fill = assay_number)) + 
-  #geom_boxplot() +
-  #scale_fill_manual (values = c("#25798F","#7BD151")) +
-  #facet_wrap(~study_site) + 
-  #theme_minimal() +
-  #theme(legend.position = "none", 
-        #panel.grid = element_blank(),
-        #axis.line.x = element_line(color = "black"),
-        #axis.line.y = element_line(color = "black")) + 
-  #xlab("") + ylab(expression(paste("Perching occurrences", italic(" (n) ")))) + 
-  #annotate("text", x = "2", y =35, label = parse(text = "bold('j')"), size = 5, hjust = -1) +
-  #labs("") 
-
-
+#Perching occurrences
 po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p, 
                         fill = assay_number)) + 
   geom_violin() +
@@ -1186,13 +1219,178 @@ po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p,
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,30,10),labels=seq(0,30,10), limits=c(0,30)) +
   xlab("") + ylab(expression(paste("Perching occurrences ", italic(" (n) ")))) + 
-  #annotate("text", x = "2", y =30, label ="j", size = 5, hjust = -5) +
+  annotate("text", x = "2", y =30, label ="D", size = 10, hjust = -3) +
   labs("") 
 
 print(po_plot)
 ggsave(filename = "assay number - perch occ  - site.jpeg", po_plot, width=200, height= 150, units = "mm")
+
+
+plot <- ggarrange(ed_plot, fo_plot, lo_plot, po_plot, ncol = 2, nrow = 2)
+plot <- annotate_figure(plot, 
+        #left = text_grob("Adjusted behaviours over two assays", rot=90, size = 16, face = "bold"),
+        bottom = text_grob("Assay number", size = 20))
+
+print(plot)
+ggsave(filename = "2 assays - behav by assay number.jpeg", plot, width=300, height= 300, units = "mm")
+
+
+
+#Jump climb duration
+jd_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p, 
+                        fill = assay_number)) + 
+  geom_violin() +
+ geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#3f4288","#1caa85")) +
+  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,200,50),labels=seq(0,200,50), limits=c(0,200)) +
+   xlab("") + ylab(expression(paste("Jumping and climbing duration (s)" )))  +
+  annotate("text", x = "2", y =200, label = "A", size = 10, hjust = -3) +
+  labs("") 
+print(jd_plot)
+#ggsave(filename = "assay number - jump dur - site.jpeg", jd_plot, width=200, height= 150, units = "mm")
+
+#Jump climb occurrences
+jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p, 
+                        fill = assay_number)) + 
+  geom_violin() +
+ geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#3f4288","#1caa85")) +
+  #facet_wrap(~study_site) + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) +
+  scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,80)) +
+  xlab("") + ylab(expression(paste("Jumping and climbing occurrences ", italic(" (n) ")))) +
+  annotate("text", x = "2", y =80, label = "B", size = 10, hjust = -3) + 
+  labs("") 
+
+print(jo_plot)
+#ggsave(filename = "assay number - jump occ - site.jpeg", jo_plot, width=200, height= 150, units = "mm")
+
+plot <- ggarrange(jd_plot, jo_plot)
+plot <- annotate_figure(plot, 
+        bottom = text_grob("Assay number", size = 20))
+
+print(plot)
+ggsave(filename = "2 assays - jump climb by assay number.jpeg", plot, width=300, height= 150, units = "mm")
+
+
+
+#Moving duration
+md_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moved_p, 
+                        fill = assay_number)) + 
+ geom_violin() +
+ geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#3f4288","#1caa85")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,160,50),labels=seq(0,160,50), limits=c(0,160)) +
+  xlab("") + ylab(expression(paste("Quadrupedal movement duration (s)" ))) +
+  annotate("text", x = "2", y =160, label = "A", size = 10, hjust = -3) + 
+  labs("") 
+print(md_plot)
+#ggsave(filename = "assay number - move dur - site.jpeg", md_plot, width=200, height= 150, units = "mm")
+
+#Moving occurrences
+mo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moveo_p, 
+                        fill = assay_number)) + 
+  geom_violin() +
+ geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#3f4288","#1caa85")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,150,50),labels=seq(0,150,50), limits=c(0,150)) +
+  xlab("") + ylab(expression(paste("Quadrupedal movement occurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =150, label = "B", size = 10, hjust = -3) + 
+  labs("") 
+print(mo_plot)
+#ggsave(filename = "assay number - move occ - site.jpeg", mo_plot, width=200, height= 150, units = "mm")
+
+plot <- ggarrange(md_plot, mo_plot)
+plot <- annotate_figure(plot, 
+        bottom = text_grob("Assay number", size = 20))
+print(plot)
+ggsave(filename = "2 assays - move by assay number.jpeg", plot, width=300, height= 150, units = "mm")
+
+
+#Sum section visits
+sum_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = sumsecto_p, 
+                        fill = assay_number)) + 
+  geom_violin() +
+ geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#3f4288","#1caa85")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,80)) +
+  xlab("") + ylab(expression(paste("Total different section visits", italic(" (n) ")))) +
+  annotate("text", x = "2", y =80, label = "A", size = 10, hjust = -3) + 
+  labs("") 
+print(sum_plot)
+#ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
+
+#Sum total activity 
+act_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = totalacto_p, 
+                        fill = assay_number)) + 
+  geom_violin() +
+ geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#3f4288","#1caa85")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  scale_y_continuous(breaks=seq(0,400,100),labels=seq(0,400,100), limits=c(0,400)) +
+  xlab("") + ylab(expression(paste("Total activity occurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =400, label = "B", size = 10, hjust = -3) + 
+  labs("") 
+print(act_plot)
+#ggsave(filename = "assay number - tot sect - site.jpeg", act_plot, width=200, height= 150, units = "mm")
+
+plot <- ggarrange(sum_plot, act_plot)
+plot <- annotate_figure(plot, 
+        bottom = text_grob("Assay number", size = 20))
+print(plot)
+ggsave(filename = "2 assays - activity by assay number.jpeg", plot, width=300, height= 150, units = "mm")
+
 
 
 ```
