@@ -58,6 +58,9 @@ library(glmmTMB)
 install.packages("scales")
 library(scales)
 
+install.packages("freqtables")
+library(freqtables)
+
 ```
 
 # Data preparation
@@ -183,14 +186,11 @@ data$time_assaytolight <- data$first_light - data$snout
 data <- data %>%
   filter(!(quoll_code %in% c("53328", "87DE0")))
 
-view(data)
-str(data)
 
 ```
 
 # Correlation analysis
 ```{r}
-
 cor <- data  %>% 
   dplyr::select(age_n, body_weight_kg, cond_n, pes_mean_mm, head_length_mm)
 
@@ -213,7 +213,6 @@ corrplot(cor, method="color", type="upper", #creates a correlation matrix
          cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
-
 ```
 
 #** SINGLE ASSAYS
@@ -224,8 +223,6 @@ For morphometric and demographic analysis, and 'static behaviour' analysis
 
 data1 <- data %>%
       filter(assay_number !=2)
-
-view(data1)
 
 data1$site01 <- ifelse(data1$study_site == "Goorooyarroo", 1, 0)
 
@@ -254,20 +251,16 @@ data1 <- data1 %>%
 
 ```
 
-#Demo/morpho GLM analysis
+#Demo/morpho analysis
 ```{r}
 
-#Generalised linear model - with interaction (interactive)
-mod <- glm(site01 ~ sex*body_weight_kg + cond_n + age_n, data=data1, family=binomial)
+data1$site01 <- factor(data1$site01)
+str(data1)
 
-#AICc 
-mod_cn_site <- lmer(site01 ~ cond_n + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-mod_an_temp <- lmer(site01 ~ age_n + (1|arena), 
-            data=data1, control = control_ml, na.action = "na.fail")
-models <- list(mod_cn_site, mod_an_temp)
-model.names <- c("Condition", "Age")
-aictab(cand.set = models, modnames = model.names)
+#GLM
+mod <- glm(site01 ~ sex + body_weight_kg + age_n + cond_n, data=data1, family=binomial)
+summary(mod)
+
 
 ```
 
@@ -2417,6 +2410,8 @@ plot <- ggplot(bin_data, aes(x = minute_integer, y = moving_occ_binned,
 
 print(plot)
 ```
+
+
 
 
 # **Session information**
