@@ -206,8 +206,10 @@ rownames(cor) <- row_names
 
 #Correlation of occurrences and duration with sections
 jpeg(height=2000, width=2000, file="data corplot.jpeg", type="cairo")
-corrplot(cor, method="color", type="upper", #creates a correlation matrix
-         cl.cex=3, number.cex=2, tl.cex=3, diag=FALSE,
+corrplot(cor, method="color",
+                  col= colorRampPalette(c("#B8DE29", "#FFFFFF","#2D718E"))(10),
+         type="upper", #creates a correlation matrix
+         cl.cex=3, number.cex=4, tl.cex=4, diag=FALSE,
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
 ```
@@ -330,7 +332,7 @@ weight_plot <- ggplot(data = data1, aes(x = study_site, y = body_weight_kg, fill
       scale_y_continuous(breaks=seq(0,2,0.5),labels=seq(0,2,0.5), limits=c(0,2)) +
       xlab("Study site") +  ylab("Body weight (kg)") + labs("")
 print(weight_plot)
-ggsave(filename = "morpho - weight v study site.jpeg", weight_plot, width=175, height= 125, units = "mm")
+ggsave(filename = "morpho - weight v study site.jpeg", weight_plot, width=150, height= 150, units = "mm")
 
 
 ```
@@ -1682,61 +1684,61 @@ view(ppdata)
 
 #Intercept GLMMs - testing behaviour intercept (personality) against independent variables
 ```{r}
-mod <- lmer(i_bait_p ~ sex*body_weight_kg + study_site + cond_n + age_n + (1|arena), 
+mod <- lmer(i_bait_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_emerge_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_emerge_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_foodd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_foodd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_foodo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_foodo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_groomd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_groomd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_groomo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_groomo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_jumpd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_jumpd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_jumpo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_jumpo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_legsd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_legsd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_legso_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_legso_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_moved_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_moved_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_moveo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_moveo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_perchd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_perchd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_percho_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_percho_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_sumsecto_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_sumsecto_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_totalacto_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_totalacto_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_trapstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_trapstress_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_bagstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_bagstress_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(i_tablestress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(i_tablestress_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
 ```
@@ -1749,8 +1751,7 @@ tidy_results <- tidy(mod) %>%
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
   kbl(caption = response_var, escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
+  kable_classic(full_width = F)
 table
 
 ```
@@ -1771,28 +1772,26 @@ aictab(cand.set = models, modnames = model.names)
 
 #Intercept plots
 ```{r}
-
-#Latency to emerge
-i_e_site <- ggplot(data=ppdata, aes(x = study_site, y = i_emerge_p, fill=study_site)) + 
- geom_violin() +
+#Groom duration
+i_gd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_groomd_p, fill=study_site)) + geom_violin() +
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18)) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab(" ") + 
-  ylab("Adjusted latency to emerge (s) intercept") + labs("") 
+  xlab("Study site ") + 
+  ylab("Adjusted grooming duration (s) intercept") + labs("") 
+  #annotate("text", x = "Mulligans Flat", y = 25, label = parse(text = "A"), size = 10, hjust = -4)
 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
+print(i_gd_site)
+ggsave(filename = "intercept - study site v grooming dur.jpeg", i_gd_site, width=150, height= 150, units = "mm")
 
-print(i_e_site)
-
-ggsave(filename = "intercept - study site v latency to emerge.jpeg", i_e_site, width=200, height= 150, units = "mm")
 
 
 #Bait eaten
@@ -1801,63 +1800,48 @@ geom_violin() +
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
   xlab(" ") + 
-  ylab("Adjusted bait eaten (g) intercept") + labs("") 
-
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('b')"), size = 5, hjust = -5)
+  ylab("Adjusted bait eaten (g) intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 20, label = parse(text = "B"), size = 10, hjust = -4)
 
 print(i_b_site)
+#ggsave(filename = "intercept - study site v bait.jpeg", i_b_site, width=200, height= 150, units = "mm")
 
-ggsave(filename = "intercept - study site v bait.jpeg", i_b_site, width=200, height= 150, units = "mm")
-
-
-#Groom duration
-i_gd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_groomd_p, fill=study_site)) + geom_violin() +
+#Latency to emerge
+i_e_site <- ggplot(data=ppdata, aes(x = study_site, y = i_emerge_p, fill=study_site)) + 
+ geom_violin() +
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab(" ") + 
-  ylab("Adjusted grooming duration (s) intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('c')"), size = 5, hjust = -5)
+  ylab("Adjusted latency to emerge (s) intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 35, label = parse(text = "A"), size = 10, hjust = -4)
 
-print(i_gd_site)
-ggsave(filename = "intercept - study site v grooming dur.jpeg", i_gd_site, width=200, height= 150, units = "mm")
+print(i_e_site)
+#ggsave(filename = "intercept - study site v latency to emerge.jpeg", i_e_site, width=200, height= 150, units = "mm")
 
 
-#Groom occurrences
-i_go_site <- ggplot(data=ppdata, aes(x = study_site, y = i_groomo_p, fill=study_site)) + geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab(" ") + 
-   ylab("Adjusted grooming occurrences (n) intercept") + labs("") 
-
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('d')"), size = 5, hjust = -5)
-
-print(i_go_site)
-
-ggsave(filename = "intercept - study site v grooming occ.jpeg", i_go_site, width=200, height= 150, units = "mm")
+#Combine plots
+plot <- ggarrange(i_e_site, i_b_site)
+plot <- annotate_figure(plot,
+        bottom = text_grob("Study site", size = 20))
+print(plot)
+ggsave(filename = "intercept emerge bait.jpeg", plot, width=300, height= 150, units = "mm")
 
 
 #Move duration
@@ -1866,42 +1850,74 @@ i_md_site <- ggplot(data=ppdata, aes(x = study_site, y = i_moved_p, fill=study_s
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab(" ") + 
-  ylab("Adjusted quadrupedal movement duration (s) intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('e')"), size = 5, hjust = -5)
-print(i_md_site)
+  ylab("Adjusted quadrupedal movement duration (s) intercept") + 
+  labs("") +
+  annotate("text", x = "Mulligans Flat", y = 160, label = parse(text = "A"), size = 10, hjust = -4)
 
-ggsave(filename = "intercept - study site v move dur.jpeg", i_md_site, width=200, height= 150, units = "mm")
+  print(i_md_site)
+#ggsave(filename = "intercept - study site v move dur.jpeg", i_md_site, width=200, height= 150, units = "mm")
+
+#Hind legs duration
+i_ld_site <- ggplot(data=ppdata, aes(x = study_site, y = i_legsd_p, fill=study_site)) + 
+ geom_violin() +
+ geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  scale_y_continuous(breaks=seq(100,300,100),labels=seq(100,300,100), limits=c(100,310)) +
+  xlab(" ") + 
+  ylab("Adjusted hindleg stands duration (s) intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 310, label = parse(text = "B"), size = 10, hjust = -4)
+
+  print(i_ld_site)
+#ggsave(filename = "intercept - study site v legs dur.jpeg", i_ld_site, width=200, height= 150, units = "mm")
 
 
+#Combine plots
+plot <- ggarrange(i_md_site, i_ld_site)
+plot <- annotate_figure(plot,
+        bottom = text_grob("Study site", size = 20))
+print(plot)
+ggsave(filename = "intercept move legs.jpeg", plot, width=310, height= 160, units = "mm")
 
+  
+  
+  
 #Jump/climb duration
 i_jd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_jumpd_p, fill=study_site)) + 
 geom_violin() +
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab(" ") + 
-  ylab("Adjusted jumping and climbing duration (s) intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('f')"), size = 5, hjust = -5)
+  ylab("Adjusted jumping + climbing duration (s) intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 200, label = parse(text = "A"), size = 10, hjust = -4)
 
 print(i_jd_site)
-
-ggsave(filename = "intercept - study site v jumpclimb dur.jpeg", i_jd_site, width=200, height= 150, units = "mm")
+#ggsave(filename = "intercept - study site v jumpclimb dur.jpeg", i_jd_site, width=200, height= 150, units = "mm")
 
 
 #Jump/climb occurrences
@@ -1910,20 +1926,30 @@ i_jo_site <- ggplot(data=ppdata, aes(x = study_site, y = i_jumpo_p, fill=study_s
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab(" ") + 
-  ylab("Adjusted jumping and climbing occurrences (n) intercept") + labs("") 
-  #annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('g')"), size = 5, hjust = -5)
+  ylab(expression(paste("Adjusted jumping + climbing occurrences ", italic("(n)"), " intercept"))) +
+  labs("") +
+  annotate("text", x = "Mulligans Flat", y = 80, label = parse(text = "B"), size = 10, hjust = -4)
 
 print(i_jo_site)
+#ggsave(filename = "intercept - study site v jumpclimb occ.jpeg", i_jo_site, width=200, height= 150, units = "mm")
 
-ggsave(filename = "intercept - study site v jumpclimb occ.jpeg", i_jo_site, width=200, height= 150, units = "mm")
+
+#Combine plots
+plot <- ggarrange(i_jd_site, i_jo_site)
+plot <- annotate_figure(plot,
+        bottom = text_grob("Study site", size = 20))
+print(plot)
+ggsave(filename = "intercept jump.jpeg", plot, width=310, height= 160, units = "mm")
+
 
 
 #Perch duration
@@ -1931,61 +1957,46 @@ i_pd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_perchd_p, fill=study_
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  #scale_y_continuous(breaks=seq(50,300,100),labels=seq(50,300,100), limits=c(50,300)) +
   xlab(" ") + 
-  ylab("Adjusted perching duration (s) intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('h')"), size = 5, hjust = -5)
-
+  ylab("Adjusted perching duration (s) intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 300, label = parse(text = "A"), size = 10, hjust = -4)
 print(i_pd_site)
-ggsave(filename = "intercept - study site v perch dur.jpeg", i_pd_site, width=200, height= 150, units = "mm")
-
+#ggsave(filename = "intercept - study site v perch dur.jpeg", i_pd_site, width=200, height= 150, units = "mm")
 
 #Perch occurrences
 i_po_site <- ggplot(data=ppdata, aes(x = study_site, y = i_percho_p, fill=study_site)) + geom_violin() +
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab(" ") + 
-  ylab("Adjusted perching occurrences (n) intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('i')"), size = 5, hjust = -5)
-
+  ylab(expression(paste("Adjusted perching occurrences ", italic("(n)"), " intercept"))) +
+  annotate("text", x = "Mulligans Flat", y = 30, label = parse(text = "B"), size = 10, hjust = -4)
 print(i_po_site)
-ggsave(filename = "intercept - study site v perch occ.jpeg", i_po_site, width=200, height= 150, units = "mm")
+#ggsave(filename = "intercept - study site v perch occ.jpeg", i_po_site, width=200, height= 150, units = "mm")
 
+#Combine plots
+plot <- ggarrange(i_pd_site, i_po_site)
+plot <- annotate_figure(plot,
+        bottom = text_grob("Study site", size = 20))
+print(plot)
+ggsave(filename = "intercept perching.jpeg", plot, width=300, height= 150, units = "mm")
 
-
-#Hind legs duration
-i_ld_site <- ggplot(data=ppdata, aes(x = study_site, y = i_legsd_p, fill=study_site)) + 
- geom_violin() +
- geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab(" ") + 
-  ylab("Adjusted standing on hind legs duration (s) intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('j')"), size = 5, hjust = -5)
-
-print(i_ld_site)
-ggsave(filename = "intercept - study site v legs dur.jpeg", i_ld_site, width=200, height= 150, units = "mm")
 
 #Bag stress
 i_bs_site <- ggplot(data=ppdata, aes(x = study_site, y = i_bagstress_p, fill=study_site)) + 
@@ -1993,19 +2004,19 @@ geom_violin() +
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  scale_y_continuous(breaks=seq(0.9,1.6,0.1),labels=seq(0.9,1.6,0.1), limits=c(0.9,1.6)) +
   xlab("") + 
-  ylab("Adjusted bag stress rating intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('a')"), size = 5, hjust = -5)
-
+  ylab("Adjusted bag stress rating intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 1.6, label = parse(text = "A"), size = 10, hjust = -4)
 print(i_bs_site)
-ggsave(filename = "intercept - study site v bag stress.jpeg", i_bs_site, width=200, height= 150, units = "mm")
+#ggsave(filename = "intercept - study site v bag stress.jpeg", i_bs_site, width=200, height= 150, units = "mm")
 
 #Table stress
 i_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = i_tablestress_p, fill=study_site)) + 
@@ -2013,20 +2024,26 @@ i_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = i_tablestress_p, fill=s
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  scale_y_continuous(breaks=seq(0.9,1.6,0.1),labels=seq(0.9,1.6,0.1), limits=c(0.9,1.6)) +
   xlab("") + 
-  ylab("Adjusted table stress rating intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('b')"), size = 5, hjust = -5)
-
+  ylab("Adjusted table stress rating intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 1.6, label = parse(text = "B"), size = 10, hjust = -4)
 print(i_ts_site)
 ggsave(filename = "intercept - study site v table stress.jpeg", i_ts_site, width=200, height= 150, units = "mm")
 
+#Combine plots
+plot <- ggarrange(i_bs_site, i_ts_site)
+plot <- annotate_figure(plot,
+        bottom = text_grob("Study site", size = 20))
+print(plot)
+ggsave(filename = "intercept stress ratings.jpeg", plot, width=300, height= 150, units = "mm")
 
 
 #Sum of section visits
@@ -2035,20 +2052,19 @@ i_sumsect_site <- ggplot(data=ppdata, aes(x = study_site, y = i_sumsecto_p, fill
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  scale_y_continuous(breaks=seq(30,70,10),labels=seq(30,70,10), limits=c(30,70)) +
   xlab("") + 
-  ylab("Adjusted sum of section visits (n) intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('b')"), size = 5, hjust = -5)
-
+  ylab(expression(paste("Adjusted sum of section visits ", italic("(n)"), " intercept"))) +
+  annotate("text", x = "Mulligans Flat", y = 70, label = parse(text = "A"), size = 10, hjust = -4)
 print(i_sumsect_site)
-ggsave(filename = "intercept - study site v sum sections.jpeg", i_sumsect_site, width=200, height= 150, units = "mm")
-
+#ggsave(filename = "intercept - study site v sum sections.jpeg", i_sumsect_site, width=200, height= 150, units = "mm")
 
 #Total activity occurrences
 i_act_site <- ggplot(data=ppdata, aes(x = study_site, y = i_totalacto_p, fill=study_site)) + 
@@ -2056,101 +2072,87 @@ i_act_site <- ggplot(data=ppdata, aes(x = study_site, y = i_totalacto_p, fill=st
  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="grey40", fill="white", 
                shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#25798F","#7BD151")) +
+  scale_fill_manual (values = c("#674A8E","#C4E44D")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  scale_y_continuous(breaks=seq(150,350,100),labels=seq(150,350,100), limits=c(150,350)) +
   xlab("") + 
-  ylab("Adjusted total activity occurrences (n) intercept") + labs("") 
-#annotate("text", x = "Mulligans Flat", y = 120, label = parse(text = "bold('b')"), size = 5, hjust = -5)
-
+  ylab(expression(paste("Adjusted total activity occurrences ", italic("(n)"), " intercept"))) +
+  annotate("text", x = "Mulligans Flat", y = 350, label = parse(text = "B"), size = 10, hjust = -4)
 print(i_act_site)
-ggsave(filename = "intercept - study site v total activity.jpeg", i_act_site, width=200, height= 150, units = "mm")
+#ggsave(filename = "intercept - study site v total activity.jpeg", i_act_site, width=200, height= 150, units = "mm")
 
-```
+#Combine  plots
+plot <- ggarrange(i_sumsect_site, i_act_site)
+plot <- annotate_figure(plot,
+        bottom = text_grob("Study site", size = 20))
+print(plot)
+ggsave(filename = "intercept sum and total act.jpeg", plot, width=300, height= 150, units = "mm")
 
-Arrange intercept plots into one. 
-```{r}
-
-intercept_plot <- ggarrange(i_md_site, i_gd_site, i_go_site, i_b_site, i_jd_site, i_jo_site, i_e_site, i_pd_site, i_po_site, i_ld_site, i_lo_site, ncol = 3, nrow = 4,
-  font.label = list(
-    size = 6,
-    face = "bold",
-    color = "black",
-    label.x = 0.89,
-    label.y = 0.99,
-    hjust = -0.1,
-    vjust = 1.5  ))
-
-intercept_plot <- annotate_figure(intercept_plot, 
-        left = text_grob("Adjusted behaviour intercepts a.k.a personality", rot=90, size = 16, face = "bold"),
-        bottom = text_grob("Study site", size = 16, face = "bold"))
-
-print(intercept_plot)
-ggsave(filename = "intercept - study site v adjusted behaviour plots.jpeg", intercept_plot, width=600, height= 800, units = "mm")
 ```
 
 #Slope GLMMs - testing behaviour slope (plasticity) against independent variables
 ```{r}
 
-mod <- lmer(s_bait_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_bait_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_emerge_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_emerge_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_foodd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_foodd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_foodo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_foodo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_groomd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_groomd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_groomo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_groomo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_jumpd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_jumpd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_jumpo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_jumpo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_legsd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_legsd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_legso_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_legso_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_moved_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_moved_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_moveo_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_moveo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_perchd_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_perchd_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_percho_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_percho_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_sumsecto_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_sumsecto_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_totalacto_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_totalacto_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_bagstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_bagstress_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_trapstress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_trapstress_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
-mod <- lmer(s_tablestress_p ~ sex*body_weight_kg + study_site + age_n + (1|arena), 
+mod <- lmer(s_tablestress_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 ```
 
@@ -2162,8 +2164,7 @@ tidy_results <- tidy(mod) %>%
 table <- tidy_results %>%
   mutate(p.value = ifelse(p.value <= 0.05, cell_spec(p.value, bold = TRUE), p.value)) %>%
   kbl(caption = response_var, escape = FALSE) %>%
-  kable_classic(full_width = F, html_font = "Times New Roman") %>%
-  kable_styling(bootstrap_options = "striped", font_size = 12)
+  kable_classic(full_width = F)
 table
 
 ```
@@ -2171,24 +2172,125 @@ table
 #Slope AICc model selection
 ```{r}
 
-#Perching duration TO DO****
-mod_mds_site <- lmer(s_moved_p ~ study_site + (1|arena), 
+#Food occ
+mod_fos_cond <- lmer(s_foodo_p ~ cond_n + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_fos_sex <- lmer(s_foodo_p ~ sex + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_fos_weight <- lmer(s_foodo_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+models <- list(mod_fos_cond, mod_fos_sex, mod_fos_weight)
+model.names <- c("Condition", "Sex", "Body weight")
+aictab(cand.set = models, modnames = model.names)
+
+#Legs occ
+mod_los_cond <- lmer(s_legso_p ~ cond_n + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_los_sex <- lmer(s_legso_p ~ sex + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_los_weight <- lmer(s_legso_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_los_site <- lmer(s_legso_p ~ study_site  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+models <- list(mod_los_cond, mod_los_sex, mod_los_weight, mod_los_site)
+model.names <- c("Condition", "Sex", "Body weight", "Study site")
+aictab(cand.set = models, modnames = model.names)
+
+#Jump occ
+mod_jos_cond <- lmer(s_jumpo_p ~ cond_n + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_jos_weight <- lmer(s_jumpo_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_jos_site <- lmer(s_jumpo_p ~ study_site  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+models <- list(mod_jos_cond, mod_jos_weight, mod_jos_site)
+model.names <- c("Condition", "Body weight", "Study site")
+aictab(cand.set = models, modnames = model.names)
+
+#Move dur
+mod_mds_cond <- lmer(s_moved_p ~ cond_n + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
 mod_mds_weight <- lmer(s_moved_p ~ body_weight_kg  + (1|arena), 
             data=ppdata, control = control_ml, na.action = "na.fail")
-models <- list(mod_mds_site, mod_mds_weight)
-model.names <- c("Study site", "Body weight kg")
+
+mod_mds_site <- lmer(s_moved_p ~ study_site  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+models <- list(mod_mds_cond, mod_mds_weight, mod_mds_site)
+model.names <- c("Condition", "Body weight", "Study site")
+aictab(cand.set = models, modnames = model.names)
+
+#Move occ
+mod_mos_cond <- lmer(s_moveo_p ~ cond_n + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_mos_weight <- lmer(s_moveo_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_mos_site <- lmer(s_moveo_p ~ study_site  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_mos_sex <- lmer(s_moveo_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+models <- list(mod_mos_cond, mod_mos_weight, mod_mos_site, mod_mos_sex)
+model.names <- c("Condition", "Body weight", "Study site", "Sex")
+aictab(cand.set = models, modnames = model.names)
+
+#Table stress
+mod_tabs_cond <- lmer(s_tablestress_p ~ cond_n + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_tabs_weight <- lmer(s_tablestress_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_tabs_site <- lmer(s_tablestress_p ~ study_site  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+models <- list(mod_tabs_cond, mod_tabs_weight, mod_tabs_site)
+model.names <- c("Condition", "Body weight", "Study site")
+aictab(cand.set = models, modnames = model.names)
+
+#Sum section
+mod_sums_weight <- lmer(s_sumsecto_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_sums_sex <- lmer(s_sumsecto_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+models <- list(mod_sums_weight, mod_sums_sex)
+model.names <- c("Body weight", "Sex")
+aictab(cand.set = models, modnames = model.names)
+
+#Total act
+mod_tots_cond <- lmer(s_totalacto_p ~ cond_n + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_tots_weight <- lmer(s_totalacto_p ~ body_weight_kg  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+mod_tots_sex <- lmer(s_totalacto_p ~ sex  + (1|arena), 
+            data=ppdata, control = control_ml, na.action = "na.fail")
+
+models <- list(mod_tots_cond, mod_tots_weight, mod_tots_sex)
+model.names <- c("Condition", "Body weight", "Sex")
 aictab(cand.set = models, modnames = model.names)
 
 ```
 
-
-
 #Slope plots
 ```{r}
-
-view(ppdata)
-names(ppdata)
 
 #Latency to emerge v site
 s_e_site <- ggplot(data=ppdata, aes(x = study_site, y = s_emerge_p, fill=study_site)) + 
@@ -2211,7 +2313,6 @@ s_e_site <- ggplot(data=ppdata, aes(x = study_site, y = s_emerge_p, fill=study_s
 #print(s_e_site)
 
 ggsave(filename = "slope - study site v latency to emerge.jpeg", s_e_site, width=150, height= 150, units = "mm")
-
 
 
 #Food interaction duration v site
