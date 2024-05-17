@@ -360,9 +360,9 @@ mod <- glm(sumsect_o ~ temp + moon_phase + time_assaytolight + time_processtoass
 mod <- glm(totalact_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 mod <- glm(emerge_max ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
 
-mod <- glm(stress_in_trap ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
-mod <- glm(stress_in_bag ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
-mod <- glm(stress_on_table ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data1)
+mod <- glm(stress_in_trap ~ temp + moon_phase, data=data1)
+mod <- glm(stress_in_bag ~ temp + moon_phase, data=data1)
+mod <- glm(stress_on_table ~ temp + moon_phase, data=data1)
 
 ```
 
@@ -827,9 +827,9 @@ mod <- glm(emerge_max ~ temp + moon_phase + time_assaytolight + time_processtoas
 mod <- glm(sumsect_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
 mod <- glm(totalact_o ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
 
-mod <- glm(stress_in_trap ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
-mod <- glm(stress_in_bag ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
-mod <- glm(stress_on_table ~ temp + moon_phase + time_assaytolight + time_processtoassay, data=data2)
+mod <- glm(stress_in_trap ~ temp + moon_phase, data=data2)
+mod <- glm(stress_in_bag ~ temp + moon_phase, data=data2)
+mod <- glm(stress_on_table ~ temp + moon_phase, data=data2)
 
 ```
 
@@ -903,7 +903,7 @@ mod <- lmer(stress_in_trap ~ study_site + sex + age_n + cond_n + body_weight_kg 
             data=data2, na.action = "na.fail")
 
 mod <- lmer(stress_on_table ~ study_site + sex + age_n + cond_n + body_weight_kg + 
-              time_assaytolight + time_processtoassay + (1|arena), 
+            (1|arena), 
             data=data2, na.action = "na.fail")
 
 mod <- lmer(sumsect_o ~ study_site + sex + age_n + cond_n + body_weight_kg + moon_phase + 
@@ -1002,10 +1002,10 @@ groomdur <- ggplot(data=data2, aes(x = sex, y = grooming_d, fill = sex)) +
   scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,80)) +
   xlab("Sex") + 
   ylab("Grooming duration (s)") + labs("") +
-  scale_x_discrete(labels = c("M" = "Male", "F" = "Female"))
+  scale_x_discrete(labels = c("M" = "Male", "F" = "Female"))+
+  annotate("text", x="M", y =80, label = "C", size = 10, hjust = -2)
 print(groomdur)
 ggsave(filename = "2 assays - sex v grooming.jpeg", groomdur, width=150, height= 150, units = "mm")
-
 
 
 #Bait eaten v age
@@ -1048,25 +1048,8 @@ perchocc <- ggplot(data=data2, aes(x = study_site, y = perch_o, fill = study_sit
 print(perchocc)
 #ggsave(filename = "2 assays raw - site v perching.jpeg", perchocc, width=150, height= 150, units = "mm")
 
-#Latency to emerge vs temp
-emergetemp <- ggplot(data=data2, aes(x = temp, y = emerge_max)) + 
- geom_point() +
-  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
-  theme_minimal() +
-    theme(legend.position = "right", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
-  scale_x_continuous(breaks=seq(10,25,5),labels=seq(10,25,5), limits=c(10,25)) +
-  xlab(expression(paste("Ambient temperature (", degree, "C)"))) + 
-  ylab("Latency to emerge (s)") + labs("") +
-  annotate("text", x =25, y =60, label = "C", size = 10, hjust = 1)
-print(emergetemp)
-#ggsave(filename = "2 assay raw - emerge temp.jpeg", emergetemp, width=150, height= 150, units = "mm")
-
 #Combine  plots
-plot <- ggarrange(baitage, perchocc, emergetemp, ncol = 3, nrow=1)
+plot <- ggarrange(baitage, perchocc, groomdur, ncol = 3, nrow=1)
 #plot <- annotate_figure(plot, 
         #left = text_grob("Adjusted behaviours over two assays", rot=90, size = 16, face = "bold"),
         #bottom = text_grob("Study site", size = 20))
@@ -1233,8 +1216,8 @@ print(legso_process)
 #ggsave(filename = "2 assay raw - legs process.jpeg", legso_process, width=150, height= 150, units = "mm")
 
 
-#Table stress v time process to assay
-table_process <- ggplot(data=data2, aes(x = time_processtoassay, y = stress_on_table)) + 
+#Latency to emerge vs temp
+emergetemp <- ggplot(data=data2, aes(x = temp, y = emerge_max)) + 
  geom_point() +
   geom_smooth(method = "lm", se = TRUE, colour = "#AADC32", fill = "#C6E876") +
   theme_minimal() +
@@ -1242,21 +1225,19 @@ table_process <- ggplot(data=data2, aes(x = time_processtoassay, y = stress_on_t
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  scale_x_continuous(breaks=seq(50,250,50),labels=seq(50,250,50), limits=c(30,300)) +
-  xlab("Time: processing to assay (mins)") + 
-  ylab("Table stress rating") + labs("") +
-  annotate("text", x =295, y =2, label = "I", size = 10, hjust = 1)
-
-print(table_process)
-#ggsave(filename = "2 assay raw - legs process.jpeg", legso_process, width=150, height= 150, units = "mm")
-
+        text = element_text(size=20)) + 
+  scale_x_continuous(breaks=seq(10,25,5),labels=seq(10,25,5), limits=c(10,25)) +
+  xlab(expression(paste("Ambient temperature (", degree, "C)"))) + 
+  ylab("Latency to emerge (s)") + labs("") +
+  annotate("text", x =25, y =60, label = "I", size = 10, hjust = 1)
+print(emergetemp)
+#ggsave(filename = "2 assay raw - emerge temp.jpeg", emergetemp, width=150, height= 150, units = "mm")
 
 
 #Combine  plots
 plot <- ggarrange(sum_moon, foodo_light, foodo_process, 
                   moved_light, moveo_light, moveo_process, 
-                  legso_light, legso_process, table_process, 
+                  legso_light, legso_process, emergetemp, 
                   ncol = 3, nrow=3) 
 #plot <- annotate_figure(plot, 
         #left = text_grob("Adjusted behaviours over two assays", rot=90, size = 16, face = "bold"),
@@ -1275,9 +1256,9 @@ data2_mutate <- data2 %>%
   mutate_at(vars(5, 44, 65, 66), ~ as.vector(scale(.)))
 
 data2$condition <- factor(data2$condition, levels = c("Excellent", "Good", "Fair", "Poor"))
-data2$age_n <- factor(data2$age_n, levels = c("2", "1", "0"))
 
-view(data2_mutate)
+str(data2_mutate$age_n)
+
 write.csv(data2_mutate, "data2_mutate - both assays env vars adjusted.csv")
 
 ```
@@ -1360,24 +1341,19 @@ mod <- glm(totalact_o ~ temp + moon_phase + time_assaytolight + time_processtoas
              data2_mutate)
              data2_mutate$totalacto_p <- predict(mod, type = "response")
              
-mod <- glm(stress_in_trap ~ temp + moon_phase + time_assaytolight + time_processtoassay,
-           family=gaussian, data=
-             data2_mutate)
+mod <- glm(stress_in_trap ~ temp + moon_phase, family = gaussian, data=data2_mutate)
              data2_mutate$trapstress_p <- predict(mod, type = "response")
 
-mod <- glm(stress_in_bag ~ temp + moon_phase + time_assaytolight + time_processtoassay,
-           family=gaussian, data=
-             data2_mutate)
+mod <- glm(stress_in_bag ~ temp + moon_phase,
+           family=gaussian, data=data2_mutate)
              data2_mutate$bagstress_p <- predict(mod, type = "response")
 
-mod <- glm(stress_on_table ~ temp + moon_phase + time_assaytolight + time_processtoassay,
-           family=gaussian, data=
-             data2_mutate)
+mod <- glm(stress_on_table ~ temp + moon_phase,
+           family=gaussian, data=data2_mutate)
              data2_mutate$tablestress_p <- predict(mod, type = "response")
 
 mod <- glm(emerge_max ~ temp + moon_phase + time_assaytolight + time_processtoassay,
-           family=gaussian, data=
-             data2_mutate)
+           family=gaussian, data=data2_mutate)
              data2_mutate$emerge_p <- predict(mod, type = "response")
 
 ```
@@ -1393,6 +1369,8 @@ data2_pred <- data2_mutate %>%
                      -resting_d, -bait_eaten_g, 
                      -sumsect_o, -totalact_o, -emerge_max, -time_to_emerge_s, -arena_entry) %>%
 mutate(assay_number = as.factor(assay_number))
+
+str(data2_pred)
 
 write.csv(data2_pred,"data2_pred - both assays adjusted env variables.csv")
 
@@ -1460,8 +1438,10 @@ ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p,
   scale_y_continuous(breaks=seq(0,50,10),labels=seq(0,50,10), limits=c(0,50)) +
   xlab("Assay number") + 
   ylab(expression(paste("Latency to emerge (s)")))+
-  labs("") 
+  labs("")+
+  annotate("text", x = "2", y =50, label = "A", size = 10, hjust = -2)
 print(ed_plot)
+
 ggsave(filename = "assay number - emerge.jpeg", ed_plot, width=150, height= 150, units = "mm")
 
 
@@ -1482,7 +1462,7 @@ fo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = foodo_p,
         text = element_text(size=18)) + 
   #scale_y_continuous(breaks=seq(0,35,10),labels=seq(0,35,10), limits=c(0,35)) +
   xlab("") + ylab(expression(paste("Food interaction occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =30, label = "A", size = 10, hjust = -3) + 
+  annotate("text", x = "2", y =30, label = "B", size = 10, hjust = -3) + 
   labs("") 
 print(fo_plot)
 #ggsave(filename = "assay number - food occ - site.jpeg", fo_plot, width=200, height= 150, units = "mm")
@@ -1504,7 +1484,7 @@ jd_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p,
         text = element_text(size=18)) + 
   #scale_y_continuous(breaks=seq(0,200,50),labels=seq(0,200,50), limits=c(0,200)) +
    xlab("") + ylab(expression(paste("Jumping and climbing duration (s)" )))  +
-  annotate("text", x = "2", y =200, label = "B", size = 10, hjust = -3) +
+  annotate("text", x = "2", y =200, label = "C", size = 10, hjust = -3) +
   labs("") 
 print(jd_plot)
 #ggsave(filename = "assay number - jump dur - site.jpeg", jd_plot, width=200, height= 150, units = "mm")
@@ -1525,7 +1505,7 @@ jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p,
         text = element_text(size=18)) +
   #scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,80)) +
   xlab("") + ylab(expression(paste("Jumping and climbing occurrences ", italic(" (n) ")))) +
-  annotate("text", x = "2", y =80, label = "C", size = 10, hjust = -2.5) + 
+  annotate("text", x = "2", y =80, label = "D", size = 10, hjust = -2.5) + 
   labs("") 
 print(jo_plot)
 #ggsave(filename = "assay number - jump occ - site.jpeg", jo_plot, width=200, height= 150, units = "mm")
@@ -1546,7 +1526,7 @@ po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p,
         text = element_text(size=20)) + 
   scale_y_continuous(breaks=seq(0,30,10),labels=seq(0,30,10), limits=c(0,30)) +
   xlab("Assay number") + ylab(expression(paste("Perching occurrences ", italic(" (n) ")))) + 
-    annotate("text", x = "2", y =30, label = "D", size = 10, hjust = -2.5) + 
+    annotate("text", x = "2", y =30, label = "E", size = 10, hjust = -2.5) + 
   labs("") 
 print(po_plot)
 ggsave(filename = "assay number - perch occ.jpeg", po_plot, width=150, height= 150, units = "mm")
@@ -1569,7 +1549,7 @@ md_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moved_p,
         text = element_text(size=18)) + 
   scale_y_continuous(breaks=seq(0,160,50),labels=seq(0,160,50), limits=c(0,160)) +
   xlab("") + ylab(expression(paste("Quadrupedal movement duration (s)" ))) +
-  annotate("text", x = "2", y =160, label = "E", size = 10, hjust = -3) + 
+  annotate("text", x = "2", y =160, label = "F", size = 10, hjust = -3) + 
   labs("") 
 print(md_plot)
 #ggsave(filename = "assay number - move dur - site.jpeg", md_plot, width=200, height= 150, units = "mm")
@@ -1590,7 +1570,7 @@ mo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moveo_p,
         text = element_text(size=18)) + 
   scale_y_continuous(breaks=seq(0,150,50),labels=seq(0,150,50), limits=c(0,150)) +
   xlab("") + ylab(expression(paste("Quadrupedal movement occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =150, label = "F", size = 10, hjust = -3) + 
+  annotate("text", x = "2", y =150, label = "G", size = 10, hjust = -3) + 
   labs("") 
 print(mo_plot)
 #ggsave(filename = "assay number - move occ - site.jpeg", mo_plot, width=200, height= 150, units = "mm")
@@ -1612,7 +1592,7 @@ lo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = legso_p,
         text = element_text(size=18)) + 
   scale_y_continuous(breaks=seq(0,110,20),labels=seq(0,110,20), limits=c(0,110)) +
   xlab("") + ylab(expression(paste("Standing on hind legs occurrences", italic("(n) ")))) +
-  annotate("text", x = "2", y =110, label = "G", size = 10, hjust = -2.5) +
+  annotate("text", x = "2", y =110, label = "H", size = 10, hjust = -2.5) +
   labs("") 
 print(lo_plot)
 ggsave(filename = "assay number - legs occ - site.jpeg", lo_plot, width=200, height= 150, units = "mm")
@@ -1633,7 +1613,7 @@ act_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = totalacto_p,
         text = element_text(size=18)) + 
   scale_y_continuous(breaks=seq(0,400,100),labels=seq(0,400,100), limits=c(0,400)) +
   xlab("") + ylab(expression(paste("Total activity occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =400, label = "H", size = 10, hjust = -2.5) + 
+  annotate("text", x = "2", y =400, label = "I", size = 10, hjust = -2.5) + 
   labs("") 
 print(act_plot)
 #ggsave(filename = "assay number - tot sect - site.jpeg", act_plot, width=200, height= 150, units = "mm")
@@ -1654,19 +1634,74 @@ sum_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = sumsecto_p,
         text = element_text(size=18)) + 
   scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,80)) +
   xlab("") + ylab(expression(paste("Total arena section visits", italic(" (n) ")))) +
-  annotate("text", x = "2", y =80, label = "I", size = 10, hjust = -5) + 
+  annotate("text", x = "2", y =80, label = "J", size = 10, hjust = -5) + 
   labs("") 
 print(sum_plot)
 #ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
 
-plot <- ggarrange(fo_plot, jd_plot, jo_plot, 
+plot <- ggarrange(ed_plot, fo_plot, jd_plot, jo_plot, 
                   po_plot, md_plot, mo_plot, 
-                    lo_plot, act_plot, sum_plot, nrow=3, ncol=3)
+                    lo_plot, act_plot, sum_plot, nrow=5, ncol=2)
 
 plot <- annotate_figure(plot, 
         bottom = text_grob("Assay number", size = 24))
 print(plot)
-ggsave(filename = "2 assays - activity by assay number.jpeg", plot, width=375, height= 375, units = "mm")
+ggsave(filename = "2 assays - activity by assay number.jpeg", plot, width=300, height= 600, units = "mm")
+
+
+
+
+#Bag stress
+bag_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = bagstress_p, 
+                        fill = assay_number)) + 
+  geom_violin() +
+ geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18)) + 
+  scale_y_continuous(breaks=seq(1,1.5,0.1),labels=seq(1,1.5,0.1), limits=c(0.9,1.5)) +
+  xlab("") + ylab("Adjusted bag stress rating") +
+  annotate("text", x = "2", y =1.5, label = "A", size = 10, hjust = -2) + 
+  labs("") 
+print(bag_plot)
+#ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
+
+
+#Table stress
+table_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = tablestress_p, 
+                        fill = assay_number)) + 
+  geom_violin() +
+ geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18)) + 
+  scale_y_continuous(breaks=seq(1,1.5,0.1),labels=seq(1,1.5,0.1), limits=c(0.9,1.5)) +
+  xlab("") + ylab("Adjusted table stress rating") +
+  annotate("text", x = "2", y =1.5, label = "B", size = 10, hjust = -2) + 
+  labs("") 
+print(table_plot)
+#ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
+
+
+plot <- ggarrange(bag_plot, table_plot)
+
+plot <- annotate_figure(plot, 
+        bottom = text_grob("Capture number", size = 24))
+print(plot)
+ggsave(filename = "2 assays - stress by capture.jpeg", plot, width=300, height= 150, units = "mm")
+
 
 ```
 
@@ -1675,7 +1710,7 @@ Prep data for coefficient left_join
 ```{r}
 
 view(data2_pred)
-
+str(data2_pred)
 view(quoll2)
 quoll2 <- data2_pred %>%
   select(-assay_date, -initial_repeat_assay, -trap_location, -snout, 
@@ -1766,7 +1801,8 @@ ppdata <- ppdata[ , !duplicated(colnames(ppdata))]
 
 # Write to csv file
 write_csv(ppdata, "ppdata - intercept and slope data.csv")
-view(ppdata)
+
+str(ppdata)
 
 ```
 
@@ -1777,6 +1813,8 @@ view(ppdata)
 
 #Intercept GLMMs - testing behaviour intercept (personality) against independent variables
 ```{r}
+
+
 mod <- lmer(i_bait_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
             data=ppdata, na.action = "na.fail")
 
@@ -1899,10 +1937,10 @@ i_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = i_tablestress_p, fill=s
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
         text = element_text(size=16)) + 
-  scale_y_continuous(breaks=seq(0.9,1.6,0.1),labels=seq(0.9,1.6,0.1), limits=c(0.9,1.6)) +
+  scale_y_continuous(breaks=seq(0.9,1.3,0.1),labels=seq(0.9,1.3,0.1), limits=c(0.9,1.3)) +
   xlab("") + 
   ylab("Adjusted table stress rating intercept") + labs("") +
-  annotate("text", x = "Mulligans Flat", y = 1.6, label = parse(text = "B"), size = 10, hjust = -2)
+  annotate("text", x = "Mulligans Flat", y = 1.3, label = parse(text = "B"), size = 10, hjust = -2)
 print(i_ts_site)
 #ggsave(filename = "intercept - study site v table stress.jpeg", i_ts_site, width=200, height= 150, units = "mm")
 
@@ -1919,10 +1957,10 @@ i_e_site <- ggplot(data=ppdata, aes(x = study_site, y = i_emerge_p, fill=study_s
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
         text = element_text(size=16)) + 
-  scale_y_continuous(breaks=seq(0,40,10),labels=seq(0,40,10), limits=c(0,40)) +
+  scale_y_continuous(breaks=seq(0,50,10),labels=seq(0,50,10), limits=c(0,50)) +
   xlab(" ") + 
   ylab("Adjusted latency to emerge (s) intercept") + labs("") +
-  annotate("text", x = "Mulligans Flat", y = 40, label = parse(text = "C"), size = 10, hjust = -2)
+  annotate("text", x = "Mulligans Flat", y = 50, label = parse(text = "C"), size = 10, hjust = -2)
 print(i_e_site)
 #ggsave(filename = "intercept - study site v latency to emerge.jpeg", i_e_site, width=200, height= 150, units = "mm")
 
@@ -2351,130 +2389,507 @@ aictab(cand.set = models, modnames = model.names)
 
 ```
 
-#Plasticity geom smooth code
+#Plasticity x weight plots
 ```{r}
 
-names(d2pred)
-
-custom_colors <- c("Goorooyarroo" = "#4DBC94", "Mulligans Flat" = "#7BD151")
-custom_colors <- c("Goorooyarroo" = "#674A8E", "Mulligans Flat" = "#2D718E")
-
-#Latency to emerge vs site 
-emerge <- ggplot(data=d2pred, aes(x = assay_number, y = emerge_p, color = study_site, fill = study_site)) + 
+#Food occ v weight
+food <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_foodo_p)) + 
  geom_point() +
-  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+  geom_smooth(method = "lm", se = TRUE, colour = "#2C728E", fill = "#72A1B4") +
   theme_minimal() +
     theme(legend.position = "right", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
-  xlab("Assay number") + 
-  ylab("Adjusted latency to emerge (s)") +
-  labs(color = "Study site", fill = "Study site") +
-  scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
-print(emerge)
-ggsave(filename = "slope smooth - study site v emerge.jpeg", emerge, width=200, height= 150, units = "mm")
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-30,10,10),labels=seq(-30,10,10), limits=c(-30,10)) +
+  xlab("") + 
+    ylab(expression(paste("Adjusted food interaction occurrences", italic(" (n)")," slope"))) + labs("") +
+  annotate("text", x =1.6, y =10, label = "D", size = 10, hjust = 1)
+print(food)
+
+#Legs occ v weight
+legso_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legso_p)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#440154", fill = "#82568D") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-100,25,25),labels=seq(-100,25,25), limits=c(-100,25)) +
+  xlab("") + 
+    ylab(expression(paste("Adjusted hindleg stand occurrences", italic(" (n)")," slope"))) +
+  labs("") +
+  annotate("text", x =1.6, y =25, label = "A", size = 10, hjust = 1)
+print(legso_weight)
+
+#Legs dur v weight
+legsd_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legsd_p)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#472D7B", fill = "#8473A7") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-40,50,20),labels=seq(-40,50,20), limits=c(-40, 50)) +
+  xlab("") + 
+    ylab("Adjusted hindleg stand duration (s) slope") + labs("") +
+  annotate("text", x =1.6, y =50, label = "B", size = 10, hjust = 1)
+print(legsd_weight)
+
+#Move occ v weight
+moveo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moveo_p)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#3B528B", fill = "#7C8CB2") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-150,50,50),labels=seq(-150,50,50), limits=c(-150, 50)) +
+  xlab("") + 
+    ylab(expression(paste("Adjusted quadrupedal movement occurrences", italic(" (n)")," slope"))) +
+  annotate("text", x =1.6, y =50, label = "C", size = 10, hjust = 1)
+print(moveo_weight)
+
+#Sums sect v weight
+sum_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_sumsecto_p)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#21908C", fill = "#6BB5B2") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-40,0,20),labels=seq(-40,0,20), limits=c(-40, 0)) +
+  xlab("") + 
+    ylab(expression(paste("Adjusted total arena section visits", italic(" (n)")," slope"))) +
+  annotate("text", x =1.6, y =0, label = "E", size = 10, hjust = 1)
+print(sum_weight)
+
+#Total act v weight
+tot_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_totalacto_p)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#27AD81", fill = "#6FC8AB") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-300,10,50),labels=seq(-300,10,50), limits=c(-300, 20)) +
+  xlab("") + 
+    ylab(expression(paste("Adjusted total activity", italic(" (n)")," slope"))) +
+  annotate("text", x =1.6, y =0, label = "F", size = 10, hjust = 1)
+print(tot_weight)
+
+#Combine plots
+plot <- ggarrange(legso_weight, legsd_weight, moveo_weight, food, sum_weight, tot_weight, nrow=3,ncol=2)
+plot <- annotate_figure(plot,
+        bottom = text_grob("Body weight (kg)", size = 20))
+print(plot)
+ggsave(filename = "slope - weight plots.jpeg", plot, width=300, height= 450, units = "mm")
+
+```
+
+#Plasticity site plots block 1
+```{r}
+
+custom_colors <- c("Goorooyarroo" = "#4DBC94", "Mulligans Flat" = "#2D718E")
+#custom_colors <- c("Goorooyarroo" = "#674A8E", "Mulligans Flat" = "#2D718E")
 
 
-#Food dur vs site 
+#Food interaction dur blob
+s_fd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_foodd_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  scale_y_continuous(breaks=seq(-100,60,20),labels=seq(-100,60,20), limits=c(-100,60)) +
+  xlab("") + 
+  ylab("Adjusted food interaction duration (s) slope") + labs("") +
+  annotate("text", x ="Mulligans Flat", y =60, label = "A", size = 10, hjust = -3)
+print(s_fd_site)
+
+#Food dur vs site smooth
 food <- ggplot(data=d2pred, aes(x = assay_number, y =foodd_p, color = study_site, fill = study_site)) + 
  geom_point() +
   geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
   theme_minimal() +
-    theme(legend.position = "right", 
+    theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
-  xlab("Assay number") + 
+        text = element_text(size=17)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") + 
+  scale_y_continuous(breaks=seq(-50,100,25),labels=seq(-50,100,25), limits=c(-50,100)) +
+  scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+  xlab("") + 
   ylab("Adjusted food interaction duration (s)") +
   labs(color = "Study site", fill = "Study site") +
   scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =100, label = "B", size = 10, hjust = 2)
+
 print(food)
-ggsave(filename = "slope smooth - study site v food dur.jpeg", food, width=200, height= 150, units = "mm")
+
+#Latency to emerge blob
+s_e_site <- ggplot(data=ppdata, aes(x = study_site, y = s_emerge_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
+  scale_y_continuous(breaks=seq(-10,50,10),labels=seq(-10,50,10), limits=c(-10,50)) +
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  xlab("") + 
+  ylab("Adjusted latency to emerge (s) slope") + labs("") +
+  annotate("text", x ="Mulligans Flat", y =50, label = "C", size = 10, hjust = -3)
+print(s_e_site)
 
 
-#Jump climb dur vs site 
+#Latency to emerge smooth
+emerge <- ggplot(data=d2pred, aes(x = assay_number, y = emerge_p, color = study_site, fill = study_site)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+  theme_minimal() +
+    theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+  scale_y_continuous(breaks=seq(-10,50,10),labels=seq(-10,50,10), limits=c(-10,50)) +
+  xlab("") + 
+  ylab("Adjusted latency to emerge (s)") +
+  labs(color = "Study site", fill = "Study site") +
+  scale_color_manual(values = custom_colors) +
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =50, label = "D", size = 10, hjust = 2)
+print(emerge)
+
+
+#Jump + climb dur blob
+s_jd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_jumpd_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "bottom", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=17)) + 
+  scale_y_continuous(breaks=seq(-150,50,50),labels=seq(-150,50,50), limits=c(-150,50)) +
+  xlab("Study site") + 
+  ylab("Adjusted jumping + climbing duration (s) slope") +
+  annotate("text", x ="Mulligans Flat", y =50, label = "E", size = 10, hjust = -3)
+print(s_jd_site)
+
+
+#Jump climb dur smooth
 jump <- ggplot(data=d2pred, aes(x = assay_number, y =jumpd_p, color = study_site, fill = study_site)) + 
  geom_point() +
   geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
   theme_minimal() +
-    theme(legend.position = "right", 
+    theme(legend.position = "bottom", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+        text = element_text(size=17)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
   xlab("Assay number") + 
   ylab("Adjusted jumping + climbing duration (s)") +
   labs(color = "Study site", fill = "Study site") +
   scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =200, label = "F", size = 10, hjust = 2)
 print(jump)
-ggsave(filename = "slope smooth - study site v jump dur.jpeg", jump, width=200, height= 150, units = "mm")
 
-#Jump climb occ vs site 
-jump <- ggplot(data=d2pred, aes(x = assay_number, y =jumpo_p, color = study_site, fill = study_site)) + 
- geom_point() +
-  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+
+#Combine plots
+plot <- ggarrange(s_fd_site, food, s_e_site, emerge, s_jd_site, jump, nrow=3,ncol=2, heights = c(1, 1, 1.1))
+#plot <- annotate_figure(plot,
+  #      bottom = text_grob("Body weight (kg)", size = 20))
+print(plot)
+ggsave(filename = "slope - study site plots 1.jpeg", plot, width=300, height= 400, units = "mm")
+
+
+
+```
+
+#Plasticity site plots block 2
+```{r}
+
+#Jump + climb occurrences blob
+s_jo_site <- ggplot(data=ppdata, aes(x = study_site, y = s_jumpo_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
   theme_minimal() +
-    theme(legend.position = "right", 
+  theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
-  xlab("Assay number") + 
+        text = element_text(size=16)) + 
+  scale_y_continuous(breaks=seq(-60,0,20),labels=seq(-60,0,20), limits=c(-60,0)) +
+  xlab(" ") + 
+  ylab(expression(paste("Adjusted jump. + climb. occurrences ", italic("(n)"), " slope")))+
+  annotate("text", x ="Mulligans Flat", y =0, label = "A", size = 10, hjust = -2)
+print(s_jo_site)
+
+#Jump climb occ smooth
+jump2 <- ggplot(data=d2pred, aes(x = assay_number, y =jumpo_p, color = study_site, fill = study_site)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+  theme_minimal() +
+    theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+  xlab("") + 
   ylab(expression(paste("Adjusted jumping + climbing occurrences ", italic("(n)"), ""))) +
   labs(color = "Study site", fill = "Study site") +
   scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
-print(jump)
-ggsave(filename = "slope smooth - study site v jump occ.jpeg", jump, width=200, height= 150, units = "mm")
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =80, label = "B", size = 10, hjust = 2)
+print(jump2)
 
+#Perching duration blob
+s_pd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_perchd_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black",  
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  scale_y_continuous(breaks=seq(-200,200,100),labels=seq(-200,200,100), limits=c(-200,200)) +
+  xlab(" ") + 
+  ylab("Adjusted perching duration (s) slope") + labs("") +
+  annotate("text", x ="Mulligans Flat", y =200, label = "C", size = 10, hjust = -2)
+print(s_pd_site)
 
-#Perch dur vs site 
+#Perch dur smooth
 perch <- ggplot(data=d2pred, aes(x = assay_number, y =perchd_p, color = study_site, fill = study_site)) + 
  geom_point() +
   geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
   theme_minimal() +
-    theme(legend.position = "right", 
+    theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
-  xlab("Assay number") + 
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+  xlab("") + 
   ylab("Adjusted perching duration (s)") +
   labs(color = "Study site", fill = "Study site") +
   scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
-print(perch)
-ggsave(filename = "slope smooth - study site v perch dur.jpeg", perch, width=200, height= 150, units = "mm")
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =300, label = "D", size = 10, hjust = 2)
+ print(perch)
 
-#Perch occ vs site 
-perch <- ggplot(data=d2pred, aes(x = assay_number, y =percho_p, color = study_site, fill = study_site)) + 
- geom_point() +
-  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+#Perching occurrences blob
+s_po_site <- ggplot(data=ppdata, aes(x = study_site, y = s_percho_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
   theme_minimal() +
-    theme(legend.position = "right", 
+  theme(legend.position = "bottom", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+        text = element_text(size=16)) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Study site") + 
+  ylab(expression(paste("Adjusted perching occurrences ", italic("(n)"), "slope"))) +
+  annotate("text", x ="Mulligans Flat", y =5, label = "E", size = 10, hjust = -2)
+print(s_po_site)
+
+#Perch occ smooth 
+perch2 <- ggplot(data=d2pred, aes(x = assay_number, y =percho_p, color = study_site, fill = study_site)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+  theme_minimal() +
+    theme(legend.position = "bottom", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
   xlab("Assay number") + 
   ylab(expression(paste("Adjusted perching occurrences ", italic("(n)"), ""))) +
   labs(color = "Study site", fill = "Study site") +
   scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
-print(perch)
-ggsave(filename = "slope smooth - study site v perch occ.jpeg", perch, width=200, height= 150, units = "mm")
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =30, label = "F", size = 10, hjust = 2)
+print(perch2)
+
+#Combine plots
+plot <- ggarrange(s_jo_site, jump2, s_pd_site, perch, s_po_site, perch2, nrow=3,ncol=2, heights = c(1, 1, 1.1))
+#plot <- annotate_figure(plot,
+  #      bottom = text_grob("Body weight (kg)", size = 20))
+print(plot)
+ggsave(filename = "slope - study site plots 2.jpeg", plot, width=300, height= 400, units = "mm")
+
+```
+
+#Plasticity site plots block 3 and 4
+```{r}
+
+#Bag stress rating blob
+s_bs_site <- ggplot(data=ppdata, aes(x = study_site, y = s_bagstress_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18)) + 
+  xlab("") + 
+  ylab("Adjusted bag stress rating slope") + labs("") +
+  annotate("text", x ="Mulligans Flat", y =0.2, label = "A", size = 10, hjust = -2)
+print(s_bs_site)
+
+#Bag stress vs site smooth
+bag <- ggplot(data=d2pred, aes(x = assay_number, y =bagstress_p, color = study_site, fill = study_site)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+  theme_minimal() +
+    theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  scale_y_continuous(breaks=seq(0.9,1.3,0.1),labels=seq(0.9,1.3,0.1), limits=c(0.9,1.3))+
+  scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+  xlab("") + 
+  ylab("Adjusted bag stress rating") +
+  labs(color = "Study site", fill = "Study site") +
+  scale_color_manual(values = custom_colors) +
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =1.3, label = "B", size = 10, hjust = 2)
+print(bag)
+
+#Table stress site blob
+s_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = s_tablestress_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black",  
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "bottom", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18)) + 
+  scale_y_continuous(breaks=seq(-0.1,0.2,0.1),labels=seq(-0.1,0.2,0.1), limits=c(-0.1,0.2)) +
+  xlab("Study site") + 
+  ylab("Adjusted table stress rating slope") + labs("") +
+  annotate("text", x ="Mulligans Flat", y =0.2, label = "C", size = 10, hjust = -2)
+print(s_ts_site)
+
+#Table stress vs site 
+table <- ggplot(data=d2pred, aes(x = assay_number, y =tablestress_p, color = study_site, fill = study_site)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+  theme_minimal() +
+    theme(legend.position = "bottom", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+   scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  xlab("Assay number") + 
+  ylab("Adjusted table stress rating") +
+  labs(color = "Study site", fill = "Study site") +
+  scale_color_manual(values = custom_colors) +
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =2, label = "D", size = 10, hjust = 2)
+print(table)
+
+#Combine plots
+plot <- ggarrange(s_bs_site, bag, s_ts_site, table, nrow=2,ncol=2, heights = c(1, 1.1))
+#plot <- annotate_figure(plot,
+  #      bottom = text_grob("Body weight (kg)", size = 20))
+print(plot)
+ggsave(filename = "slope - study site plots 3.jpeg", plot, width=300, height= 400, units = "mm")
+
+#Movement duration v site
+s_md_site <- ggplot(data=ppdata, aes(x = study_site, y = s_moved_p, fill=study_site)) + 
+ geom_violin() +
+  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
+  stat_summary(fun="median", geom="point", col="black", fill="black", 
+               shape=21, size=1.5, stroke=1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
+  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=16)) + 
+  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
+  xlab("Study site") + 
+  ylab("Adjusted quadrupedal movement duration (s) slope") + labs("") +
+    annotate("text", x ="Mulligans Flat", y =50, label = "A", size = 10, hjust = -2)
+print(s_md_site)
 
 #Move dur vs site 
 move <- ggplot(data=d2pred, aes(x = assay_number, y =moved_p, color = study_site, fill = study_site)) + 
@@ -2485,356 +2900,47 @@ move <- ggplot(data=d2pred, aes(x = assay_number, y =moved_p, color = study_site
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
   xlab("Assay number") + 
   ylab("Adjusted quadrupedal movement duration (s)") +
   labs(color = "Study site", fill = "Study site") +
   scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
+  scale_fill_manual(values = custom_colors) +
+  annotate("text", x =max(d2pred$assay_number), y =160, label = "B", size = 10, hjust = 2)
 print(move)
-ggsave(filename = "slope smooth - study site v move dur.jpeg", move, width=200, height= 150, units = "mm")
 
-#Bag stress vs site 
-bag <- ggplot(data=d2pred, aes(x = assay_number, y =bagstress_p, color = study_site, fill = study_site)) + 
+#Total act v weight
+tot <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moved_p)) + 
  geom_point() +
-  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
+  geom_smooth(method = "lm", se = TRUE, colour = "#CDE868", fill = "#CDE868") +
   theme_minimal() +
     theme(legend.position = "right", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
-  xlab("Assay number") + 
-  ylab("Adjusted bag stress rating") +
-  labs(color = "Study site", fill = "Study site") +
-  scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
-print(bag)
-ggsave(filename = "slope smooth - study site v bag.jpeg", bag, width=200, height= 150, units = "mm")
+        text = element_text(size=16)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-150,50,50),labels=seq(-150,50,50), limits=c(-170, 50)) +
+  xlab("Body weight (kg)") + 
+    ylab("Adjusted quadrupedal movement duration (s) slope") +
+  annotate("text", x =1.6, y =50, label = "C", size = 10, hjust = 1)
+print(tot)
 
-#Table stress vs site 
-table <- ggplot(data=d2pred, aes(x = assay_number, y =tablestress_p, color = study_site, fill = study_site)) + 
- geom_point() +
-  geom_smooth(method = "lm", se = TRUE, aes(fill = study_site)) +
-  theme_minimal() +
-    theme(legend.position = "right", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
-  xlab("Assay number") + 
-  ylab("Adjusted table stress rating") +
-  labs(color = "Study site", fill = "Study site") +
-  scale_color_manual(values = custom_colors) +
-  scale_fill_manual(values = custom_colors) 
-print(table)
-ggsave(filename = "slope smooth - study site v table.jpeg", table, width=200, height= 150, units = "mm")
-
+#Combine plots
+plot <- ggarrange(s_md_site, move, tot, nrow=2,ncol=2, widths = c(1, 1.25))
+#plot <- annotate_figure(plot,
+  #      bottom = text_grob("Body weight (kg)", size = 20))
+print(plot)
+ggsave(filename = "slope - study site plots 4.jpeg", plot, width=400, height= 350, units = "mm")
 
 ```
 
-
-#Slope violin plots
+# **Session information**
 ```{r}
-
-#Latency to emerge v site
-s_e_site <- ggplot(data=ppdata, aes(x = study_site, y = s_emerge_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Study site") + 
-  ylab("Adjusted latency to emerge (s) slope") + labs("") 
-print(s_e_site)
-ggsave(filename = "slope blob - study site v emerge.jpeg", s_e_site, width=150, height= 150, units = "mm")
-
-
-#Food interaction duration v site
-s_fd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_foodd_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Study site") + 
-  ylab("Adjusted food interaction duration (s) slope") + labs("") 
-print(s_fd_site)
-
-ggsave(filename = "slope blob - study site v food dur.jpeg", s_fd_site, width=150, height= 150, units = "mm")
-
-
-#Movement duration v site
-s_md_site <- ggplot(data=ppdata, aes(x = study_site, y = s_moved_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Study site") + 
-  ylab("Adjusted quadrupedal movement duration (s) slope") + labs("") 
-print(s_md_site)
-ggsave(filename = "slope blob - study site v movement dur.jpeg", s_md_site, width=150, height= 150, units = "mm")
-
-
-#Jump + climb duration v site
-s_jd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_jumpd_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab(" ") + 
-  ylab("Adjusted jumping + climbing duration (s) slope") + labs("") 
-print(s_jd_site)
-ggsave(filename = "slope blob - study site v jump dur.jpeg", s_jd_site, width=150, height= 150, units = "mm")
-
-
-#Jump + climb occurrences v site
-s_jo_site <- ggplot(data=ppdata, aes(x = study_site, y = s_jumpo_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab(" ") + 
-  ylab(expression(paste("Adjusted jumping + climbing occurrences ", italic("(n)"), " slope")))
-print(s_jo_site)
-ggsave(filename = "slope blob - study site v jump occ.jpeg", s_jo_site, width=150, height= 150, units = "mm")
-
-
-#Bag stress rating v site
-s_bs_site <- ggplot(data=ppdata, aes(x = study_site, y = s_bagstress_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  xlab("Study site") + 
-  ylab("Adjusted bag stress rating slope") + labs("") 
-print(s_bs_site)
-ggsave(filename = "slope blob - study site v bag stress.jpeg", s_bs_site, width=150, height= 150, units = "mm")
-
-
-#Table stress rating v site
-s_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = s_tablestress_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Study site") + 
-  ylab("Adjusted table stress rating slope") + labs("") 
-print(s_ts_site)
-ggsave(filename = "slope blob - study site v table stress.jpeg", s_ts_site, width=150, height= 150, units = "mm")
-
-
-#Perching duration
-s_pd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_perchd_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Study site") + 
-  ylab("Adjusted perching duration (s) slope") + labs("") 
-print(s_pd_site)
-ggsave(filename = "slope blob - study site v perch dur.jpeg", s_pd_site, width=150, height= 150, units = "mm")
-
-
-#Perching occurrences
-s_po_site <- ggplot(data=ppdata, aes(x = study_site, y = s_percho_p, fill=study_site)) + 
- geom_violin() +
-  geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-               shape=21, size=1.5, stroke=1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#674A8E","#2D718E")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Study site") + 
-  ylab("Adjusted perching occurrences (n) slope") + labs("") 
-print(s_po_site)
-ggsave(filename = "slope blob - study site v perch occ.jpeg", s_po_site, width=150, height= 150, units = "mm")
-
-
-
-#NOT SURE HOW TO DO THIS ONE CHECK WITH BELINDA - bin data or use auto line rather than lm?
-#Food interaction occurrences v weight
-s_fo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_foodo_p)) + 
-  geom_smooth() +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Body weight (kg)") + 
-  ylab("Adjusted food interaction occurrences (n) slope") + labs("") 
-print(s_fo_weight)
-
-ggsave(filename = "slope - weight v food occ.jpeg", s_fo_weight, width=150, height= 150, units = "mm")
-
-#Add Legs dur v weight
-
-#Legs occurrences v weight
-s_lo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legso_p, )) + 
- geom_smooth() +
-  #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  #stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-  #             shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#420053","#3f4288")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Body weight (kg)") + 
-  ylab("Adjusted hind leg stands occurrences (n) slope") + labs("") 
-print(s_lo_weight)
-ggsave(filename = "slope - weight v legs occ.jpeg", s_lo_weight, width=150, height= 150, units = "mm")
-
-#Add move dur v weight
-
-#Move occ v weight 
-s_mo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moveo_p)) + 
- geom_smooth() +
-  #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  #stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-  #             shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#420053","#3f4288")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Body weight (kg) ") + 
-  ylab("Adjusted quadrupedal movement occurrences slope") + labs("") 
-print(s_mo_weight)
-ggsave(filename = "slope - weight  v moving occ.jpeg", s_mo_weight, width=150, height= 150, units = "mm")
-
-
-#Add sum section v weight
-
-#Total activity v weight 
-s_toto_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_totalacto_p)) + 
- geom_smooth() +
-  #geom_boxplot(col="grey40", fill="grey40", width=0.02, lwd=0.5) +
-  #stat_summary(fun="median", geom="point", col="grey40", fill="white", 
-  #             shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#420053","#3f4288")) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
-  #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
-  xlab("Body weight (kg) ") + 
-  ylab("Adjusted total activity occurrences (n) slope") + labs("") 
-print(s_toto_weight)
-ggsave(filename = "slope - weight  v total activity occr.jpeg", s_toto_weight, width=150, height= 150, units = "mm") 
-
-
-```
-
-Arrange slope plots into one. 
-
-```{r}
-
-slope_plot <- ggarrange(i_md_site, i_gd_site, i_go_site, i_b_site, i_jd_site, i_jo_site, i_e_site, i_pd_site, i_po_site, i_ld_site, i_lo_site, ncol = 3, nrow = 4,
-  font.label = list(
-    size = 6,
-    face = "bold",
-    color = "black",
-    label.x = 0.89,
-    label.y = 0.99,
-    hjust = -0.1,
-    vjust = 1.5  ))
-
-
-slope_plot <- annotate_figure(slope_plot, 
-        left = text_grob("Adjusted behaviour intercepts a.k.a personality", rot=90, size = 16, face = "bold"),
-        bottom = text_grob("Study site", size = 16, face = "bold"))
-
-print(slope_plot)
-ggsave(filename = "intercept - study site v adjusted behaviour plots.jpeg", slope_plot, width=800, height= 600, units = "mm")
+# Display version information for R, OS, and packages
+sessionInfo()
 ```
 
 
@@ -2889,87 +2995,5 @@ plot <- ggplot(bin_data, aes(x = minute_integer, y = moving_occ_binned,
   facet_wrap(~assay_number)
 
 print(plot)
-```
-
-
-
-
-# **Session information**
-
-```{r}
-# Display version information for R, OS, and packages
-sessionInfo()
-```
-
-
-#Plasticity slope plot
-```{r}
-
-d2pred <- data2_pred %>%
-  mutate(assay_number = as.numeric(assay_number))
-
-#Jumping duration v study site
-plot <- ggplot(data=d2pred, aes(x=assay_number, y=jumpd_p, fill=study_site
-                                    )) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black")) +
-  xlab("Assay number") + 
-  ylab("Jumping + climbing duration (s) adjusted") + 
-  labs("") +
-    scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number)))
-
-print(plot)
-
-```
-
-
-
-## Map
-
-```{r, warning=FALSE}
-# Read in and project MFWS fence shapefile using rgdal
-mfws <- readOGR(dsn="shapefiles/MFGO_fences_and surrounds.shp", verbose=FALSE) %>% 
-  spTransform(CRS("+proj=utm +zone=55 +ellps=WGS84")) %>%
-  # Transform shapefile into a dataframe
-  fortify(verbose=FALSE) %>%
-  mutate(lat=as.numeric(lat + 10000000), 
-         long=as.numeric(long))
-
-# Read in and project MFGO fence shapefile using rgdal
-mfgo <- st_read("shapefiles/MFGO_fences.shp", quiet=TRUE) %>%
-  # Set projection to eastings/northings
-  st_set_crs("EPSG:32755") %>% 
-  # Reproject to lat/long
-  st_transform("EPSG:4326")
-
-# Plot den locations on MFWS map for each trial
-map <- ggplot() + 
-  geom_polygon(mfws, mapping=aes(x=long, y=lat, group=group), col="grey15") +
-  #coord_sf(xlim=c(695750, 699250), ylim=c(6104250, 6107750)) +
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        panel.border = element_blank(),
-        panel.background = element_rect(fill="white"),
-        axis.text.x = element_blank(), 
-        axis.text.y = element_blank(), 
-        axis.ticks.x = element_blank(),
-        axis.ticks.y = element_blank(),
-        legend.key = element_blank(), 
-        strip.background = element_blank()) +
-  #facet_wrap(~factor(year_of_acquisition), ncol=3) +
-  #scale_colour_manual(values = viridis(3, begin=0.9, end=0.1)) +
-  xlab("") + ylab("") + labs(col="Trial")
-print(map)
-```
-
-```{r}
-jpeg(file="mfgo_fences_and_surrounds.jpeg", 
-     width=4750, height=1500, units="px", res=500)
-map
-dev.off()
 ```
 
