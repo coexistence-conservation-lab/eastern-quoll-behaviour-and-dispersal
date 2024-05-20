@@ -785,6 +785,100 @@ ggsave(filename = "1st assay emerge plots.jpeg", plot, width=350, height= 150, u
 
 ```
 
+# enviro vars plots
+```{r}
+
+names(data2)
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = legs_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#2D718E", fill = "#5089A1") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_x_continuous(breaks=seq(0.25,1.75,0.5),labels=seq(0.25,1.75,0.5), limits=c(0.25,1.75)) +
+  xlab("moon") + 
+  ylab("legs o ") + 
+  labs("") 
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = bait_eaten_g)) + 
+ geom_point(aes (colour = assay_number)) +
+  geom_smooth(method = "lm", se = TRUE, colour = "#2D718E", fill = "#5089A1") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_x_continuous(breaks=seq(0.25,1.75,0.5),labels=seq(0.25,1.75,0.5), limits=c(0.25,1.75)) +
+  xlab("moonphase") + 
+  ylab("bait") + 
+  labs("") 
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = food_d)) + 
+ geom_point(aes (colour = assay_number)) +
+  geom_smooth(method = "lm", se = TRUE, colour = "#2D718E", fill = "#5089A1") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) + 
+  #scale_x_continuous(breaks=seq(0.25,1.75,0.5),labels=seq(0.25,1.75,0.5), limits=c(0.25,1.75)) +
+  xlab("moon") + 
+  ylab("food d ") + 
+  labs("") 
+print(plot)
+
+
+
+plot <- ggplot(data=data2, aes(x = time_assaytolight, y = food_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#2D718E", fill = "#5089A1") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20))  
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_processtoassay, y = food_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#2D718E", fill = "#5089A1") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) 
+print(plot)
+
+
+
+plot <- ggplot(data=data2, aes(x = time_processtoassay, y = moving_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#2D718E", fill = "#5089A1") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=20)) 
+print(plot)
+
+
+```
+
+
 ## ** MULTIPLE ASSAYS
 #Subsetting data to animals with repeated assays
 ```{r}
