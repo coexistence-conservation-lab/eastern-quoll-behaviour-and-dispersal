@@ -39,8 +39,8 @@ First, we installed the [pacman Package Management Tool](https://cran.r-project.
 # Install packages
 ```{r, results='hide', warning=FALSE, message=FALSE}
 # Install and load required packages
-pacman::p_load(basemaps, ggplot2, ggpubr, gtools, janitor, lme4,lmerTest, MuMIn,  
-               readr, sf, readxl, rstudioapi, tidyverse, viridis, beepr, corrplot,
+pacman::p_load(ggplot2, ggpubr, gtools, janitor, lme4,lmerTest, MuMIn,  
+               readr, sf, readxl, rstudioapi, tidyverse, viridis, corrplot,
                broom, sjPlot, sjmisc, sjlabelled, knitr)
 
 #install.packages("kableExtra")
@@ -363,7 +363,7 @@ mod <- glm(emerge_max ~ temp + moon_phase + time_assaytolight + time_processtoas
 mod <- glm(stress_in_trap ~ temp + moon_phase, data=data1)
 mod <- glm(stress_in_bag ~ temp + moon_phase, data=data1)
 mod <- glm(stress_on_table ~ temp + moon_phase, data=data1)
-
+summary(mod)
 ```
 
 #Environmental vars tables  with kabelExtra
@@ -654,15 +654,16 @@ aictab(cand.set = models, modnames = model.names)
 groomd_site <- ggplot(data=data1, aes(x = study_site, y = grooming_d, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#68C6A5")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=18),  
+       axis.text.x = element_text(size=18)) +
   scale_y_continuous(breaks=seq(0,110,20),labels=seq(0,110,20), limits=c(0,110)) +
   xlab("") + ylab("Grooming duration (s)") + labs("")  +
   annotate("text", x = "Mulligans Flat", y =110, label = "A", size = 9, hjust = -2)
@@ -674,15 +675,16 @@ groomo_site <- ggplot(data=data1, aes(x = study_site, y = grooming_o,
                         fill = study_site)) + 
   geom_violin() +
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#68C6A5")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=18),  
+       axis.text.x = element_text(size=18)) +
   scale_y_continuous(breaks=seq(0,8,2),labels=seq(0,8,2), limits=c(0,8)) +
   xlab("") + ylab(expression(paste("Grooming occurrences ", italic(" (n)")))) + labs("") +
   annotate("text", x = "Mulligans Flat", y =8, label = "B", size = 9, hjust = -2)
@@ -694,18 +696,19 @@ ggsave(filename = "1st assay - study site v grooming occ.jpeg", groomo_site, wid
 moved_site <- ggplot(data=data1, aes(x = study_site, y = moving_d, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#68C6A5")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
-  scale_y_continuous(breaks=seq(0,250,50),labels=seq(0,250,50), limits=c(0,250)) +
-  xlab("") + ylab("Quadrupedal movement duration (s)") + labs("") +
-    annotate("text", x = "Mulligans Flat", y =250, label = "C", size = 9, hjust = -2)
+        text = element_text(size=18),  
+       axis.text.x = element_text(size=18)) +
+  scale_y_continuous(breaks=seq(0,300,50),labels=seq(0,300,50), limits=c(0,300)) +
+  xlab("") + ylab("Quadrupedal movement \nduration (s)") + labs("") +
+    annotate("text", x = "Mulligans Flat", y =300, label = "C", size = 9, hjust = -2)
 print(moved_site)
 #ggsave(filename = "1st assay - study site v moving dur.jpeg", moved_site, width=100, height= 150, units = "mm")
 
@@ -785,7 +788,7 @@ ggsave(filename = "1st assay emerge plots.jpeg", plot, width=350, height= 150, u
 
 ```
 
-# enviro vars plots
+# enviro vars plots - dont need these for thesis
 ```{r}
 
 names(data2)
@@ -1150,9 +1153,6 @@ plot <- ggarrange(baitage, perchocc, groomdur, ncol = 3, nrow=1)
 print(plot)
 ggsave(filename = "2 assays -bait perch emerge.jpeg", plot, width=350, height= 150, units = "mm")
 
-viridis(9)
-
-
 #Total section vs moon 
 sum_moon <- ggplot(data=data2, aes(x = moon_phase, y = sumsect_o)) + 
  geom_point() +
@@ -1500,6 +1500,8 @@ mod <- glm(bagstress_p ~ assay_number, family=gaussian, data=data2_pred)
 mod <- glm(trapstress_p ~ assay_number, family=gaussian, data=data2_pred)
 mod <- glm(tablestress_p ~ assay_number, family=gaussian, data=data2_pred)
 
+summary(mod)
+
 ```
 
 ```{r}
@@ -1520,24 +1522,24 @@ ed_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = emerge_p,
                         fill = assay_number)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +  
   scale_y_continuous(breaks=seq(0,50,10),labels=seq(0,50,10), limits=c(0,50)) +
-  xlab("Assay number") + 
+  xlab("") + 
   ylab(expression(paste("Latency to emerge (s)")))+
   labs("")+
-  annotate("text", x = "2", y =50, label = "A", size = 10, hjust = -2)
+  annotate("text", x = "2", y =50, label = "D", size = 10, hjust = -2)
 print(ed_plot)
-
-ggsave(filename = "assay number - emerge.jpeg", ed_plot, width=150, height= 150, units = "mm")
-
+#ggsave(filename = "assay number - emerge.jpeg", ed_plot, width=150, height= 150, units = "mm")
 
 
 #Food interaction occurrences
@@ -1545,18 +1547,20 @@ fo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = foodo_p,
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) + 
   #scale_y_continuous(breaks=seq(0,35,10),labels=seq(0,35,10), limits=c(0,35)) +
-  xlab("") + ylab(expression(paste("Food interaction occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =30, label = "B", size = 10, hjust = -3) + 
+  xlab("") + ylab(expression(paste("Food interaction \noccurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =30, label = "A", size = 10, hjust = -2) + 
   labs("") 
 print(fo_plot)
 #ggsave(filename = "assay number - food occ - site.jpeg", fo_plot, width=200, height= 150, units = "mm")
@@ -1567,18 +1571,20 @@ jd_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpd_p,
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+       text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) + 
   #scale_y_continuous(breaks=seq(0,200,50),labels=seq(0,200,50), limits=c(0,200)) +
-   xlab("") + ylab(expression(paste("Jumping and climbing duration (s)" )))  +
-  annotate("text", x = "2", y =200, label = "C", size = 10, hjust = -3) +
+   xlab("") + ylab(expression(paste("Jumping + climbing \nduration (s)" )))  +
+  annotate("text", x = "2", y =200, label = "B", size = 10, hjust = -2) +
   labs("") 
 print(jd_plot)
 #ggsave(filename = "assay number - jump dur - site.jpeg", jd_plot, width=200, height= 150, units = "mm")
@@ -1588,18 +1594,20 @@ jo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = jumpo_p,
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) +
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) + 
   #scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,80)) +
-  xlab("") + ylab(expression(paste("Jumping and climbing occurrences ", italic(" (n) ")))) +
-  annotate("text", x = "2", y =80, label = "D", size = 10, hjust = -2.5) + 
+  xlab("") + ylab(expression(paste("Jumping + \nclimbing occurrences ", italic(" (n) ")))) +
+  annotate("text", x = "2", y =80, label = "C", size = 10, hjust = -2) + 
   labs("") 
 print(jo_plot)
 #ggsave(filename = "assay number - jump occ - site.jpeg", jo_plot, width=200, height= 150, units = "mm")
@@ -1609,22 +1617,23 @@ po_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = percho_p,
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=20)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0,30,10),labels=seq(0,30,10), limits=c(0,30)) +
-  xlab("Assay number") + ylab(expression(paste("Perching occurrences ", italic(" (n) ")))) + 
-    annotate("text", x = "2", y =30, label = "E", size = 10, hjust = -2.5) + 
+  xlab("") + ylab(expression(paste("Perching \noccurrences ", italic(" (n) ")))) + 
+    annotate("text", x = "2", y =30, label = "E", size = 10, hjust = -2) + 
   labs("") 
 print(po_plot)
-ggsave(filename = "assay number - perch occ.jpeg", po_plot, width=150, height= 150, units = "mm")
-
+#ggsave(filename = "assay number - perch occ.jpeg", po_plot, width=150, height= 150, units = "mm")
 
 
 #Moving duration
@@ -1632,18 +1641,20 @@ md_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moved_p,
                         fill = assay_number)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+       text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0,160,50),labels=seq(0,160,50), limits=c(0,160)) +
-  xlab("") + ylab(expression(paste("Quadrupedal movement duration (s)" ))) +
-  annotate("text", x = "2", y =160, label = "F", size = 10, hjust = -3) + 
+  xlab("") + ylab(expression(paste("Quadrupedal \nmovement duration (s)" ))) +
+  annotate("text", x = "2", y =160, label = "F", size = 10, hjust = -2) + 
   labs("") 
 print(md_plot)
 #ggsave(filename = "assay number - move dur - site.jpeg", md_plot, width=200, height= 150, units = "mm")
@@ -1653,18 +1664,20 @@ mo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = moveo_p,
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0,150,50),labels=seq(0,150,50), limits=c(0,150)) +
-  xlab("") + ylab(expression(paste("Quadrupedal movement occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =150, label = "G", size = 10, hjust = -3) + 
+  xlab("") + ylab(expression(paste("Quadrupedal\n movement occurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =150, label = "G", size = 10, hjust = -2) + 
   labs("") 
 print(mo_plot)
 #ggsave(filename = "assay number - move occ - site.jpeg", mo_plot, width=200, height= 150, units = "mm")
@@ -1675,39 +1688,43 @@ lo_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = legso_p,
                         fill = assay_number)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0,110,20),labels=seq(0,110,20), limits=c(0,110)) +
-  xlab("") + ylab(expression(paste("Standing on hind legs occurrences", italic("(n) ")))) +
-  annotate("text", x = "2", y =110, label = "H", size = 10, hjust = -2.5) +
+  xlab("") + ylab(expression(paste("Hindleg stand \noccurrences ", italic("(n) ")))) +
+  annotate("text", x = "2", y =110, label = "H", size = 10, hjust = -2) +
   labs("") 
 print(lo_plot)
-ggsave(filename = "assay number - legs occ - site.jpeg", lo_plot, width=200, height= 150, units = "mm")
+#ggsave(filename = "assay number - legs occ - site.jpeg", lo_plot, width=200, height= 150, units = "mm")
 
 #Sum total activity 
 act_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = totalacto_p, 
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0,400,100),labels=seq(0,400,100), limits=c(0,400)) +
-  xlab("") + ylab(expression(paste("Total activity occurrences", italic(" (n) ")))) +
-  annotate("text", x = "2", y =400, label = "I", size = 10, hjust = -2.5) + 
+  xlab("") + ylab(expression(paste("Total activity \noccurrences", italic(" (n) ")))) +
+  annotate("text", x = "2", y =400, label = "I", size = 10, hjust = -2) + 
   labs("") 
 print(act_plot)
 #ggsave(filename = "assay number - tot sect - site.jpeg", act_plot, width=200, height= 150, units = "mm")
@@ -1717,32 +1734,23 @@ sum_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = sumsecto_p,
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),  
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) +  
   scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,80)) +
-  xlab("") + ylab(expression(paste("Total arena section visits", italic(" (n) ")))) +
-  annotate("text", x = "2", y =80, label = "J", size = 10, hjust = -5) + 
+  xlab("") + ylab(expression(paste("Total arena \nsection visits", italic(" (n) ")))) +
+  annotate("text", x = "2", y =80, label = "J", size = 10, hjust = -2) + 
   labs("") 
 print(sum_plot)
 #ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
-
-plot <- ggarrange(ed_plot, fo_plot, jd_plot, jo_plot, 
-                  po_plot, md_plot, mo_plot, 
-                    lo_plot, act_plot, sum_plot, nrow=5, ncol=2)
-
-plot <- annotate_figure(plot, 
-        bottom = text_grob("Assay number", size = 24))
-print(plot)
-ggsave(filename = "2 assays - activity by assay number.jpeg", plot, width=300, height= 600, units = "mm")
-
-
 
 
 #Bag stress
@@ -1750,18 +1758,20 @@ bag_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = bagstress_p,
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +   
   scale_y_continuous(breaks=seq(1,1.5,0.1),labels=seq(1,1.5,0.1), limits=c(0.9,1.5)) +
-  xlab("") + ylab("Adjusted bag stress rating") +
-  annotate("text", x = "2", y =1.5, label = "A", size = 10, hjust = -2) + 
+  xlab("") + ylab("Adjusted bag\n stress rating") +
+  annotate("text", x = "2", y =1.5, label = "K", size = 10, hjust = -2) + 
   labs("") 
 print(bag_plot)
 #ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
@@ -1772,29 +1782,36 @@ table_plot <- ggplot(data=data2_pred, aes(x = assay_number, y = tablestress_p,
                         fill = assay_number)) + 
   geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
-  scale_fill_manual (values = c("#7E67A0","#6B9BAF")) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
+  scale_fill_manual (values = c("#7E67A0","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +  
   scale_y_continuous(breaks=seq(1,1.5,0.1),labels=seq(1,1.5,0.1), limits=c(0.9,1.5)) +
-  xlab("") + ylab("Adjusted table stress rating") +
-  annotate("text", x = "2", y =1.5, label = "B", size = 10, hjust = -2) + 
+  xlab("") + ylab("Adjusted table \nstress rating") +
+  annotate("text", x = "2", y =1.5, label = "L", size = 10, hjust = -2) + 
   labs("") 
 print(table_plot)
 #ggsave(filename = "assay number - sum sect - site.jpeg", sum_plot, width=200, height= 150, units = "mm")
 
 
-plot <- ggarrange(bag_plot, table_plot)
+
+plot <- ggarrange(fo_plot, jd_plot, jo_plot, 
+                  ed_plot, po_plot, md_plot, 
+                  mo_plot, lo_plot, act_plot, 
+                  sum_plot, bag_plot, table_plot,  nrow=4, ncol=3)
 
 plot <- annotate_figure(plot, 
-        bottom = text_grob("Capture number", size = 24))
+        bottom = text_grob("Assay / capture number", size = 25))
 print(plot)
-ggsave(filename = "2 assays - stress by capture.jpeg", plot, width=300, height= 150, units = "mm")
+ggsave(filename = "2 assays - activity by assay number.jpeg", plot, width=400, height= 550, units = "mm")
+
 
 
 ```
@@ -2002,19 +2019,21 @@ aictab(cand.set = models, modnames = model.names)
 i_bs_site <- ggplot(data=ppdata, aes(x = study_site, y = i_bagstress_p, fill=study_site)) + 
 geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +   
   scale_y_continuous(breaks=seq(0.9,1.3,0.1),labels=seq(0.9,1.3,0.1), limits=c(0.9,1.3)) +
-  xlab("") + 
-  ylab("Adjusted bag stress rating intercept") + labs("") +
-  annotate("text", x = "Mulligans Flat", y = 1.3, label = parse(text = "A"), size = 10, hjust = -2)
+  xlab(" ") + 
+  ylab("Adjusted bag stress \nrating intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 1.3, label = parse(text = "A"), size = 10, hjust = -2 )
 print(i_bs_site)
 #ggsave(filename = "intercept - study site v bag stress.jpeg", i_bs_site, width=200, height= 150, units = "mm")
 
@@ -2022,18 +2041,20 @@ print(i_bs_site)
 i_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = i_tablestress_p, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+       text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   scale_y_continuous(breaks=seq(0.9,1.3,0.1),labels=seq(0.9,1.3,0.1), limits=c(0.9,1.3)) +
   xlab("") + 
-  ylab("Adjusted table stress rating intercept") + labs("") +
+  ylab("Adjusted table stress \nrating intercept") + labs("") +
   annotate("text", x = "Mulligans Flat", y = 1.3, label = parse(text = "B"), size = 10, hjust = -2)
 print(i_ts_site)
 #ggsave(filename = "intercept - study site v table stress.jpeg", i_ts_site, width=200, height= 150, units = "mm")
@@ -2042,18 +2063,20 @@ print(i_ts_site)
 i_e_site <- ggplot(data=ppdata, aes(x = study_site, y = i_emerge_p, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   scale_y_continuous(breaks=seq(0,50,10),labels=seq(0,50,10), limits=c(0,50)) +
   xlab(" ") + 
-  ylab("Adjusted latency to emerge (s) intercept") + labs("") +
+  ylab("Adjusted latency \nto emerge (s) intercept") + labs("") +
   annotate("text", x = "Mulligans Flat", y = 50, label = parse(text = "C"), size = 10, hjust = -2)
 print(i_e_site)
 #ggsave(filename = "intercept - study site v latency to emerge.jpeg", i_e_site, width=200, height= 150, units = "mm")
@@ -2063,17 +2086,19 @@ print(i_e_site)
 i_b_site <- ggplot(data=ppdata, aes(x = study_site, y = i_bait_p, fill=study_site)) + 
 geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+       text = element_text(size=19), 
+       axis.text.x = element_text(size=19),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   xlab(" ") + 
-  ylab("Adjusted bait eaten (g) intercept") + labs("") +
+  ylab("Adjusted \nbait eaten (g) intercept") + labs("") +
   annotate("text", x = "Mulligans Flat", y = 20, label = parse(text = "F"), size = 10, hjust = -2)
 print(i_b_site)
 
@@ -2082,18 +2107,20 @@ print(i_b_site)
 #Groom duration
 i_gd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_groomd_p, fill=study_site)) + geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=18)) + 
+       text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab("") + 
-  ylab("Adjusted grooming duration (s) intercept") + labs("") +
+  ylab("Adjusted grooming\n duration (s) intercept") + labs("") +
   annotate("text", x = "Mulligans Flat", y = 25, label = parse(text = "E"), size = 10, hjust = -2)
 print(i_gd_site)
 
@@ -2103,53 +2130,45 @@ print(i_gd_site)
 i_ld_site <- ggplot(data=ppdata, aes(x = study_site, y = i_legsd_p, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+       text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   scale_y_continuous(breaks=seq(100,300,100),labels=seq(100,300,100), limits=c(100,300)) +
   xlab(" ") + 
-  ylab("Adjusted hindleg stands duration (s) intercept") + labs("") +
+  ylab("Adjusted hindleg stands \nduration (s) intercept") + labs("") +
   annotate("text", x = "Mulligans Flat", y = 300, label = parse(text = "D"), size = 10, hjust = -2)
 print(i_ld_site)
 
 #ggsave(filename = "intercept - study site v legs dur.jpeg", i_ld_site, width=200, height= 150, units = "mm")
 
 
-#Combine plots
-plot <- ggarrange(i_bs_site, i_ts_site,
-                  i_e_site,i_ld_site,  
-                  i_gd_site, i_b_site, nrow=3,ncol=2)
-plot <- annotate_figure(plot,
-        bottom = text_grob("Study site", size = 20))
-print(plot)
-ggsave(filename = "intercept plots A.jpeg", plot, width=300, height= 400, units = "mm")
-
-
-
 #Jump/climb duration
 i_jd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_jumpd_p, fill=study_site)) + 
 geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+       text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   scale_y_continuous(breaks=seq(0,200,50),labels=seq(0,200,50), limits=c(0,220)) +
   xlab(" ") + 
-  ylab("Adjusted jumping + climbing duration (s) intercept") + labs("") +
-  annotate("text", x = "Mulligans Flat", y = 220, label = parse(text = "A"), size = 10, hjust = -2)
-
+  ylab("Adjusted jumping + climbing \nduration (s) intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 220, label = parse(text = "G"), size = 10, hjust = -2)
 print(i_jd_site)
 #ggsave(filename = "intercept - study site v jumpclimb dur.jpeg", i_jd_site, width=200, height= 150, units = "mm")
 
@@ -2158,21 +2177,22 @@ print(i_jd_site)
 i_jo_site <- ggplot(data=ppdata, aes(x = study_site, y = i_jumpo_p, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+     text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) + 
   scale_y_continuous(breaks=seq(0,80,20),labels=seq(0,80,20), limits=c(0,90)) +
   xlab(" ") + 
-  ylab(expression(paste("Adjusted jumping + climbing occurrences ", italic("(n)"), " intercept"))) +
+  ylab(expression(paste("Adjusted jumping + climbing\n occurrences intercept",italic("(n)")))) +
   labs("") +
-  annotate("text", x = "Mulligans Flat", y = 90, label = parse(text = "B"), size = 10, hjust = -2)
-
+  annotate("text", x = "Mulligans Flat", y = 90, label = parse(text = "H"), size = 10, hjust = -2)
 print(i_jo_site)
 #ggsave(filename = "intercept - study site v jumpclimb occ.jpeg", i_jo_site, width=200, height= 150, units = "mm")
 
@@ -2180,38 +2200,42 @@ print(i_jo_site)
 #Perch duration
 i_pd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_perchd_p, fill=study_site)) + geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
+       text = element_text(size=19), 
+       axis.text.x = element_text(size=19),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   #scale_y_continuous(breaks=seq(50,300,100),labels=seq(50,300,100), limits=c(50,300)) +
   xlab(" ") + 
-  ylab("Adjusted perching duration (s) intercept") + labs("") +
-  annotate("text", x = "Mulligans Flat", y = 300, label = parse(text = "C"), size = 10, hjust = -2)
+  ylab("Adjusted perching\n duration (s) intercept") + labs("") +
+  annotate("text", x = "Mulligans Flat", y = 300, label = parse(text = "J"), size = 10, hjust = -2)
 print(i_pd_site)
 #ggsave(filename = "intercept - study site v perch dur.jpeg", i_pd_site, width=200, height= 150, units = "mm")
 
 #Perch occurrences
 i_po_site <- ggplot(data=ppdata, aes(x = study_site, y = i_percho_p, fill=study_site)) + geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab(" ") + 
-  ylab(expression(paste("Adjusted perching occurrences ", italic("(n)"), " intercept"))) +
-  annotate("text", x = "Mulligans Flat", y = 30, label = parse(text = "D"), size = 10, hjust = -2)
+  ylab(expression(paste("Adjusted perching \noccurrences intercept ", italic("(n)")))) +
+  annotate("text", x = "Mulligans Flat", y = 30, label = parse(text = "K"), size = 10, hjust = -2)
 print(i_po_site)
 #ggsave(filename = "intercept - study site v perch occ.jpeg", i_po_site, width=200, height= 150, units = "mm")
 
@@ -2219,21 +2243,22 @@ print(i_po_site)
 i_md_site <- ggplot(data=ppdata, aes(x = study_site, y = i_moved_p, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   #scale_y_continuous(breaks=seq(0,120,20),labels=seq(0,120,20), limits=c(0,120)) +
   xlab(" ") + 
-  ylab("Adjusted quadrupedal movement duration (s) intercept") + 
+  ylab("Adjusted quadrupedal movement\n duration intercept  (s)") + 
   labs("") +
-  annotate("text", x = "Mulligans Flat", y = 160, label = parse(text = "E"), size = 10, hjust = -2)
-
+  annotate("text", x = "Mulligans Flat", y = 160, label = parse(text = "I"), size = 10, hjust = -2)
   print(i_md_site)
 #ggsave(filename = "intercept - study site v move dur.jpeg", i_md_site, width=200, height= 150, units = "mm")
 
@@ -2241,51 +2266,58 @@ i_md_site <- ggplot(data=ppdata, aes(x = study_site, y = i_moved_p, fill=study_s
 i_sumsect_site <- ggplot(data=ppdata, aes(x = study_site, y = i_sumsecto_p, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) + 
   scale_y_continuous(breaks=seq(30,70,10),labels=seq(30,70,10), limits=c(30,70)) +
   xlab("") + 
-  ylab(expression(paste("Adjusted sum of section visits ", italic("(n)"), " intercept"))) +
-  annotate("text", x = "Mulligans Flat", y = 70, label = parse(text = "F"), size = 10, hjust = -2)
+ ylab(expression(paste("Adjusted total arena \nsection visits intercept ", italic("(n)")))) +  annotate("text", x = "Mulligans Flat", y = 70, label = parse(text = "L"), size = 9, hjust = -2)
 print(i_sumsect_site)
 #ggsave(filename = "intercept - study site v sum sections.jpeg", i_sumsect_site, width=200, height= 150, units = "mm")
-
-#Combine plots
-plot <- ggarrange(i_jd_site, i_jo_site,
-                  i_pd_site,i_po_site,  
-                  i_md_site, i_sumsect_site, nrow=3,ncol=2)
-plot <- annotate_figure(plot,
-        bottom = text_grob("Study site", size = 20))
-print(plot)
-ggsave(filename = "intercept plots B.jpeg", plot, width=300, height= 400, units = "mm")
 
 
 #Total activity occurrences
 i_act_site <- ggplot(data=ppdata, aes(x = study_site, y = i_totalacto_p, fill=study_site)) + 
  geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19), 
+       axis.text.x = element_text(size=19),
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) + 
   scale_y_continuous(breaks=seq(150,350,100),labels=seq(150,350,100), limits=c(150,350)) +
-  xlab("Study site") + 
-  ylab(expression(paste("Adjusted total activity occurrences ", italic("(n)"), " intercept"))) 
-  #annotate("text", x = "Mulligans Flat", y = 350, label = parse(text = "B"), size = 10, hjust = -4)
+  xlab("") + 
+  ylab(expression(paste("Adjusted total activity \noccurrences intercept", 
+                        italic("(n)")))) +
+  annotate("text", x = "Mulligans Flat", y = 350, label = parse(text = "M"), size = 9, hjust = -2)
 print(i_act_site)
-ggsave(filename = "intercept - study site v total activity.jpeg", i_act_site, width=150, height= 150, units = "mm")
+#ggsave(filename = "intercept - study site v total activity.jpeg", i_act_site, width=150, height= 150, units = "mm")
+
+
+#Combine plots
+plot <- ggarrange(i_bs_site, i_ts_site, i_e_site, 
+                  i_ld_site, i_gd_site, i_b_site, 
+                  i_jd_site, i_jo_site,i_md_site, 
+                  i_pd_site,i_po_site, i_sumsect_site,
+                  i_act_site, nrow=5,ncol=3)
+plot <- annotate_figure(plot,
+        bottom = text_grob("Study site", size = 25))
+print(plot)
+ggsave(filename = "intercept plots.jpeg", plot, width=400, height= 600, units = "mm")
 
 ```
 
@@ -2489,40 +2521,24 @@ aictab(cand.set = models, modnames = model.names)
 #Food occ v weight
 food <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_foodo_p)) + 
  geom_point() +
-  geom_smooth(method = "lm", se = TRUE, colour = "#2C728E", fill = "#72A1B4") +
-  theme_minimal() +
-    theme(legend.position = "right", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
-  scale_y_continuous(breaks=seq(-30,10,10),labels=seq(-30,10,10), limits=c(-30,10)) +
-  xlab("") + 
-    ylab(expression(paste("Adjusted food interaction occurrences", italic(" (n)")," slope"))) + labs("") +
-  annotate("text", x =1.6, y =10, label = "D", size = 10, hjust = 1)
-print(food)
-
-#Legs occ v weight
-legso_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legso_p)) + 
- geom_point() +
   geom_smooth(method = "lm", se = TRUE, colour = "#440154", fill = "#82568D") +
   theme_minimal() +
     theme(legend.position = "right", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) + 
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
-  scale_y_continuous(breaks=seq(-100,25,25),labels=seq(-100,25,25), limits=c(-100,25)) +
+  scale_y_continuous(breaks=seq(-30,10,10),labels=seq(-30,10,10), limits=c(-30,10)) +
   xlab("") + 
-    ylab(expression(paste("Adjusted hindleg stand occurrences", italic(" (n)")," slope"))) +
-  labs("") +
-  annotate("text", x =1.6, y =25, label = "A", size = 10, hjust = 1)
-print(legso_weight)
+    ylab(expression(paste("Adjusted food \ninteraction occurrences slope", italic(" (n)")))) + labs("") +
+  annotate("text", x =1.6, y =10, label = "A", size = 10, hjust = 1)
+print(food)
 
-#Legs dur v weight
-legsd_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legsd_p)) + 
+#Legs occ v weight
+legso_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legso_p)) + 
  geom_point() +
   geom_smooth(method = "lm", se = TRUE, colour = "#472D7B", fill = "#8473A7") +
   theme_minimal() +
@@ -2530,16 +2546,19 @@ legsd_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legsd_p)) +
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
-  scale_y_continuous(breaks=seq(-40,50,20),labels=seq(-40,50,20), limits=c(-40, 50)) +
+  scale_y_continuous(breaks=seq(-100,25,25),labels=seq(-100,25,25), limits=c(-100,25)) +
   xlab("") + 
-    ylab("Adjusted hindleg stand duration (s) slope") + labs("") +
-  annotate("text", x =1.6, y =50, label = "B", size = 10, hjust = 1)
-print(legsd_weight)
+    ylab(expression(paste("Adjusted hindleg stand \noccurrences slope", italic(" (n)"),))) +
+  labs("") +
+  annotate("text", x =1.6, y =25, label = "B", size = 10, hjust = 1)
+print(legso_weight)
 
-#Move occ v weight
-moveo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moveo_p)) + 
+#Legs dur v weight
+legsd_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_legsd_p)) + 
  geom_point() +
   geom_smooth(method = "lm", se = TRUE, colour = "#3B528B", fill = "#7C8CB2") +
   theme_minimal() +
@@ -2547,16 +2566,38 @@ moveo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moveo_p)) +
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
-  scale_y_continuous(breaks=seq(-150,50,50),labels=seq(-150,50,50), limits=c(-150, 50)) +
+  scale_y_continuous(breaks=seq(-40,50,20),labels=seq(-40,50,20), limits=c(-40, 50)) +
   xlab("") + 
-    ylab(expression(paste("Adjusted quadrupedal movement occurrences", italic(" (n)")," slope"))) +
+    ylab("Adjusted hindleg stand \nduration slope (s)") + labs("") +
   annotate("text", x =1.6, y =50, label = "C", size = 10, hjust = 1)
-print(moveo_weight)
+print(legsd_weight)
 
-#Sums sect v weight
-sum_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_sumsecto_p)) + 
+#Move dur v weight
+moveweight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moved_p)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#2C728E", fill = "#72A1B4") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +    
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-150,50,50),labels=seq(-150,50,50), limits=c(-170, 70)) +
+  xlab("") + 
+    ylab("Adjusted quadrupedal \nmovement duration slope (s)") +
+  annotate("text", x =1.6, y =70, label = "D", size = 10, hjust = 1)
+print(moveweight)
+
+
+#Move occ v weight
+moveo_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moveo_p)) + 
  geom_point() +
   geom_smooth(method = "lm", se = TRUE, colour = "#21908C", fill = "#6BB5B2") +
   theme_minimal() +
@@ -2564,16 +2605,18 @@ sum_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_sumsecto_p)) +
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
-  scale_y_continuous(breaks=seq(-40,0,20),labels=seq(-40,0,20), limits=c(-40, 0)) +
+  scale_y_continuous(breaks=seq(-150,50,50),labels=seq(-150,50,50), limits=c(-150, 50)) +
   xlab("") + 
-    ylab(expression(paste("Adjusted total arena section visits", italic(" (n)")," slope"))) +
-  annotate("text", x =1.6, y =0, label = "E", size = 10, hjust = 1)
-print(sum_weight)
+    ylab(expression(paste("Adjusted quadrupedal \nmovement occurrences slope ", italic(" (n)"),))) +
+  annotate("text", x =1.6, y =50, label = "E", size = 10, hjust = 1)
+print(moveo_weight)
 
-#Total act v weight
-tot_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_totalacto_p)) + 
+#Sums sect v weight
+sum_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_sumsecto_p)) + 
  geom_point() +
   geom_smooth(method = "lm", se = TRUE, colour = "#27AD81", fill = "#6FC8AB") +
   theme_minimal() +
@@ -2581,27 +2624,49 @@ tot_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_totalacto_p)) +
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
+  scale_y_continuous(breaks=seq(-40,0,20),labels=seq(-40,0,20), limits=c(-40, 0)) +
+  xlab("") + 
+    ylab(expression(paste("Adjusted total\n arena section visits slope", italic(" (n)"),))) +
+  annotate("text", x =1.6, y =0, label = "F", size = 10, hjust = 1)
+#print(sum_weight)
+
+#Total act v weight
+tot_weight <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_totalacto_p)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#5DC863", fill = "#93DA97") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")) +  
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
   scale_y_continuous(breaks=seq(-300,10,50),labels=seq(-300,10,50), limits=c(-300, 20)) +
   xlab("") + 
-    ylab(expression(paste("Adjusted total activity", italic(" (n)")," slope"))) +
-  annotate("text", x =1.6, y =0, label = "F", size = 10, hjust = 1)
+    ylab(expression(paste("Adjusted total\n activity slope", italic(" (n)"),))) +
+  annotate("text", x =1.6, y =0, label = "G", size = 10, hjust = 1)
 print(tot_weight)
 
+
 #Combine plots
-plot <- ggarrange(legso_weight, legsd_weight, moveo_weight, food, sum_weight, tot_weight, nrow=3,ncol=2)
+plot <- ggarrange(food, legso_weight, legsd_weight, moveweight, moveo_weight, sum_weight, tot_weight, nrow=3,ncol=3)
 plot <- annotate_figure(plot,
-        bottom = text_grob("Body weight (kg)", size = 20))
+        bottom = text_grob("Body weight (kg)", size = 25))
 print(plot)
-ggsave(filename = "slope - weight plots.jpeg", plot, width=300, height= 450, units = "mm")
+ggsave(filename = "slope - weight plots.jpeg", plot, width=350, height= 400, units = "mm")
 
 ```
 
-#Plasticity site plots block 1
+#Plasticity x site plots
 ```{r}
 
-custom_colors <- c("Goorooyarroo" = "#4DBC94", "Mulligans Flat" = "#2D718E")
+custom_colors <- c("Goorooyarroo" = "#2D718E", "Mulligans Flat" = "#B8DE29")
 #custom_colors <- c("Goorooyarroo" = "#674A8E", "Mulligans Flat" = "#2D718E")
 
 
@@ -2609,19 +2674,21 @@ custom_colors <- c("Goorooyarroo" = "#4DBC94", "Mulligans Flat" = "#2D718E")
 s_fd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_foodd_p, fill=study_site)) + 
  geom_violin() +
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
-  stat_summary(fun="median", geom="point", col="black", fill="black", 
-               shape=21, size=1.5, stroke=1) +
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
+               shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +    
   scale_y_continuous(breaks=seq(-100,60,20),labels=seq(-100,60,20), limits=c(-100,60)) +
   xlab("") + 
-  ylab("Adjusted food interaction duration (s) slope") + labs("") +
+  ylab("Adjusted food \ninteraction duration (s) slope") + labs("") +
   annotate("text", x ="Mulligans Flat", y =60, label = "A", size = 10, hjust = -3)
 print(s_fd_site)
 
@@ -2634,16 +2701,18 @@ food <- ggplot(data=d2pred, aes(x = assay_number, y =foodd_p, color = study_site
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") + 
-  scale_y_continuous(breaks=seq(-50,100,25),labels=seq(-50,100,25), limits=c(-50,100)) +
+  scale_y_continuous(breaks=seq(-50,100,25),labels=seq(-50,100,25), limits=c(-50,110)) +
   scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
   xlab("") + 
-  ylab("Adjusted food interaction duration (s)") +
+  ylab("Adjusted food \ninteraction duration (s)") +
   labs(color = "Study site", fill = "Study site") +
   scale_color_manual(values = custom_colors) +
   scale_fill_manual(values = custom_colors) +
-  annotate("text", x =max(d2pred$assay_number), y =100, label = "B", size = 10, hjust = 2)
+  annotate("text", x =max(d2pred$assay_number), y =110, label = "B", size = 10, hjust = 2)
 
 print(food)
 
@@ -2655,13 +2724,15 @@ s_e_site <- ggplot(data=ppdata, aes(x = study_site, y = s_emerge_p, fill=study_s
                shape=21, size=1.5, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
   scale_y_continuous(breaks=seq(-10,50,10),labels=seq(-10,50,10), limits=c(-10,50)) +
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +  
   xlab("") + 
   ylab("Adjusted latency to emerge (s) slope") + labs("") +
   annotate("text", x ="Mulligans Flat", y =50, label = "C", size = 10, hjust = -3)
@@ -2677,12 +2748,14 @@ emerge <- ggplot(data=d2pred, aes(x = assay_number, y = emerge_p, color = study_
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +  
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
   scale_x_continuous(breaks = c(min(d2pred$assay_number), max(d2pred$assay_number))) +
   scale_y_continuous(breaks=seq(-10,50,10),labels=seq(-10,50,10), limits=c(-10,50)) +
   xlab("") + 
-  ylab("Adjusted latency to emerge (s)") +
+  ylab("Adjusted latency \nto emerge (s)") +
   labs(color = "Study site", fill = "Study site") +
   scale_color_manual(values = custom_colors) +
   scale_fill_manual(values = custom_colors) +
@@ -2697,16 +2770,18 @@ s_jd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_jumpd_p, fill=study_s
   stat_summary(fun="median", geom="point", col="black", fill="black", 
                shape=21, size=1.5, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "bottom", 
         panel.grid = element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.line.y = element_line(color = "black"),
-        text = element_text(size=17)) + 
+        text = element_text(size=19),  
+       axis.text.x = element_text(size=19), 
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   scale_y_continuous(breaks=seq(-150,50,50),labels=seq(-150,50,50), limits=c(-150,50)) +
   xlab("Study site") + 
-  ylab("Adjusted jumping + climbing duration (s) slope") +
+  ylab("Adjusted jumping + \nclimbing duration (s) slope") +
   annotate("text", x ="Mulligans Flat", y =50, label = "E", size = 10, hjust = -3)
 print(s_jd_site)
 
@@ -2753,7 +2828,7 @@ s_jo_site <- ggplot(data=ppdata, aes(x = study_site, y = s_jumpo_p, fill=study_s
   stat_summary(fun="median", geom="point", col="black", fill="black", 
                shape=21, size=1.5, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2793,7 +2868,7 @@ s_pd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_perchd_p, fill=study_
   stat_summary(fun="median", geom="point", col="black", fill="black",  
                shape=21, size=1.5, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2833,7 +2908,7 @@ s_po_site <- ggplot(data=ppdata, aes(x = study_site, y = s_percho_p, fill=study_
   stat_summary(fun="median", geom="point", col="black", fill="black", 
                shape=21, size=1.5, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "bottom", 
         panel.grid = element_blank(),
@@ -2885,7 +2960,7 @@ s_bs_site <- ggplot(data=ppdata, aes(x = study_site, y = s_bagstress_p, fill=stu
   stat_summary(fun="median", geom="point", col="black", fill="black", 
                shape=21, size=1.5, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2925,7 +3000,7 @@ s_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = s_tablestress_p, fill=s
   stat_summary(fun="median", geom="point", col="black", fill="black",  
                shape=21, size=1.5, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "bottom", 
         panel.grid = element_blank(),
@@ -2972,7 +3047,7 @@ s_md_site <- ggplot(data=ppdata, aes(x = study_site, y = s_moved_p, fill=study_s
   stat_summary(fun="median", geom="point", col="black", fill="black", 
                shape=21, size=1.5, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#68C6A5","#6B9BAF")) +
+  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -3005,22 +3080,6 @@ move <- ggplot(data=d2pred, aes(x = assay_number, y =moved_p, color = study_site
   annotate("text", x =max(d2pred$assay_number), y =160, label = "B", size = 10, hjust = 2)
 print(move)
 
-#Total act v weight
-tot <- ggplot(data=ppdata, aes(x = body_weight_kg, y = s_moved_p)) + 
- geom_point() +
-  geom_smooth(method = "lm", se = TRUE, colour = "#CDE868", fill = "#CDE868") +
-  theme_minimal() +
-    theme(legend.position = "right", 
-        panel.grid = element_blank(),
-        axis.line.x = element_line(color = "black"),
-        axis.line.y = element_line(color = "black"),
-        text = element_text(size=16)) + 
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
-  scale_y_continuous(breaks=seq(-150,50,50),labels=seq(-150,50,50), limits=c(-170, 50)) +
-  xlab("Body weight (kg)") + 
-    ylab("Adjusted quadrupedal movement duration (s) slope") +
-  annotate("text", x =1.6, y =50, label = "C", size = 10, hjust = 1)
-print(tot)
 
 #Combine plots
 plot <- ggarrange(s_md_site, move, tot, nrow=2,ncol=2, widths = c(1, 1.25))
