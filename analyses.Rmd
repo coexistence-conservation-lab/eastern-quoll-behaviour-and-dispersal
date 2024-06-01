@@ -388,7 +388,7 @@ table
 
 names(data1)
 
-#Grooming and tempoerature
+#Grooming dur and tempoerature
 groomtemp <- ggplot(data=data1, aes(x = temp, y = grooming_o)) + 
  geom_point() +
   geom_smooth(method = "auto", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
@@ -941,6 +941,260 @@ table <- tidy_results %>%
 table
 
 ```
+
+#two assay enviro - dont need these?
+```{r}
+names(data2)
+
+
+plot <- ggplot(data=data2, aes(x = temp, y = emerge_max)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = bait_eaten_g)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = food_d)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = legs_d)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = moving_d)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = moving_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = sumsect_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = moon_phase, y = totalact_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+#Time process to assay
+
+
+plot <- ggplot(data=data2, aes(x = time_processtoassay, y = food_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_processtoassay, y = legs_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_processtoassay, y = moving_d)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_processtoassay, y = moving_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_processtoassay, y = sumsect_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_processtoassay, y = totalact_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+#Time assay to first light
+
+plot <- ggplot(data=data2, aes(x = time_assaytolight, y = food_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_assaytolight, y = jump_climb_d)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_assaytolight, y = legs_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_assaytolight, y = moving_d)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_assaytolight, y = moving_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+plot <- ggplot(data=data2, aes(x = time_assaytolight, y = totalact_o)) + 
+ geom_point() +
+  geom_smooth(method = "lm", se = TRUE, colour = "#1caa85", fill = "#68C6AE") +
+  theme_minimal() +
+    theme(legend.position = "right", 
+        panel.grid = element_blank(),
+        axis.line.x = element_line(color = "black"),
+        axis.line.y = element_line(color = "black"),
+        text = element_text(size=18))
+print(plot)
+
+
+```
+
+
 
 #Capture and recapture behaviour GLMMs with environmental vars
 ```{r}
@@ -2021,7 +2275,7 @@ geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2043,7 +2297,7 @@ i_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = i_tablestress_p, fill=s
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2065,7 +2319,7 @@ i_e_site <- ggplot(data=ppdata, aes(x = study_site, y = i_emerge_p, fill=study_s
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2088,7 +2342,7 @@ geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2109,7 +2363,7 @@ i_gd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_groomd_p, fill=study_
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2132,7 +2386,7 @@ i_ld_site <- ggplot(data=ppdata, aes(x = study_site, y = i_legsd_p, fill=study_s
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2156,7 +2410,7 @@ geom_violin() +
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2179,7 +2433,7 @@ i_jo_site <- ggplot(data=ppdata, aes(x = study_site, y = i_jumpo_p, fill=study_s
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2202,7 +2456,7 @@ i_pd_site <- ggplot(data=ppdata, aes(x = study_site, y = i_perchd_p, fill=study_
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2223,7 +2477,7 @@ i_po_site <- ggplot(data=ppdata, aes(x = study_site, y = i_percho_p, fill=study_
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2245,7 +2499,7 @@ i_md_site <- ggplot(data=ppdata, aes(x = study_site, y = i_moved_p, fill=study_s
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2268,7 +2522,7 @@ i_sumsect_site <- ggplot(data=ppdata, aes(x = study_site, y = i_sumsecto_p, fill
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+ scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2290,7 +2544,7 @@ i_act_site <- ggplot(data=ppdata, aes(x = study_site, y = i_totalacto_p, fill=st
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) +
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
-  scale_fill_manual (values = c("#CDE868","#6B9BAF")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2678,7 +2932,7 @@ s_fd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_foodd_p, fill=study_s
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2724,7 +2978,7 @@ s_jd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_jumpd_p, fill=study_s
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+ scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2769,7 +3023,7 @@ s_jo_site <- ggplot(data=ppdata, aes(x = study_site, y = s_jumpo_p, fill=study_s
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "bottom", 
         panel.grid = element_blank(),
@@ -2820,7 +3074,7 @@ s_e_site <- ggplot(data=ppdata, aes(x = study_site, y = s_emerge_p, fill=study_s
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
   scale_y_continuous(breaks=seq(-10,50,10),labels=seq(-10,50,10), limits=c(-10,50)) +
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2865,7 +3119,7 @@ s_pd_site <- ggplot(data=ppdata, aes(x = study_site, y = s_perchd_p, fill=study_
   stat_summary(fun="median", geom="point", col="black", fill="white",  
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2910,7 +3164,7 @@ s_po_site <- ggplot(data=ppdata, aes(x = study_site, y = s_percho_p, fill=study_
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -2955,7 +3209,7 @@ s_md_site <- ggplot(data=ppdata, aes(x = study_site, y = s_moved_p, fill=study_s
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -3000,7 +3254,7 @@ s_bs_site <- ggplot(data=ppdata, aes(x = study_site, y = s_bagstress_p, fill=stu
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+  scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
@@ -3044,7 +3298,7 @@ s_ts_site <- ggplot(data=ppdata, aes(x = study_site, y = s_tablestress_p, fill=s
   stat_summary(fun="median", geom="point", col="black", fill="white",  
                shape=21, size=3, stroke=1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +  # Add horizontal line at y = 0
-  scale_fill_manual (values = c("#2D718E","#B8DE29")) +
+ scale_fill_manual (values = c("#6B9BAF","#CDE868")) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid = element_blank(),
