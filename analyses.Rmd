@@ -1,6 +1,6 @@
 ---
 title: "Ranging after reintroduction: do behavioural traits predict dispersal into new territory?"
-author: "Christina Gee and Belinda Wilson"
+author: "Gee C & Wilson B" 
 date: "March 4, 2025"
 output: 
   html_document:
@@ -22,54 +22,59 @@ knitr::opts_chunk$set(echo=TRUE, eval=FALSE)
 
 # **Background**
 
-Here we describe the analyses conducted for the journal article Gee *et al*. (in prep) "*Ranging after reintroduction: do behavioural traits predict dispersal into new territory?*". We conducted field-based behavioural assays on eastern quolls (*Dasyurus viverrinus*) from two self-selecting populations:
+This [R project](https://support.posit.co/hc/en-us/articles/200526207-Using-RStudio-Projects) presents the workflows and datasets used in the '*Ranging after reintroduction: do behavioural traits predict dispersal into new territory?*' project.
 
-  1. An original safe haven where the species was reintroduced, and 
-  2. A new, adjacent haven that eastern quolls could disperse to but not leave. 
-  
-We aimed to determine whether rapid field assays could detect behavioural differences between these populations, and whether these differences influence these populations’ dynamics and traits.
+For information on our methodological approach, see the [GitHub repo](https://github.com/coexistence-conservation-lab/eastern-quoll-behaviour-and-dispersal) README.
 
-# **Definitions**
-
+*Locations, organisations, and platforms*
+  - **ACT:** Australian Capital Territory
   - **ANU:** The Australian National University
   - **API:** Application Programming Interface
   - **CCL:** Coexistence Conservation Lab
-  - **df:** Dataframe
-  - **GLM:** Generalised linear model
-  - **GLMM:** Generalised linear mixed model (i.e., with random effects)
-  - **_i:** Intercept
+  - **GS:** Goorooyarroo Sanctuary
   - **MFGO:** Mulligans Flat–Goorooyarroo Woodland Experiment
-  - **MFWS:** Mulligans Flat Woodland Sanctuary
-  - **mod:** Model
+  - **MFWS** or **MF:** Mulligans Flat Woodland Sanctuary
+
+*Technical:*
+  - **_i:** Intercept
   - **_s:** Slope
+  - **AM:** annual monitoring
+  - **CMR:** Capture-mark-recapture
+  - **df:** dataframe
+  - **GLM:** generalised linear model
+  - **GLMM:** generalised linear mixed model
+  - **mod:** model
   
 # **Setup**
 
   1. Manually install prerequisite packages.
   
-Here we install [pacman](https://cran.r-project.org/web/packages/pacman/index.html) (enables efficient installation and loading of other packages). Note that this installation only needs to be done once per computer.
+Here we install the [pacman](https://cran.r-project.org/web/packages/pacman/index.html) package, which enables efficient installation and loading of other packages. Note that this only needs to be done once per computer.
 
 ```{r, eval=FALSE}
 # Manually install package
 install.packages(pacman)
 ```
 
- 2. Install other required packages using the `pacman` package.
+ 2. Install and load other required packages using the `pacman` package.
 
 ```{r, results='hide', warning=FALSE, message=FALSE}
 # Install and load required packages
-pacman::p_load(AICcmodavg, beepr, broom, broom.mixed, corrplot, dplyr, ggplot2, 
-               ggpubr, grid, gtools, janitor, jPlot, kableExtra, lme4, lmerTest, 
-               lubridate, MuMIn, readr, readxl, rstudioapi, scales, sf, sjmisc, 
-               sjlabelled, tidyr, tidyverse, viridis, writexl)
+pacman::p_load(beepr, broom, broom.mixed, dplyr, grid, gtools, janitor, lme4, 
+               lubridate, readxl, sjmisc, sjlabelled, 
+               tidyverse, writexl, # General functionality
+               ggplot2, ggpubr, jPlot, scales, viridis, # Plotting
+               ggmap, sf, # Mapping
+               AICcmodavg, corrplot, kableExtra, 
+               lme4, lmerTest, MuMIn) # Modelling
 ```
 
   3. Assign custom values and global settings.
 
 ```{r}
-# Assign custom values
-raw_data <- "input/data.xlsx"
-processed_data <- "output/processed_data.xlsx"
+# Assign paths to objects
+raw_data <- "input/raw data.xlsx"
+processed_data <- "output/processed data.xlsx"
 
 # Global setting to deactivate scientific notation
 options(scipen=100, digits=4)
@@ -83,10 +88,10 @@ If you don't have a Google API key, you will need to [set one up](https://suppor
 
 ```{r}
 # Read API key as a character string, while trimming whitespace
-api_key <- trimws(readLines("input/api.txt", warn=FALSE))
+api_key <- trimws(readLines("metadata/api.txt", warn=FALSE))
 
 # Register your Google API
-ggmap::register_google(key="[enter API key here]")
+ggmap::register_google(key=api_key)
 ```
 
    5. Set up [beepr](https://cran.r-project.org/web/packages/beepr/readme/README.html) package to play a sound when long-running code segments (🐢) finish running. 

@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Christina Gee and Belinda Wilson" />
+<meta name="author" content="Gee C &amp; Wilson B" />
 
 <meta name="date" content="2025-03-04" />
 
@@ -1553,7 +1553,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Ranging after reintroduction: do
 behavioural traits predict dispersal into new territory?</h1>
-<h4 class="author">Christina Gee and Belinda Wilson</h4>
+<h4 class="author">Gee C &amp; Wilson B</h4>
 <h4 class="date">March 4, 2025</h4>
 
 </div>
@@ -1562,65 +1562,55 @@ behavioural traits predict dispersal into new territory?</h1>
 <div id="background" class="section level1" number="1">
 <h1><span class="header-section-number">1</span>
 <strong>Background</strong></h1>
-<p>Here we describe the analyses conducted for the journal article Gee
-<em>et al</em>. (in prep) “<em>Ranging after reintroduction: do
-behavioural traits predict dispersal into new territory?</em>”. We
-conducted field-based behavioural assays on eastern quolls (<em>Dasyurus
-viverrinus</em>) from two self-selecting populations:</p>
-<ol style="list-style-type: decimal">
-<li>An original safe haven where the species was reintroduced, and</li>
-<li>A new, adjacent haven that eastern quolls could disperse to but not
-leave.</li>
-</ol>
-<p>We aimed to determine whether rapid field assays could detect
-behavioural differences between these populations, and whether these
-differences influence these populations’ dynamics and traits.</p>
+<p>This <a href="https://support.posit.co/hc/en-us/articles/200526207-Using-RStudio-Projects">R
+project</a> presents the workflows and datasets used in the ‘<em>Ranging
+after reintroduction: do behavioural traits predict dispersal into new
+territory?</em>’ project.</p>
+<p>For information on our methodological approach, see the <a href="https://github.com/coexistence-conservation-lab/eastern-quoll-behaviour-and-dispersal">GitHub
+repo</a> README.</p>
+<p><em>Locations, organisations, and platforms</em> -
+<strong>ACT:</strong> Australian Capital Territory -
+<strong>ANU:</strong> The Australian National University -
+<strong>API:</strong> Application Programming Interface -
+<strong>CCL:</strong> Coexistence Conservation Lab -
+<strong>GS:</strong> Goorooyarroo Sanctuary - <strong>MFGO:</strong>
+Mulligans Flat–Goorooyarroo Woodland Experiment - <strong>MFWS</strong>
+or <strong>MF:</strong> Mulligans Flat Woodland Sanctuary</p>
+<p><em>Technical:</em> - **_i:** Intercept - **_s:** Slope -
+<strong>AM:</strong> annual monitoring - <strong>CMR:</strong>
+Capture-mark-recapture - <strong>df:</strong> dataframe -
+<strong>GLM:</strong> generalised linear model - <strong>GLMM:</strong>
+generalised linear mixed model - <strong>mod:</strong> model</p>
 </div>
-<div id="definitions" class="section level1" number="2">
+<div id="setup" class="section level1" number="2">
 <h1><span class="header-section-number">2</span>
-<strong>Definitions</strong></h1>
-<ul>
-<li><strong>ANU:</strong> The Australian National University</li>
-<li><strong>API:</strong> Application Programming Interface</li>
-<li><strong>CCL:</strong> Coexistence Conservation Lab</li>
-<li><strong>df:</strong> Dataframe</li>
-<li><strong>GLM:</strong> Generalised linear model</li>
-<li><strong>GLMM:</strong> Generalised linear mixed model (i.e., with
-random effects)</li>
-<li>**_i:** Intercept</li>
-<li><strong>MFGO:</strong> Mulligans Flat–Goorooyarroo Woodland
-Experiment</li>
-<li><strong>MFWS:</strong> Mulligans Flat Woodland Sanctuary</li>
-<li><strong>mod:</strong> Model</li>
-<li>**_s:** Slope</li>
-</ul>
-</div>
-<div id="setup" class="section level1" number="3">
-<h1><span class="header-section-number">3</span>
 <strong>Setup</strong></h1>
 <ol style="list-style-type: decimal">
 <li>Manually install prerequisite packages.</li>
 </ol>
-<p>Here we install <a href="https://cran.r-project.org/web/packages/pacman/index.html">pacman</a>
-(enables efficient installation and loading of other packages). Note
-that this installation only needs to be done once per computer.</p>
+<p>Here we install the <a href="https://cran.r-project.org/web/packages/pacman/index.html">pacman</a>
+package, which enables efficient installation and loading of other
+packages. Note that this only needs to be done once per computer.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Manually install package</span></span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">install.packages</span>(pacman)</span></code></pre></div>
 <ol start="2" style="list-style-type: decimal">
-<li>Install other required packages using the <code>pacman</code>
-package.</li>
+<li>Install and load other required packages using the
+<code>pacman</code> package.</li>
 </ol>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Install and load required packages</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(AICcmodavg, beepr, broom, broom.mixed, corrplot, dplyr, ggplot2, </span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>               ggpubr, grid, gtools, janitor, jPlot, kableExtra, lme4, lmerTest, </span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>               lubridate, MuMIn, readr, readxl, rstudioapi, scales, sf, sjmisc, </span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>               sjlabelled, tidyr, tidyverse, viridis, writexl)</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(beepr, broom, broom.mixed, dplyr, grid, gtools, janitor, lme4, </span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>               lubridate, readxl, sjmisc, sjlabelled, </span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>               tidyverse, writexl, <span class="co"># General functionality</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>               ggplot2, ggpubr, jPlot, scales, viridis, <span class="co"># Plotting</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>               ggmap, sf, <span class="co"># Mapping</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>               AICcmodavg, corrplot, kableExtra, </span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>               lme4, lmerTest, MuMIn) <span class="co"># Modelling</span></span></code></pre></div>
 <ol start="3" style="list-style-type: decimal">
 <li>Assign custom values and global settings.</li>
 </ol>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Assign custom values</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="st">&quot;input/data.xlsx&quot;</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>processed_data <span class="ot">&lt;-</span> <span class="st">&quot;output/processed_data.xlsx&quot;</span></span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Assign paths to objects</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="st">&quot;input/raw data.xlsx&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>processed_data <span class="ot">&lt;-</span> <span class="st">&quot;output/processed data.xlsx&quot;</span></span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co"># Global setting to deactivate scientific notation</span></span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">100</span>, <span class="at">digits=</span><span class="dv">4</span>)</span></code></pre></div>
@@ -1634,10 +1624,10 @@ up</a>, and paste it into the <code>input/api.txt</code> file. We have
 set up this repo so that Git will ignore this file so the key remains
 private and secure.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Read API key as a character string, while trimming whitespace</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>api_key <span class="ot">&lt;-</span> <span class="fu">trimws</span>(<span class="fu">readLines</span>(<span class="st">&quot;input/api.txt&quot;</span>, <span class="at">warn=</span><span class="cn">FALSE</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>api_key <span class="ot">&lt;-</span> <span class="fu">trimws</span>(<span class="fu">readLines</span>(<span class="st">&quot;metadata/api.txt&quot;</span>, <span class="at">warn=</span><span class="cn">FALSE</span>))</span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
 <span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># Register your Google API</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>ggmap<span class="sc">::</span><span class="fu">register_google</span>(<span class="at">key=</span><span class="st">&quot;[enter API key here]&quot;</span>)</span></code></pre></div>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>ggmap<span class="sc">::</span><span class="fu">register_google</span>(<span class="at">key=</span>api_key)</span></code></pre></div>
 <ol start="5" style="list-style-type: decimal">
 <li>Set up <a href="https://cran.r-project.org/web/packages/beepr/readme/README.html">beepr</a>
 package to play a sound when long-running code segments (🐢) finish
@@ -1647,8 +1637,8 @@ running.</li>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co"># mario, treasure, ready, wilhelm, facebook, sword (try them out!)</span></span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>sound <span class="ot">&lt;-</span> <span class="st">&quot;coin&quot;</span></span></code></pre></div>
 </div>
-<div id="data-preparation" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> <strong>Data
+<div id="data-preparation" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> <strong>Data
 preparation</strong></h1>
 <p>Read in meta, quoll, capture, and session data.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Read in metadata</span></span>
@@ -1767,8 +1757,8 @@ preparation</strong></h1>
 <span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>         <span class="at">age_n=</span><span class="fu">as.numeric</span>(<span class="fu">ifelse</span>(age_estimate<span class="sc">==</span><span class="st">&quot;&lt;1yr&quot;</span>, <span class="dv">0</span>, </span>
 <span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>                               <span class="fu">ifelse</span>(age_estimate<span class="sc">==</span><span class="st">&quot;1-2yrs&quot;</span>, <span class="dv">1</span>, </span>
 <span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>                                      <span class="fu">ifelse</span>(age_estimate<span class="sc">==</span><span class="st">&quot;2-3yrs&quot;</span>, <span class="dv">2</span>, <span class="cn">NA</span>)))))</span></code></pre></div>
-<div id="calculate-time-differences" class="section level2" number="4.1">
-<h2><span class="header-section-number">4.1</span> Calculate time
+<div id="calculate-time-differences" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Calculate time
 differences</h2>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Change time columns to correct POSIXct format</span></span>
 <span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
@@ -1782,8 +1772,8 @@ differences</h2>
 <span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>  <span class="co"># Remove two individuals who were assayed in September 2023</span></span>
 <span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>(quoll_code <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;53328&quot;</span>, <span class="st">&quot;87DE0&quot;</span>)))</span></code></pre></div>
 </div>
-<div id="correlation-analysis" class="section level2" number="4.2">
-<h2><span class="header-section-number">4.2</span> Correlation
+<div id="correlation-analysis" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> Correlation
 analysis</h2>
 <p>Conduct a correlation analysis to assess which morphological traits
 accounted for similar variation.</p>
@@ -1816,8 +1806,8 @@ accounted for similar variation.</p>
 <span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
 </div>
 </div>
-<div id="single-assays" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> <strong>Single
+<div id="single-assays" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> <strong>Single
 assays</strong></h1>
 <p>I created a data subset to test the demographic, morphometric and
 behavioural variables for the first assay for all 36 individual eastern
@@ -1848,8 +1838,8 @@ quolls.</p>
 <span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>  <span class="co"># Reorder new labels</span></span>
 <span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_estimate=</span><span class="fu">factor</span>(age_estimate, </span>
 <span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>                             <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;2–3 years&quot;</span>, <span class="st">&quot;1–2 years&quot;</span>, <span class="st">&quot;&lt;1 year&quot;</span>)))</span></code></pre></div>
-<div id="demomorpho-analysis" class="section level2" number="5.1">
-<h2><span class="header-section-number">5.1</span> Demo/morpho
+<div id="demomorpho-analysis" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> Demo/morpho
 analysis</h2>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(site01 <span class="sc">~</span> sex <span class="sc">+</span> body_weight_kg <span class="sc">+</span> age_n <span class="sc">+</span> cond_n, </span>
@@ -1858,8 +1848,8 @@ analysis</h2>
 <span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="co"># Summarise model</span></span>
 <span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="fu">summary</span>(mod)</span></code></pre></div>
 </div>
-<div id="extract-table" class="section level2" number="5.2">
-<h2><span class="header-section-number">5.2</span> Extract table</h2>
+<div id="extract-table" class="section level2" number="4.2">
+<h2><span class="header-section-number">4.2</span> Extract table</h2>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>tidy_results <span class="ot">&lt;-</span> <span class="fu">tidy</span>(mod) <span class="sc">%&gt;%</span></span>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, <span class="sc">~</span><span class="fu">round</span>(., <span class="at">digits=</span><span class="dv">3</span>))</span>
@@ -1876,8 +1866,8 @@ analysis</h2>
 <span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co"># Display table</span></span>
 <span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="fu">print</span>(table)</span></code></pre></div>
 </div>
-<div id="plot-demographics-and-morphology" class="section level2" number="5.3">
-<h2><span class="header-section-number">5.3</span> Plot demographics and
+<div id="plot-demographics-and-morphology" class="section level2" number="4.3">
+<h2><span class="header-section-number">4.3</span> Plot demographics and
 morphology</h2>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="co"># Age plot</span></span>
 <span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>age_plot  <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
@@ -1931,8 +1921,8 @@ morphology</h2>
 <span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="at">filename=</span><span class="st">&quot;output/plots/morpho plots.jpeg&quot;</span>, </span>
 <span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a>       plot, <span class="at">width=</span><span class="dv">350</span>, <span class="at">height=</span><span class="dv">150</span>, <span class="at">units=</span><span class="st">&quot;mm&quot;</span>)</span></code></pre></div>
 </div>
-<div id="environmental-vars-influence-glm-analysis" class="section level2" number="5.4">
-<h2><span class="header-section-number">5.4</span> Environmental vars
+<div id="environmental-vars-influence-glm-analysis" class="section level2" number="4.4">
+<h2><span class="header-section-number">4.4</span> Environmental vars
 influence GLM analysis</h2>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(food_d <span class="sc">~</span> temp <span class="sc">+</span> moon_phase <span class="sc">+</span> </span>
@@ -1986,8 +1976,8 @@ influence GLM analysis</h2>
 <span id="cb20-50"><a href="#cb20-50" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(stress_on_table <span class="sc">~</span> temp <span class="sc">+</span> moon_phase, <span class="at">data=</span>data1)</span>
 <span id="cb20-51"><a href="#cb20-51" tabindex="-1"></a><span class="fu">summary</span>(mod)</span></code></pre></div>
 </div>
-<div id="environmental-variables-table" class="section level2" number="5.5">
-<h2><span class="header-section-number">5.5</span> Environmental
+<div id="environmental-variables-table" class="section level2" number="4.5">
+<h2><span class="header-section-number">4.5</span> Environmental
 variables table</h2>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># Tables with kableExtra</span></span>
 <span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>response_var <span class="ot">&lt;-</span> <span class="fu">all.vars</span>(<span class="fu">formula</span>(mod))[<span class="dv">1</span>]</span>
@@ -2005,8 +1995,8 @@ variables table</h2>
 <span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a>table</span></code></pre></div>
 </div>
-<div id="analysis-of-behaviour-indicators" class="section level2" number="5.6">
-<h2><span class="header-section-number">5.6</span> Analysis of behaviour
+<div id="analysis-of-behaviour-indicators" class="section level2" number="4.6">
+<h2><span class="header-section-number">4.6</span> Analysis of behaviour
 indicators</h2>
 <ol style="list-style-type: decimal">
 <li>Test the influence of fixed (e.g., site) and random effects (e.g.,
@@ -2017,8 +2007,8 @@ selection using the dredge() function to determine which fixed effects
 are within delta 2 AICc.</li>
 </ol>
 </div>
-<div id="capture-behaviour-glmms" class="section level2" number="5.7">
-<h2><span class="header-section-number">5.7</span> Capture behaviour
+<div id="capture-behaviour-glmms" class="section level2" number="4.7">
+<h2><span class="header-section-number">4.7</span> Capture behaviour
 GLMMS</h2>
 <p>Test behaviour in GLMMs including environmental variables as
 competing factors in fixed effects model.</p>
@@ -2132,8 +2122,8 @@ competing factors in fixed effects model.</p>
 <span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a>table</span></code></pre></div>
 </div>
-<div id="capture-behaviour-aicc-model-selection" class="section level2" number="5.8">
-<h2><span class="header-section-number">5.8</span> Capture behaviour
+<div id="capture-behaviour-aicc-model-selection" class="section level2" number="4.8">
+<h2><span class="header-section-number">4.8</span> Capture behaviour
 AICc model selection</h2>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>control_ml <span class="ot">&lt;-</span> <span class="fu">lmerControl</span>(<span class="at">optimizer=</span><span class="st">&quot;Nelder_Mead&quot;</span>)</span>
@@ -2191,8 +2181,8 @@ AICc model selection</h2>
 <span id="cb26-19"><a href="#cb26-19" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb26-20"><a href="#cb26-20" tabindex="-1"></a><span class="fu">aictab</span>(<span class="at">cand.set=</span>models, <span class="at">modnames=</span>model.names)</span></code></pre></div>
 </div>
-<div id="capture-behaviour-plots" class="section level2" number="5.9">
-<h2><span class="header-section-number">5.9</span> Capture behaviour
+<div id="capture-behaviour-plots" class="section level2" number="4.9">
+<h2><span class="header-section-number">4.9</span> Capture behaviour
 plots</h2>
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="co"># Grooming duration v study site plot</span></span>
 <span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>groomd_site <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data=</span>data1, <span class="fu">aes</span>(<span class="at">x=</span>study_site, <span class="at">y=</span>grooming_d, </span>
@@ -2374,13 +2364,13 @@ plots</h2>
 <span id="cb34-11"><a href="#cb34-11" tabindex="-1"></a>       plot, <span class="at">width=</span><span class="dv">350</span>, <span class="at">height=</span><span class="dv">150</span>, <span class="at">units=</span><span class="st">&quot;mm&quot;</span>)</span></code></pre></div>
 </div>
 </div>
-<div id="multiple-assays" class="section level1" number="6">
-<h1><span class="header-section-number">6</span> <strong>Multiple
+<div id="multiple-assays" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> <strong>Multiple
 assays</strong></h1>
 <p>I created a data subset to test the behavioural variables over
 multiple assays for 17 individual eastern quolls.</p>
-<div id="subset-to-animals-with-repeated-assays" class="section level2" number="6.1">
-<h2><span class="header-section-number">6.1</span> Subset to animals
+<div id="subset-to-animals-with-repeated-assays" class="section level2" number="5.1">
+<h2><span class="header-section-number">5.1</span> Subset to animals
 with repeated assays</h2>
 <div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a>values_to_exclude <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;524E3&quot;</span>, <span class="st">&quot;53221&quot;</span>, <span class="st">&quot;53511&quot;</span>, <span class="st">&quot;53512&quot;</span>, <span class="st">&quot;53515&quot;</span>, </span>
@@ -2396,8 +2386,8 @@ with repeated assays</h2>
 <span id="cb35-12"><a href="#cb35-12" tabindex="-1"></a><span class="fu">write.csv</span>(data2, </span>
 <span id="cb35-13"><a href="#cb35-13" tabindex="-1"></a>          <span class="st">&quot;output/data2 - individuals with two assays raw data.csv&quot;</span>)</span></code></pre></div>
 </div>
-<div id="capture-and-recapture-environmental-vars-glm-analysis" class="section level2" number="6.2">
-<h2><span class="header-section-number">6.2</span> Capture and recapture
+<div id="capture-and-recapture-environmental-vars-glm-analysis" class="section level2" number="5.2">
+<h2><span class="header-section-number">5.2</span> Capture and recapture
 environmental vars GLM analysis</h2>
 <div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="co"># Fit GLM to test feeding response by environmental variables</span></span>
 <span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(bait_eaten_g <span class="sc">~</span> temp <span class="sc">+</span> moon_phase <span class="sc">+</span> </span>
@@ -2452,8 +2442,8 @@ environmental vars GLM analysis</h2>
 <span id="cb36-51"><a href="#cb36-51" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(stress_in_bag <span class="sc">~</span> temp <span class="sc">+</span> moon_phase, <span class="at">data=</span>data2)</span>
 <span id="cb36-52"><a href="#cb36-52" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(stress_on_table <span class="sc">~</span> temp <span class="sc">+</span> moon_phase, <span class="at">data=</span>data2)</span></code></pre></div>
 </div>
-<div id="capture-and-recapture-environmental-variable-tables" class="section level2" number="6.3">
-<h2><span class="header-section-number">6.3</span> Capture and recapture
+<div id="capture-and-recapture-environmental-variable-tables" class="section level2" number="5.3">
+<h2><span class="header-section-number">5.3</span> Capture and recapture
 environmental variable tables</h2>
 <div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="co"># Collect variables</span></span>
 <span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a>response_var <span class="ot">&lt;-</span> <span class="fu">all.vars</span>(<span class="fu">formula</span>(mod))[<span class="dv">1</span>]</span>
@@ -2472,8 +2462,8 @@ environmental variable tables</h2>
 <span id="cb37-15"><a href="#cb37-15" tabindex="-1"></a><span class="co"># Display the table</span></span>
 <span id="cb37-16"><a href="#cb37-16" tabindex="-1"></a><span class="fu">print</span>(table)</span></code></pre></div>
 </div>
-<div id="capture-and-recapture-behaviour-glmms-with-environmental-vars" class="section level2" number="6.4">
-<h2><span class="header-section-number">6.4</span> Capture and recapture
+<div id="capture-and-recapture-behaviour-glmms-with-environmental-vars" class="section level2" number="5.4">
+<h2><span class="header-section-number">5.4</span> Capture and recapture
 behaviour GLMMs with environmental vars</h2>
 <div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a>data2 <span class="ot">&lt;-</span> data2 <span class="sc">%&gt;%</span></span>
@@ -2598,8 +2588,8 @@ behaviour GLMMs with environmental vars</h2>
 <span id="cb39-15"><a href="#cb39-15" tabindex="-1"></a><span class="co"># Display table</span></span>
 <span id="cb39-16"><a href="#cb39-16" tabindex="-1"></a><span class="fu">print</span>(table)</span></code></pre></div>
 </div>
-<div id="capture-and-recapture-behaviour-aicc-model-selection" class="section level2" number="6.5">
-<h2><span class="header-section-number">6.5</span> Capture and recapture
+<div id="capture-and-recapture-behaviour-aicc-model-selection" class="section level2" number="5.5">
+<h2><span class="header-section-number">5.5</span> Capture and recapture
 behaviour AICc model selection</h2>
 <div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb40-2"><a href="#cb40-2" tabindex="-1"></a>control_ml <span class="ot">&lt;-</span> <span class="fu">lmerControl</span>(<span class="at">optimizer=</span><span class="st">&quot;Nelder_Mead&quot;</span>)</span>
@@ -2685,8 +2675,8 @@ behaviour AICc model selection</h2>
 <span id="cb44-15"><a href="#cb44-15" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb44-16"><a href="#cb44-16" tabindex="-1"></a><span class="fu">aictab</span>(<span class="at">cand.set=</span>models, <span class="at">modnames=</span>model.names)</span></code></pre></div>
 </div>
-<div id="plots-for-two-assays" class="section level2" number="6.6">
-<h2><span class="header-section-number">6.6</span> Plots for two
+<div id="plots-for-two-assays" class="section level2" number="5.6">
+<h2><span class="header-section-number">5.6</span> Plots for two
 assays</h2>
 <div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" tabindex="-1"></a><span class="co"># Grooming duration by sex </span></span>
 <span id="cb45-2"><a href="#cb45-2" tabindex="-1"></a>groomdur <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data=</span>data2, <span class="fu">aes</span>(<span class="at">x=</span>sex, <span class="at">y=</span>grooming_d, <span class="at">fill=</span>sex)) <span class="sc">+</span> </span>
@@ -3015,8 +3005,8 @@ assays</h2>
 <span id="cb58-11"><a href="#cb58-11" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="at">filename=</span><span class="st">&quot;output/plots/2 assays - fixed effects.jpeg&quot;</span>, </span>
 <span id="cb58-12"><a href="#cb58-12" tabindex="-1"></a>       plot, <span class="at">width=</span><span class="dv">350</span>, <span class="at">height=</span><span class="dv">350</span>, <span class="at">units=</span><span class="st">&quot;mm&quot;</span>)</span></code></pre></div>
 </div>
-<div id="environmental-vars-data-mutate" class="section level2" number="6.7">
-<h2><span class="header-section-number">6.7</span> Environmental vars
+<div id="environmental-vars-data-mutate" class="section level2" number="5.7">
+<h2><span class="header-section-number">5.7</span> Environmental vars
 data mutate</h2>
 <p>I minimised environmental influence on the behaviour models by
 standardising their values: the means of the environmental variables
@@ -3034,8 +3024,8 @@ were all scaled to zero, and the standard deviation to one, as in Wilson
 <span id="cb59-10"><a href="#cb59-10" tabindex="-1"></a><span class="fu">write.csv</span>(data2_mutate, </span>
 <span id="cb59-11"><a href="#cb59-11" tabindex="-1"></a>          <span class="st">&quot;output/data2_mutate - both assays env vars adjusted.csv&quot;</span>)</span></code></pre></div>
 </div>
-<div id="adjusted-behaviour-variables---extracting-values" class="section level2" number="6.8">
-<h2><span class="header-section-number">6.8</span> Adjusted behaviour
+<div id="adjusted-behaviour-variables---extracting-values" class="section level2" number="5.8">
+<h2><span class="header-section-number">5.8</span> Adjusted behaviour
 variables - extracting values</h2>
 <p>I fitted GLMs of the adjusted behaviours against assay number and the
 standardised environmental variables, and at the same time, I extracted
@@ -3153,8 +3143,8 @@ coefficients for each behavioural variable.</p>
 <span id="cb60-110"><a href="#cb60-110" tabindex="-1"></a>           <span class="at">family=</span>gaussian, <span class="at">data=</span>data2_mutate)</span>
 <span id="cb60-111"><a href="#cb60-111" tabindex="-1"></a>             data2_mutate<span class="sc">$</span>emerge_p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod, <span class="at">type=</span><span class="st">&quot;response&quot;</span>)</span></code></pre></div>
 </div>
-<div id="adjusted-behaviour-variables" class="section level2" number="6.9">
-<h2><span class="header-section-number">6.9</span> Adjusted behaviour
+<div id="adjusted-behaviour-variables" class="section level2" number="5.9">
+<h2><span class="header-section-number">5.9</span> Adjusted behaviour
 variables</h2>
 <p>Once adjusted variables were extracted, we tidied up the df.</p>
 <div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" tabindex="-1"></a><span class="co"># </span></span>
@@ -3170,8 +3160,8 @@ variables</h2>
 <span id="cb61-11"><a href="#cb61-11" tabindex="-1"></a><span class="fu">write.csv</span>(data2_pred, </span>
 <span id="cb61-12"><a href="#cb61-12" tabindex="-1"></a>          <span class="st">&quot;output/data2_pred - both assays adjusted env variables.csv&quot;</span>)</span></code></pre></div>
 </div>
-<div id="adjusted-behaviour-variables---test-vs-assay-number" class="section level2" number="6.10">
-<h2><span class="header-section-number">6.10</span> Adjusted behaviour
+<div id="adjusted-behaviour-variables---test-vs-assay-number" class="section level2" number="5.10">
+<h2><span class="header-section-number">5.10</span> Adjusted behaviour
 variables - test vs assay number</h2>
 <div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb62-2"><a href="#cb62-2" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(foodd_p <span class="sc">~</span> assay_number, <span class="at">family=</span>gaussian, <span class="at">data=</span>data2_pred)</span>
@@ -3224,8 +3214,8 @@ variables - test vs assay number</h2>
 <span id="cb63-13"><a href="#cb63-13" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb63-14"><a href="#cb63-14" tabindex="-1"></a>table</span></code></pre></div>
 </div>
-<div id="adjusted-behaviour-variables-vs-assay-number-plots" class="section level2" number="6.11">
-<h2><span class="header-section-number">6.11</span> Adjusted behaviour
+<div id="adjusted-behaviour-variables-vs-assay-number-plots" class="section level2" number="5.11">
+<h2><span class="header-section-number">5.11</span> Adjusted behaviour
 variables vs assay number plots</h2>
 <div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" tabindex="-1"></a><span class="co"># Latency to emerge</span></span>
 <span id="cb64-2"><a href="#cb64-2" tabindex="-1"></a>ed_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data=</span>data2_pred, <span class="fu">aes</span>(<span class="at">x=</span>assay_number, <span class="at">y=</span>emerge_p, </span>
@@ -3580,8 +3570,8 @@ variables vs assay number plots</h2>
 <span id="cb76-15"><a href="#cb76-15" tabindex="-1"></a>       plot, <span class="at">width=</span><span class="dv">400</span>, <span class="at">height=</span><span class="dv">550</span>, <span class="at">units=</span><span class="st">&quot;mm&quot;</span>)</span></code></pre></div>
 </div>
 </div>
-<div id="personality-and-plasticity" class="section level1" number="7">
-<h1><span class="header-section-number">7</span> <strong>Personality and
+<div id="personality-and-plasticity" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> <strong>Personality and
 plasticity</strong></h1>
 <p>I created data frame for personality and plasticity analysis with
 individual eastern quoll demographic and morphological traits.</p>
@@ -3613,8 +3603,8 @@ individual eastern quoll demographic and morphological traits.</p>
 <span id="cb77-26"><a href="#cb77-26" tabindex="-1"></a></span>
 <span id="cb77-27"><a href="#cb77-27" tabindex="-1"></a><span class="co"># Export as a csv file</span></span>
 <span id="cb77-28"><a href="#cb77-28" tabindex="-1"></a><span class="fu">write.csv</span>(quoll2, <span class="st">&quot;output/quoll2.csv&quot;</span>)</span></code></pre></div>
-<div id="intercept-and-slope" class="section level2" number="7.1">
-<h2><span class="header-section-number">7.1</span> Intercept and
+<div id="intercept-and-slope" class="section level2" number="6.1">
+<h2><span class="header-section-number">6.1</span> Intercept and
 slope</h2>
 <p>Using the adjusted values I fitted models to extract the intercept
 (personality) and slope (plasticity) over multiple assays.</p>
@@ -3675,8 +3665,8 @@ slope</h2>
 <span id="cb78-55"><a href="#cb78-55" tabindex="-1"></a><span class="co"># Write to csv file</span></span>
 <span id="cb78-56"><a href="#cb78-56" tabindex="-1"></a><span class="fu">write_csv</span>(ppdata, <span class="st">&quot;output/ppdata - intercept and slope data.csv&quot;</span>)</span></code></pre></div>
 </div>
-<div id="analyse-behaviour-indicators-for-personality-and-plasticity" class="section level2" number="7.2">
-<h2><span class="header-section-number">7.2</span> Analyse behaviour
+<div id="analyse-behaviour-indicators-for-personality-and-plasticity" class="section level2" number="6.2">
+<h2><span class="header-section-number">6.2</span> Analyse behaviour
 indicators for personality and plasticity</h2>
 <ol style="list-style-type: decimal">
 <li>I tested the influence of fixed (e.g., site) and random effects
@@ -3686,8 +3676,8 @@ using the <code>lmer()</code> function.</li>
 selection to determine which fixed effects are within delta 2 AICc.</li>
 </ol>
 </div>
-<div id="intercept-glmms---testing-behaviour-intercept-personality-against-independent-variables" class="section level2" number="7.3">
-<h2><span class="header-section-number">7.3</span> Intercept GLMMs -
+<div id="intercept-glmms---testing-behaviour-intercept-personality-against-independent-variables" class="section level2" number="6.3">
+<h2><span class="header-section-number">6.3</span> Intercept GLMMs -
 testing behaviour intercept (personality) against independent
 variables</h2>
 <div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" tabindex="-1"></a><span class="co"># </span></span>
@@ -3785,8 +3775,8 @@ variables</h2>
 <span id="cb79-93"><a href="#cb79-93" tabindex="-1"></a>              cond_n <span class="sc">+</span> age_n <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>arena), </span>
 <span id="cb79-94"><a href="#cb79-94" tabindex="-1"></a>            <span class="at">data=</span>ppdata, <span class="at">na.action=</span><span class="st">&quot;na.fail&quot;</span>)</span></code></pre></div>
 </div>
-<div id="intercept-tables" class="section level2" number="7.4">
-<h2><span class="header-section-number">7.4</span> Intercept tables</h2>
+<div id="intercept-tables" class="section level2" number="6.4">
+<h2><span class="header-section-number">6.4</span> Intercept tables</h2>
 <div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb80-2"><a href="#cb80-2" tabindex="-1"></a>response_var <span class="ot">&lt;-</span> <span class="fu">all.vars</span>(<span class="fu">formula</span>(mod))[<span class="dv">1</span>]</span>
 <span id="cb80-3"><a href="#cb80-3" tabindex="-1"></a>tidy_results <span class="ot">&lt;-</span> <span class="fu">tidy</span>(mod) <span class="sc">%&gt;%</span></span>
@@ -3803,8 +3793,8 @@ variables</h2>
 <span id="cb80-14"><a href="#cb80-14" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb80-15"><a href="#cb80-15" tabindex="-1"></a>table</span></code></pre></div>
 </div>
-<div id="intercept-aicc-model-selection" class="section level2" number="7.5">
-<h2><span class="header-section-number">7.5</span> Intercept AICc model
+<div id="intercept-aicc-model-selection" class="section level2" number="6.5">
+<h2><span class="header-section-number">6.5</span> Intercept AICc model
 selection</h2>
 <div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" tabindex="-1"></a><span class="co"># Perching duration</span></span>
 <span id="cb81-2"><a href="#cb81-2" tabindex="-1"></a>mod_pdi_site <span class="ot">&lt;-</span> <span class="fu">lmer</span>(i_perchd_p <span class="sc">~</span> study_site <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>arena), </span>
@@ -3815,8 +3805,8 @@ selection</h2>
 <span id="cb81-7"><a href="#cb81-7" tabindex="-1"></a>model.names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Study site&quot;</span>, <span class="st">&quot;Interaction of Sex and body weight kg&quot;</span>)</span>
 <span id="cb81-8"><a href="#cb81-8" tabindex="-1"></a><span class="fu">aictab</span>(<span class="at">cand.set=</span>models, <span class="at">modnames=</span>model.names)</span></code></pre></div>
 </div>
-<div id="intercept-plots" class="section level2" number="7.6">
-<h2><span class="header-section-number">7.6</span> Intercept plots</h2>
+<div id="intercept-plots" class="section level2" number="6.6">
+<h2><span class="header-section-number">6.6</span> Intercept plots</h2>
 <div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" tabindex="-1"></a><span class="co"># Bag stress</span></span>
 <span id="cb82-2"><a href="#cb82-2" tabindex="-1"></a>i_bs_site <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data=</span>ppdata, <span class="fu">aes</span>(<span class="at">x=</span>study_site, <span class="at">y=</span>i_bagstress_p, </span>
 <span id="cb82-3"><a href="#cb82-3" tabindex="-1"></a>                                     <span class="at">fill=</span>study_site)) <span class="sc">+</span> </span>
@@ -4211,8 +4201,8 @@ selection</h2>
 <span id="cb95-14"><a href="#cb95-14" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="at">filename=</span><span class="st">&quot;output/plots/intercept plots.jpeg&quot;</span>, </span>
 <span id="cb95-15"><a href="#cb95-15" tabindex="-1"></a>       plot, <span class="at">width=</span><span class="dv">450</span>, <span class="at">height=</span><span class="dv">650</span>, <span class="at">units=</span><span class="st">&quot;mm&quot;</span>)</span></code></pre></div>
 </div>
-<div id="slope-glmms" class="section level2" number="7.7">
-<h2><span class="header-section-number">7.7</span> Slope GLMMs</h2>
+<div id="slope-glmms" class="section level2" number="6.7">
+<h2><span class="header-section-number">6.7</span> Slope GLMMs</h2>
 <p>Test behaviour slope (plasticity) against independent variables.</p>
 <div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb96-2"><a href="#cb96-2" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">lmer</span>(s_bait_p <span class="sc">~</span> sex <span class="sc">+</span> body_weight_kg <span class="sc">+</span> </span>
@@ -4308,8 +4298,8 @@ selection</h2>
 <span id="cb96-92"><a href="#cb96-92" tabindex="-1"></a>              study_site <span class="sc">+</span> cond_n <span class="sc">+</span> age_n <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>arena), </span>
 <span id="cb96-93"><a href="#cb96-93" tabindex="-1"></a>            <span class="at">data=</span>ppdata, <span class="at">na.action=</span><span class="st">&quot;na.fail&quot;</span>)</span></code></pre></div>
 </div>
-<div id="tables-with-kableextra" class="section level2" number="7.8">
-<h2><span class="header-section-number">7.8</span> Tables with
+<div id="tables-with-kableextra" class="section level2" number="6.8">
+<h2><span class="header-section-number">6.8</span> Tables with
 kableExtra</h2>
 <div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb97-2"><a href="#cb97-2" tabindex="-1"></a>response_var <span class="ot">&lt;-</span> <span class="fu">all.vars</span>(<span class="fu">formula</span>(mod))[<span class="dv">1</span>]</span>
@@ -4327,8 +4317,8 @@ kableExtra</h2>
 <span id="cb97-14"><a href="#cb97-14" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb97-15"><a href="#cb97-15" tabindex="-1"></a>table</span></code></pre></div>
 </div>
-<div id="slope-aicc-model-selection" class="section level2" number="7.9">
-<h2><span class="header-section-number">7.9</span> Slope AICc model
+<div id="slope-aicc-model-selection" class="section level2" number="6.9">
+<h2><span class="header-section-number">6.9</span> Slope AICc model
 selection</h2>
 <div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" tabindex="-1"></a><span class="co"># Food occ</span></span>
 <span id="cb98-2"><a href="#cb98-2" tabindex="-1"></a>mod_fos_cond <span class="ot">&lt;-</span> <span class="fu">lmer</span>(s_foodo_p <span class="sc">~</span> cond_n <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>arena), </span>
@@ -4438,8 +4428,8 @@ selection</h2>
 <span id="cb105-12"><a href="#cb105-12" tabindex="-1"></a>model.names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Condition&quot;</span>, <span class="st">&quot;Body weight&quot;</span>, <span class="st">&quot;Sex&quot;</span>)</span>
 <span id="cb105-13"><a href="#cb105-13" tabindex="-1"></a><span class="fu">aictab</span>(<span class="at">cand.set=</span>models, <span class="at">modnames=</span>model.names)</span></code></pre></div>
 </div>
-<div id="plasticity-by-weight-plots" class="section level2" number="7.10">
-<h2><span class="header-section-number">7.10</span> Plasticity by weight
+<div id="plasticity-by-weight-plots" class="section level2" number="6.10">
+<h2><span class="header-section-number">6.10</span> Plasticity by weight
 plots</h2>
 <div class="sourceCode" id="cb106"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" tabindex="-1"></a><span class="co"># Food occ v weight</span></span>
 <span id="cb106-2"><a href="#cb106-2" tabindex="-1"></a>food <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data=</span>ppdata, <span class="fu">aes</span>(<span class="at">x=</span>body_weight_kg, <span class="at">y=</span>s_foodo_p)) <span class="sc">+</span> </span>
@@ -4618,8 +4608,8 @@ plots</h2>
 <span id="cb113-14"><a href="#cb113-14" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="at">filename=</span><span class="st">&quot;output/plots/slope - weight plots.jpeg&quot;</span>, </span>
 <span id="cb113-15"><a href="#cb113-15" tabindex="-1"></a>       plot, <span class="at">width=</span><span class="dv">350</span>, <span class="at">height=</span><span class="dv">400</span>, <span class="at">units=</span><span class="st">&quot;mm&quot;</span>)</span></code></pre></div>
 </div>
-<div id="plasticity-by-site-plots" class="section level2" number="7.11">
-<h2><span class="header-section-number">7.11</span> Plasticity by site
+<div id="plasticity-by-site-plots" class="section level2" number="6.11">
+<h2><span class="header-section-number">6.11</span> Plasticity by site
 plots</h2>
 <div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" tabindex="-1"></a><span class="co"># Assign custom numbers per site</span></span>
 <span id="cb114-2"><a href="#cb114-2" tabindex="-1"></a>custom_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Goorooyarroo&quot;</span><span class="ot">=</span><span class="st">&quot;# 2D718E&quot;</span>, </span>
@@ -5113,8 +5103,8 @@ plots</h2>
 <span id="cb133-12"><a href="#cb133-12" tabindex="-1"></a>       plot, <span class="at">width=</span><span class="dv">450</span>, <span class="at">height=</span><span class="dv">700</span>, <span class="at">units=</span><span class="st">&quot;mm&quot;</span>)</span></code></pre></div>
 </div>
 </div>
-<div id="session-information" class="section level1" number="8">
-<h1><span class="header-section-number">8</span> <strong>Session
+<div id="session-information" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> <strong>Session
 information</strong></h1>
 <div class="sourceCode" id="cb134"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb134-1"><a href="#cb134-1" tabindex="-1"></a><span class="co"># Display session information</span></span>
 <span id="cb134-2"><a href="#cb134-2" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>

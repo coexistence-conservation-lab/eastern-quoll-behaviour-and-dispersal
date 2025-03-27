@@ -23,5 +23,6 @@ desktop.ini
 Desktop.ini
 
 # Project-specific files to ignore
-/input/api.txt
-#*.tif
+/metadata/api.txt
+*.accdb
+*.tif

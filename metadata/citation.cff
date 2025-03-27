@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the following."
+title: "Ranging after reintroduction: do behavioural traits predict dispersal into new territory?"
+authors:
+  - name: Gee C & Wilson B
+date-released: 2025-03-04
+repository-code: https://github.com/coexistence-conservation-lab/eastern-quoll-behaviour-and-dispersal
+license: MIT

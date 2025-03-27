@@ -1,6 +1,6 @@
 # Eastern quoll behaviour and dispersal
 
-Here we describe the analyses conducted for the journal article Gee *et al*. (in prep) "*Ranging after reintroduction: do behavioural traits predict dispersal into new territory?*".
+Here we present the workflows and datasets used in the analyses conducted for the journal article Gee *et al*. (in prep) "*Ranging after reintroduction: do behavioural traits predict dispersal into new territory?*".
 
 ## Abstract
 
@@ -15,11 +15,16 @@ We have demonstrated a novel method for conducting rapid field-based behavioural
 ## Repository structure
 
 This repository follows an organised structure for clarity and reproducibility:
-- `input` folder: contains datasets required for analyses (e.g., raw data tables, geospatial data files, etc.).
-- `output` folder: contains datasets generated from these analyses (e.g., processed data tables, maps, plots, etc.).
-- `.gitattributes`: manages repository-specific configurations.
-- `.gitignore`: specifies intentionally untracked files to be ignored by Git (e.g., large files or sensitive information).
-- `analyses.Rmd`: R markdown containing the workflow for the project's analyses, including narrative text, code, and results.
-- `project.Rproj`: RStudio Project file for managing the R environment to ensure consistent working directories and settings.
-- `README.md`: provides an overview of the repository and instructions for usage (i.e., what you're reading right now).
-- `tutorial.html`: rendered HTML output of the `analyses.Rmd` markdown, serving as a shareable tutorial that summarises the project's analyses and results.
+- `archive`: superseded datasets and workflows 
+- `input`: raw and reference datasets (e.g., tables, spatial files) 
+- `output`: results from analyses (e.g., tables, plots, maps) 
+- `.gitattributes`: repository-specific Git settings 
+- `.gitignore`: files to exclude from version control 
+- `analyses.Rmd`: R Markdown with analysis workflows 
+- `project.Rproj`: RStudio project file for consistent setup 
+- `README.md`: project overview and usage guide 
+- `tutorial.html`: rendered summary of analyses and results 
+
+## Licence
+
+Unless otherwise stated, all code in this repository is licensed under the MIT License. We kindly ask that you cite the relevant publication(s) or this repos if you reuse or adapt our code.
