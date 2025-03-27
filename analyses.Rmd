@@ -22,11 +22,12 @@ knitr::opts_chunk$set(echo=TRUE, eval=FALSE)
 
 # **Background**
 
-This [R project](https://support.posit.co/hc/en-us/articles/200526207-Using-RStudio-Projects) presents the workflows and datasets used in the '*Ranging after reintroduction: do behavioural traits predict dispersal into new territory?*' project.
+This [R project](https://support.posit.co/hc/en-us/articles/200526207-Using-RStudio-Projects) presents the workflows and datasets used in the '*Ranging after reintroduction: do behavioural traits predict dispersal into new territory?*' project. For information on our methodological approach, see the [GitHub repo](https://github.com/coexistence-conservation-lab/eastern-quoll-behaviour-and-dispersal) README.
 
-For information on our methodological approach, see the [GitHub repo](https://github.com/coexistence-conservation-lab/eastern-quoll-behaviour-and-dispersal) README.
+# **Abbreviations**
 
 *Locations, organisations, and platforms*
+
   - **ACT:** Australian Capital Territory
   - **ANU:** The Australian National University
   - **API:** Application Programming Interface
@@ -36,9 +37,7 @@ For information on our methodological approach, see the [GitHub repo](https://gi
   - **MFWS** or **MF:** Mulligans Flat Woodland Sanctuary
 
 *Technical:*
-  - **_i:** Intercept
-  - **_s:** Slope
-  - **AM:** annual monitoring
+
   - **CMR:** Capture-mark-recapture
   - **df:** dataframe
   - **GLM:** generalised linear model
@@ -3879,13 +3878,82 @@ plot <- ggarrange(s_fd_site, 	s_jd_site, 	s_jo_site,
                   nrow=6, ncol=3)
 
 # Export plot as a jpeg file
-ggsave(filename="output/plots/plasticity plots.jpeg", 
-       plot, width=450, height=700, units="mm")
+ggsave(plot, filename="output/plots/plasticity plots.jpeg", 
+       height=700, width=450, units="mm")
 ```
 
-# **Session information**
+# **Reproducibility and citation**
+
+## Session information
 
 ```{r, eval=TRUE}
-# Display session information
+# Display R version, OS, and loaded packages
 sessionInfo()
+```
+
+## Citation
+
+Finally, we define functions to extract metadata from this repository to generate a `citation.cff` file that can then be read and exported (e.g., via [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files)). 
+
+```{r, eval=TRUE}
+# Define function to extract repo metadata
+extract_metadata <- function(rmd="analyses.Rmd") 
+  {if (!requireNamespace("yaml", quietly=TRUE)) stop("Please install the 'yaml' package.")
+   lines <- suppressWarnings(readLines(rmd))
+   yaml_start <- which(lines=="---")[1]
+   yaml_end <- which(lines=="---")[2]
+   yaml_block <- lines[yaml_start:yaml_end]
+   meta <- yaml::yaml.load(paste(yaml_block, collapse="\n"))
+   date_iso <- tryCatch(
+     as.character(as.Date(meta$date, format="%B %d, %Y")), 
+     error=function(e) meta$date)
+   repo <- tryCatch(system("git config --get remote.origin.url", intern=TRUE),
+                    error=function(e) "")
+   repo_url <- sub("git@github.com:", "https://github.com/", repo)
+   repo_url <- sub(".git$", "", repo_url)
+   list(title=meta$title,
+        author=meta$author,
+        date=date_iso,
+        repo=repo_url,
+        license="MIT")}
+
+# Define function to write a citation.cff file
+write_cff_from_rmd <- function(rmd="analyses.Rmd", 
+                               cff_path="metadata/citation.cff") 
+  {if (!requireNamespace("glue", quietly=TRUE)) stop("Please install the 'glue' package.")
+   meta <- extract_metadata(rmd)
+   cff <- glue::glue(
+     "cff-version: 1.2.0\n",
+     "message: \"If you use this code, please cite the following.\"\n",
+     "title: \"{meta$title}\"\n",
+     "authors:\n",
+     "  - name: {meta$author}\n",
+     "date-released: {meta$date}\n",
+     "repository-code: {meta$repo}\n",
+     "license: {meta$license}\n")
+   writeLines(cff, cff_path)
+   message(glue::glue("{cff_path} written"))}
+
+# Define function to print the citation details
+cite <- function(rmd="analyses.Rmd") 
+  {if (!requireNamespace("crayon", quietly=TRUE)) stop("Please install the 'crayon' package.")
+   if (!requireNamespace("glue", quietly=TRUE)) stop("Please install the 'glue' package.")
+   meta <- extract_metadata(rmd)
+   bold <- crayon::bold
+   citation <- glue::glue(
+     "\nIf you use this code, please cite the following:\n\n",
+     "{bold(glue::glue('{meta$author} ({substr(meta$date, 1, 4)})'))} {meta$title}. ",
+     "Coexistence Conservation Lab, Fenner School of Environment and Society, ",
+     "The Australian National University, Canberra.\n",
+     "{bold('Available at:')} {meta$repo}\n",
+     "{bold('Date released:')} {meta$date}\n",
+     "{bold('License:')} {meta$license}\n\n",
+     "For more information, visit https://www.coexistenceconservationlab.org/")
+   cat(citation)}
+
+# Create citation file quietly
+invisible(write_cff_from_rmd())
+
+# Print citation details
+cite()
 ```
