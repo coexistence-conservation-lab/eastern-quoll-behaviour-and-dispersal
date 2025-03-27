@@ -705,7 +705,7 @@ groomd_site <- ggplot(data=data1, aes(x=study_site, y=grooming_d,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=18),  
+        text=element_text(size=18), 
        axis.text.x=element_text(size=18)) + 
   scale_y_continuous(breaks=seq(0, 110, 20), 
                      labels=seq(0, 110, 20), 
@@ -735,7 +735,7 @@ groomo_site <- ggplot(data=data1, aes(x=study_site, y=grooming_o,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=18),  
+        text=element_text(size=18), 
         axis.text.x=element_text(size=18)) + 
   scale_y_continuous(breaks=seq(0, 8, 2), 
                      labels=seq(0, 8, 2), 
@@ -766,7 +766,7 @@ moved_site <- ggplot(data=data1, aes(x=study_site, y=moving_d,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=18),  
+        text=element_text(size=18), 
         axis.text.x=element_text(size=18)) + 
   scale_y_continuous(breaks=seq(0, 300, 50), 
                      labels=seq(0, 300, 50), 
@@ -1859,7 +1859,7 @@ fo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=foodo_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-        axis.text.x=element_text(size=19),  
+        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   labs("") + xlab("") + 
   ylab(expression(paste("Food interaction \noccurrences", italic(" (n) ")))) + 
@@ -1888,7 +1888,7 @@ jd_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=jumpd_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-        axis.text.x=element_text(size=19),  
+        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   labs("") + xlab("") + 
   ylab(expression(paste("Jumping + climbing \nduration (s)"))) + 
@@ -1917,7 +1917,7 @@ jo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=jumpo_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-        axis.text.x=element_text(size=19),  
+        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   labs("") + xlab("") + 
   ylab(expression(paste("Jumping + \nclimbing occurrences ", 
@@ -1947,7 +1947,7 @@ po_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=percho_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-        axis.text.x=element_text(size=19),  
+        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0, 30, 10), 
                      labels=seq(0, 30, 10), 
@@ -1979,7 +1979,7 @@ md_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=moved_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-        axis.text.x=element_text(size=19),  
+        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0, 160, 50), 
                      labels=seq(0, 160, 50), 
@@ -2011,7 +2011,7 @@ mo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=moveo_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-        axis.text.x=element_text(size=19),  
+        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0, 150, 50), 
                      labels=seq(0, 150, 50), 
@@ -2044,7 +2044,7 @@ lo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=legso_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-        axis.text.x=element_text(size=19),  
+        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0, 110, 20), 
                      labels=seq(0, 110, 20), 
@@ -2076,7 +2076,7 @@ act_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=totalacto_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-        axis.text.x=element_text(size=19),  
+        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) +   
   scale_y_continuous(breaks=seq(0, 400, 100), 
                      labels=seq(0, 400, 100), 
@@ -2106,7 +2106,7 @@ sum_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=sumsecto_p,
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
         text=element_text(size=19), 
-       axis.text.x=element_text(size=19),  
+       axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) +  
   scale_y_continuous(breaks=seq(0, 80, 20), 
                      labels=seq(0, 80, 20), 
@@ -3141,7 +3141,7 @@ food <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_foodo_p)) +
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
@@ -3168,7 +3168,7 @@ legso_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_legso_p)) +
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
@@ -3195,7 +3195,7 @@ legsd_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_legsd_p)) +
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
         axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
@@ -3220,7 +3220,7 @@ moveweight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_moved_p)) +
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) +    
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
@@ -3245,7 +3245,7 @@ moveo_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_moveo_p)) +
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
@@ -3271,7 +3271,7 @@ sum_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_sumsecto_p)) +
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
@@ -3297,7 +3297,7 @@ tot_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_totalacto_p)) +
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=19), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) +  
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
@@ -3353,7 +3353,7 @@ s_fd_site <- ggplot(data=ppdata, aes(x=study_site, y=s_foodd_p,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=18), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) +    
   scale_y_continuous(breaks=seq(-100, 60, 20), 
@@ -3379,7 +3379,7 @@ food <- ggplot(data=d2pred, aes(x=assay_number, y=foodd_p,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=18), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") + 
@@ -3414,7 +3414,7 @@ s_jd_site <- ggplot(data=ppdata, aes(x=study_site, y=s_jumpd_p,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=18), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) + 
   scale_y_continuous(breaks=seq(-150, 50, 50), 
@@ -3440,7 +3440,7 @@ jump <- ggplot(data=d2pred, aes(x=assay_number, y=jumpd_p,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=18), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
@@ -3472,7 +3472,7 @@ s_jo_site <- ggplot(data=ppdata, aes(x=study_site, y=s_jumpo_p,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=18), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   scale_y_continuous(breaks=seq(-60, 0, 20), 
@@ -3499,7 +3499,7 @@ jump2 <- ggplot(data=d2pred, aes(x=assay_number, y=jumpo_p,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=18), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") + 
@@ -3535,7 +3535,7 @@ s_e_site <- ggplot(data=ppdata, aes(x=study_site, y=s_emerge_p,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=18), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) +  
   labs("") + xlab("") + 
@@ -3558,7 +3558,7 @@ emerge <- ggplot(data=d2pred, aes(x=assay_number, y=emerge_p,
         panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
         axis.line.y=element_line(color="black"), 
-        text=element_text(size=19),  
+        text=element_text(size=19), 
        axis.text.x=element_text(size=18), 
         plot.margin=margin(0.5, 0.5, 0.5, 0.5, "cm")) +  
   geom_hline(yintercept=0, linetype="dashed", color="grey") + 
@@ -3584,7 +3584,7 @@ s_pd_site <- ggplot(data=ppdata, aes(x=study_site, y=s_perchd_p,
                                      fill=study_site)) + 
   geom_violin() + 
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
-  stat_summary(fun="median", geom="point", col="black", fill="white",  
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
   scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
@@ -3814,7 +3814,7 @@ s_ts_site <- ggplot(data=ppdata, aes(x=study_site, y=s_tablestress_p,
                                      fill=study_site)) + 
  geom_violin() + 
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
-  stat_summary(fun="median", geom="point", col="black", fill="white",  
+  stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") + 
  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
@@ -3870,7 +3870,7 @@ print(table)
 ```{r}
 # Combine plots
 plot <- ggarrange(s_fd_site, 	s_jd_site, 	s_jo_site, 
-                  food, 	jump, 	jump2, 
+                  food, jump, jump2, 
                   s_e_site, 	s_pd_site, s_po_site, 
                   emerge, perch, perch2, 
                   s_md_site, s_bs_site, s_ts_site, 
