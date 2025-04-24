@@ -1,7 +1,7 @@
 ---
 title: "Ranging after reintroduction: do behavioural traits predict dispersal into new territory?"
 author: "Gee C & Wilson B" 
-date: "March 4, 2025"
+date: "Apr 24, 2025"
 output: 
   html_document:
     toc: true
@@ -62,7 +62,7 @@ install.packages(pacman)
 pacman::p_load(beepr, broom, broom.mixed, dplyr, grid, gtools, janitor, lme4, 
                lubridate, readxl, sjmisc, sjlabelled, 
                tidyverse, writexl, # General functionality
-               ggplot2, ggpubr, jPlot, scales, viridis, # Plotting
+               ggplot2, ggpubr, sjPlot, scales, viridis, # Plotting
                ggmap, sf, # Mapping
                AICcmodavg, corrplot, kableExtra, 
                lme4, lmerTest, MuMIn) # Modelling
@@ -262,7 +262,6 @@ cor <- data  %>%
 
 # Running the correlation test
 cor <- cor(cor)
-view(cor)
 
 # Export to a csv file
 write.csv(cor, "output/data - morphometric correlation matrix.csv")
@@ -276,14 +275,15 @@ colnames(cor) <- col_names
 rownames(cor) <- row_names
 
 # Correlation of occurrences and duration with sections
-jpeg(height=2000, width=2000, file="data corplot.jpeg", type="cairo")
-corrplot(cor, method="color", 
-                  col=colorRampPalette(c("# B8DE29", "# FFFFFF", 
-                                         "# 2D718E"))(10), 
+jpeg(height=2000, width=2000, file="output/plots/correlation plot.jpeg", 
+     type="cairo")
+corrplot(cor, method="color", col=colorRampPalette(c("#B8DE29", "#FFFFFF", 
+                                                     "#2D718E"))(10), 
          type="upper", # creates a correlation matrix
          cl.cex=3, number.cex=4, tl.cex=4, diag=FALSE, 
          tl.col="black", tl.srt=45, addCoef.col="black")
 dev.off()
+
 ```
 
 # **Single assays**
@@ -322,7 +322,6 @@ data1 <- data1 %>%
   # Reorder new labels
   mutate(age_estimate=factor(age_estimate, 
                              levels=c("2–3 years", "1–2 years", "<1 year")))
-
 ```
 
 ## Demo/morpho analysis
@@ -359,10 +358,10 @@ print(table)
 ## Plot demographics and morphology
 
 ```{r}
-# Age plot
+# Plot smoothed regression, warnings expected
 age_plot  <- ggplot() + 
   geom_smooth(data=data1, aes(x=age_n, y=as.numeric(site01)), 
-              colour="# 1caa85", fill="# 68C6AE") + 
+              colour="#1caa85", fill="#68C6AE") + 
   theme_minimal() + 
   theme(panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
@@ -373,13 +372,35 @@ age_plot  <- ggplot() +
   xlab("Age estimate") + 
   ylab("Probability of capture in MF (0) or GS (1)") + 
   annotate("text", x=1.9, y=0.95, label="A", size=8, hjust=1)
+
+# Display plot
+print(age_plot)
 ```
 
 ```{r}
-# Plot smoothed regression
-cond_plot  <- ggplot() + 
+# Plot smoothed regression, warnings expected
+weight_plot  <- ggplot() + 
+ geom_smooth(data=data1, aes(x=body_weight_kg, y=as.numeric(site01)), 
+             colour="#482677", fill="#674A8E") + 
+  theme_minimal() + 
+  theme(panel.grid=element_blank(), 
+        axis.line.x=element_line(color="black"), 
+        axis.line.y=element_line(color="black"), 
+        text=element_text(size=16)) + 
+   scale_y_continuous(breaks=seq(-0.4, 1, 0.2), 
+                      labels=seq(-0.4, 1, 0.2), limits=c(-0.4, 1)) + 
+  ylab(" ") + xlab("Body weight (kg)") + 
+  annotate("text", x=1.6, y=0.95, label="B", size=8, hjust=-0.5)
+
+# Display plot
+print(weight_plot)
+```
+
+```{r}
+# Plot smoothed regression, warnings expected
+cond_plot <- ggplot() + 
  geom_smooth(data=data1, aes(x=cond_n, y=as.numeric(site01)), 
-             colour="# 2D718E", fill="# 5089A1") + 
+             colour="#2D718E", fill="#5089A1") + 
   theme_minimal() + 
   theme(panel.grid=element_blank(), 
         axis.line.x=element_line(color="black"), 
@@ -390,24 +411,10 @@ cond_plot  <- ggplot() +
                       limits=c(-0.4, 1)) + 
   xlab("Body condition score") + ylab(" ") + 
   annotate("text", x=3.9, y=0.95, label="C", size=8, hjust=1)
-```
 
-```{r}
-# Plot smoothed regression
-weight_plot  <- ggplot() + 
- geom_smooth(data=data1, aes(x=body_weight_kg, y=as.numeric(site01)), 
-             colour="# 482677", fill="# 674A8E") + 
-  theme_minimal() + 
-  theme(panel.grid=element_blank(), 
-        axis.line.x=element_line(color="black"), 
-        axis.line.y=element_line(color="black"), 
-        text=element_text(size=16)) + 
-   scale_y_continuous(breaks=seq(-0.4, 1, 0.2), 
-                      labels=seq(-0.4, 1, 0.2), limits=c(-0.4, 1)) + 
-  ylab(" ") + xlab("Body weight (kg)") + 
-  annotate("text", x=1.6, y=0.95, label="B", size=8, hjust=-0.5)
+# Display plot
+print(cond_plot)
 ```
-
 
 ```{r}
 # Combine grooming plots
@@ -511,98 +518,98 @@ Test behaviour in GLMMs including environmental variables as competing factors i
 # 
 mod <- lmer(bait_eaten_g ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(emerge_max ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + temp + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(food_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(food_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(grooming_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + temp + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(grooming_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + temp + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(jump_climb_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(jump_climb_o ~ study_site + sex + age_n + cond_n + 
               body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(legs_d ~ study_site + sex + age_n + cond_n + 
               body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(legs_o ~ study_site + sex + age_n + cond_n + 
               body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(moving_d ~ study_site + sex + age_n + cond_n + 
               body_weight_kg + time_assaytolight + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(moving_o ~ study_site + sex + age_n + cond_n + 
               body_weight_kg + time_assaytolight + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(perch_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + temp + moon_phase + 
               time_assaytolight + time_processtoassay + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(perch_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(stress_in_bag ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(stress_in_trap ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(stress_on_table ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(sumsect_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(totalact_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data1, na.action="na.fail")
+            data=data1, na.action="na.fail", REML=FALSE)
 ```
 
 
@@ -631,11 +638,11 @@ control_ml <- lmerControl(optimizer="Nelder_Mead")
 
 # Grooming duration 
 mod_gd_site <- lmer(grooming_d ~ study_site + (1|arena), 
-            data=data1, control=control_ml, na.action="na.fail")
+            data=data1, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_gd_temp <- lmer(grooming_d ~ temp + (1|arena), 
-            data=data1, control=control_ml, na.action="na.fail")
+            data=data1, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 models <- list(mod_gd_site, mod_gd_temp)
@@ -645,16 +652,17 @@ model.names <- c("Site", "Temp")
 
 # 
 aictab(cand.set=models, modnames=model.names)
+
 ```
 
 ```{r}
 # Grooming occurrences
 mod_go_site <- lmer(grooming_o ~ study_site + (1|arena), 
-            data=data1, control=control_ml, na.action="na.fail")
+            data=data1, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_go_temp <- lmer(grooming_o ~ temp + (1|arena), 
-            data=data1, control=control_ml, na.action="na.fail")
+            data=data1, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 models <- list(mod_go_site, mod_go_temp)
@@ -669,15 +677,15 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Latency to emerge
 mod_emerge_temp <- lmer(emerge_max ~ temp + (1|arena), 
-            data=data1, control=control_ml, na.action="na.fail")
+            data=data1, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_emerge_weight <- lmer(emerge_max ~ body_weight_kg + (1|arena), 
-            data=data1, control=control_ml, na.action="na.fail")
+            data=data1, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_emerge_age <- lmer(emerge_max ~ age_n + (1|arena), 
-            data=data1, control=control_ml, na.action="na.fail")
+            data=data1, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 models <- list(mod_emerge_temp, mod_emerge_weight, mod_emerge_age)
@@ -699,7 +707,7 @@ groomd_site <- ggplot(data=data1, aes(x=study_site, y=grooming_d,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# 68C6A5")) + 
+  scale_fill_manual (values=c("#7E67A0", "#68C6A5")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -729,7 +737,7 @@ groomo_site <- ggplot(data=data1, aes(x=study_site, y=grooming_o,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# 68C6A5")) + 
+  scale_fill_manual (values=c("#7E67A0", "#68C6A5")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -760,7 +768,7 @@ moved_site <- ggplot(data=data1, aes(x=study_site, y=moving_d,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# 68C6A5")) + 
+  scale_fill_manual (values=c("#7E67A0", "#68C6A5")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -804,7 +812,7 @@ ggsave(filename="1st assay - groom and move violin plots.jpeg",
 perchtemp <- ggplot(data=data1, aes(x=temp, y=perch_d)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 1caa85", fill="# 68C6AE") + 
+              colour="#1caa85", fill="#68C6AE") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -831,7 +839,7 @@ ggsave(filename="output/plots/1st assay perch temp.jpeg",
 emergetemp <- ggplot(data=data1, aes(x=temp, y=emerge_max)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 482677", fill="# 674A8E") + 
+              colour="#482677", fill="#674A8E") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -858,7 +866,7 @@ ggsave(filename="output/plots/1st assay emerge temp.jpeg",
 emergeweight <- ggplot(data=data1, aes(x=body_weight_kg, y=emerge_max)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 2D718E", fill="# 5089A1") + 
+              colour="#2D718E", fill="#5089A1") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1005,105 +1013,104 @@ data2 <- data2 %>%
 # Fit GLM to test responses by predictor variables
 mod <- lmer(bait_eaten_g ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + moon_phase + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(emerge_max ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + temp + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(food_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + moon_phase + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(food_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + time_assaytolight + 
               time_processtoassay + (1|arena), data=data2, 
-            na.action="na.fail")
+            na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(grooming_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(grooming_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(jump_climb_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + time_assaytolight +  (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(jump_climb_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(legs_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + moon_phase + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(legs_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + time_assaytolight + 
               time_processtoassay + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(moving_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + moon_phase + 
               time_assaytolight + time_processtoassay + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(moving_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + moon_phase + 
               time_assaytolight + time_processtoassay + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(perch_d ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(perch_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(stress_in_bag ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + (1|arena), 
-            data=data2, na.action="na.fail")
-
-# Fit GLM to test responses by predictor variables
-mod <- lmer(stress_in_trap ~ study_site + sex + age_n + 
-              cond_n + body_weight_kg + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(stress_on_table ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + 
             (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(sumsect_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + moon_phase + 
               time_processtoassay +  (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
 
 # Fit GLM to test responses by predictor variables
 mod <- lmer(totalact_o ~ study_site + sex + age_n + 
               cond_n + body_weight_kg + moon_phase + 
               time_processtoassay + time_assaytolight + (1|arena), 
-            data=data2, na.action="na.fail")
+            data=data2, na.action="na.fail", REML=FALSE)
+
+
 ```
+
+NB - I did not test 'stress in trap' in the previous chunk as there was no variation between individual stress ratings. 
 
 Generate model tables.
 
@@ -1134,11 +1141,11 @@ control_ml <- lmerControl(optimizer="Nelder_Mead")
 
 # Food occ   
 mod_fo_process <- lmer(food_o ~ time_processtoassay + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_fo_light <- lmer(food_o ~ time_assaytolight + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 models <- list(mod_fo_process, mod_fo_light)
@@ -1153,11 +1160,11 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Legs occ   
 mod_lo_process <- lmer(legs_o ~ time_processtoassay + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_lo_light <- lmer(legs_o ~ time_assaytolight + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 models <- list(mod_lo_process, mod_lo_light)
@@ -1172,11 +1179,11 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Move occ   
 mod_mo_process <- lmer(moving_o ~ time_processtoassay + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_mo_light <- lmer(moving_o ~ time_assaytolight + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 models <- list(mod_mo_process, mod_mo_light)
@@ -1191,11 +1198,11 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Move dur   
 mod_md_process <- lmer(moving_d ~ time_processtoassay + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_md_light <- lmer(moving_d ~ time_assaytolight + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 models <- list(mod_md_process, mod_md_light)
@@ -1210,11 +1217,11 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Table stress   
 mod_table_process <- lmer(stress_on_table ~ time_processtoassay + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 mod_table_light <- lmer(stress_on_table ~ time_assaytolight + (1|arena), 
-            data=data2, control=control_ml, na.action="na.fail")
+            data=data2, control=control_ml, na.action="na.fail", REML=FALSE)
 
 # 
 models <- list(mod_table_process, mod_table_light)
@@ -1235,7 +1242,7 @@ groomdur <- ggplot(data=data2, aes(x=sex, y=grooming_d, fill=sex)) +
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="black", 
              shape=21, size=1.5, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# 4DBC94")) + 
+  scale_fill_manual (values=c("#7E67A0", "#4DBC94")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -1266,7 +1273,7 @@ baitage <- ggplot(data=data2, aes(x=age_estimate, y=bait_eaten_g,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="black", 
              shape=21, size=1.5, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# 68C6A5", "# D0E970")) + 
+  scale_fill_manual (values=c("#7E67A0", "#68C6A5", "#D0E970")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -1294,7 +1301,7 @@ perchocc <- ggplot(data=data2, aes(x=study_site, y=perch_o, fill=study_site)) +
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="black", 
              shape=21, size=1.5, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# 68C6A5")) + 
+  scale_fill_manual (values=c("#7E67A0", "#68C6A5")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -1324,7 +1331,7 @@ plot <- ggarrange(baitage, perchocc, groomdur, ncol=3, nrow=1)
 print(plot)
 
 # Export plot as a jpeg file
-ggsave(plot, filename="2 assays -bait perch emerge.jpeg", 
+ggsave(plot, filename="output/plots/2 assays - bait perch emerge.jpeg", 
        height=150, width=350, units="mm")
 ```
 
@@ -1333,7 +1340,7 @@ ggsave(plot, filename="2 assays -bait perch emerge.jpeg",
 sum_moon <- ggplot(data=data2, aes(x=moon_phase, y=sumsect_o)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 440154", fill="# 82568D") + 
+              colour="#440154", fill="#82568D") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1360,7 +1367,7 @@ ggsave(filename="output/plots/2 assay raw - emerge temp.jpeg",
 foodo_light <- ggplot(data=data2, aes(x=time_assaytolight, y=food_o)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 472D7B", fill="# 8473A7") + 
+              colour="#472D7B", fill="#8473A7") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1388,7 +1395,7 @@ ggsave(filename="output/plots/2 assay raw - food light.jpeg",
 foodo_process <- ggplot(data=data2, aes(x=time_processtoassay, y=food_o)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 3B528B", fill="# 7C8CB2") + 
+              colour="#3B528B", fill="#7C8CB2") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1419,7 +1426,7 @@ ggsave(filename="output/plots/2 assay raw - food process.jpeg",
 moved_light <- ggplot(data=data2, aes(x=time_assaytolight, y=moving_d)) + 
  geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 2C728E", fill="# 72A1B4") + 
+              colour="#2C728E", fill="#72A1B4") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1437,8 +1444,8 @@ moved_light <- ggplot(data=data2, aes(x=time_assaytolight, y=moving_d)) +
 print(moved_light)
 
 # Export plot as a jpeg file
-ggsave(filename="output/plots/2 assay raw - legs light.jpeg", 
-       legso_light, width=150, height=150, units="mm")
+ggsave(filename="output/plots/2 assay raw - moved light.jpeg", 
+       moved_light, width=150, height=150, units="mm")
 ```
 
 ```{r}
@@ -1446,7 +1453,7 @@ ggsave(filename="output/plots/2 assay raw - legs light.jpeg",
 moveo_light <- ggplot(data=data2, aes(x=time_assaytolight, y=moving_o)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 21908C", fill="# 6BB5B2") + 
+              colour="#21908C", fill="#6BB5B2") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1464,8 +1471,8 @@ moveo_light <- ggplot(data=data2, aes(x=time_assaytolight, y=moving_o)) +
 print(moveo_light)
 
 # Export plot as a jpeg file
-ggsave(filename="output/plots/2 assay raw - legs light.jpeg", 
-       legso_light, width=150, height=150, units="mm")
+ggsave(filename="output/plots/2 assay raw - move occ light.jpeg", 
+       moveo_light, width=150, height=150, units="mm")
 ```
 
 ```{r}
@@ -1473,7 +1480,7 @@ ggsave(filename="output/plots/2 assay raw - legs light.jpeg",
 moveo_process <- ggplot(data=data2, aes(x=time_processtoassay, y=moving_o)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 27AD81", fill="# 6FC8AB") + 
+              colour="#27AD81", fill="#6FC8AB") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1492,8 +1499,8 @@ moveo_process <- ggplot(data=data2, aes(x=time_processtoassay, y=moving_o)) +
 print(moveo_process)
 
 # Export plot as a jpeg file
-ggsave(filename="output/plots/2 assay raw - legs process.jpeg", 
-       legso_process, width=150, height=150, units="mm")
+ggsave(filename="output/plots/2 assay raw - move occ process.jpeg", 
+       moveo_process, width=150, height=150, units="mm")
 ```
 
 ```{r}
@@ -1501,7 +1508,7 @@ ggsave(filename="output/plots/2 assay raw - legs process.jpeg",
 legso_light <- ggplot(data=data2, aes(x=time_assaytolight, y=legs_o)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 5DC863", fill="# 93DA97") + 
+              colour="#5DC863", fill="#93DA97") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1528,7 +1535,7 @@ ggsave(filename="output/plots/2 assay raw - legs light.jpeg",
 legso_process <- ggplot(data=data2, aes(x=time_processtoassay, y=legs_o)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# AADC32", fill="# C6E876") + 
+              colour="#AADC32", fill="#C6E876") + 
   theme_minimal() + 
     theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1558,7 +1565,7 @@ ggsave(filename="output/plots/2 assay raw - legs process.jpeg",
 emergetemp <- ggplot(data=data2, aes(x=temp, y=emerge_max)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# AADC32", fill="# C6E876") + 
+              colour="#AADC32", fill="#C6E876") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -1820,7 +1827,7 @@ ed_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=emerge_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -1834,7 +1841,7 @@ ed_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=emerge_p,
                      limits=c(0, 50)) + 
   labs("") + xlab("") + 
   ylab(expression(paste("Latency to emerge (s)"))) + 
-  annotate("text", x="2", y=50, label="D", size=10, hjust=-2)
+  annotate("text", x="2", y=50, label="D", size=10, hjust=-3)
 
 # Display plot
 print(ed_plot)
@@ -1852,7 +1859,7 @@ fo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=foodo_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -1863,7 +1870,7 @@ fo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=foodo_p,
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   labs("") + xlab("") + 
   ylab(expression(paste("Food interaction \noccurrences", italic(" (n) ")))) + 
-  annotate("text", x="2", y=30, label="A", size=10, hjust=-2) + 
+  annotate("text", x="2", y=30, label="A", size=10, hjust=-2) 
 
 # Display plot
 print(fo_plot)
@@ -1881,7 +1888,7 @@ jd_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=jumpd_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -1910,7 +1917,7 @@ jo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=jumpo_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -1922,7 +1929,7 @@ jo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=jumpo_p,
   labs("") + xlab("") + 
   ylab(expression(paste("Jumping + \nclimbing occurrences ", 
                         italic(" (n) ")))) + 
-  annotate("text", x="2", y=80, label="C", size=10, hjust=-2) + 
+  annotate("text", x="2", y=80, label="C", size=10, hjust=-2) 
 
 # Display plot
 print(jo_plot)
@@ -1940,7 +1947,7 @@ po_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=percho_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -1952,9 +1959,8 @@ po_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=percho_p,
   scale_y_continuous(breaks=seq(0, 30, 10), 
                      labels=seq(0, 30, 10), 
                      limits=c(0, 30)) + 
-  labs("") + xlab("") + 
-  lab(expression(paste("Perching \noccurrences ", italic(" (n) ")))) + 
-  annotate("text", x="2", y=30, label="E", size=10, hjust=-2) + 
+  labs(x="", y=expression(paste("Perching \noccurrences ", italic(" (n) ")))) + 
+  annotate("text", x="2", y=30, label="E", size=10, hjust=-2) 
 
 # Display plot
 print(po_plot)
@@ -1972,7 +1978,7 @@ md_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=moved_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2004,7 +2010,7 @@ mo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=moveo_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2019,7 +2025,7 @@ mo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=moveo_p,
   labs("") + xlab("") + 
   ylab(expression(paste("Quadrupedal\n movement occurrences", 
                         italic(" (n) ")))) + 
-  annotate("text", x="2", y=150, label="G", size=10, hjust=-2) + 
+  annotate("text", x="2", y=150, label="G", size=10, hjust=-2)
 
 # Display plot
 print(mo_plot)
@@ -2037,7 +2043,7 @@ lo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=legso_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2051,7 +2057,7 @@ lo_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=legso_p,
                      limits=c(0, 110)) + 
   labs("") + xlab("") + 
   ylab(expression(paste("Hindleg stand \noccurrences ", italic("(n) ")))) + 
-  annotate("text", x="2", y=110, label="H", size=10, hjust=-2) + 
+  annotate("text", x="2", y=110, label="H", size=10, hjust=-2)
 
 # Display plot
 print(lo_plot)
@@ -2069,7 +2075,7 @@ act_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=totalacto_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2083,7 +2089,7 @@ act_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=totalacto_p,
                      limits=c(0, 400)) + 
   labs("") + xlab("") + 
   ylab(expression(paste("Total activity \noccurrences", italic(" (n) ")))) + 
-  annotate("text", x="2", y=400, label="I", size=10, hjust=-2) + 
+  annotate("text", x="2", y=400, label="I", size=10, hjust=-2)
 
 print(act_plot)
 
@@ -2099,7 +2105,7 @@ sum_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=sumsecto_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2131,7 +2137,7 @@ bag_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=bagstress_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2144,7 +2150,7 @@ bag_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=bagstress_p,
                      labels=seq(1, 1.5, 0.1), 
                      limits=c(0.9, 1.5)) + 
   labs("") + xlab("") + ylab("Adjusted bag\n stress rating") + 
-  annotate("text", x="2", y=1.5, label="K", size=10, hjust=-2) + 
+  annotate("text", x="2", y=1.5, label="K", size=10, hjust=-2) 
 
   
 print(bag_plot)
@@ -2161,7 +2167,7 @@ table_plot <- ggplot(data=data2_pred, aes(x=assay_number, y=tablestress_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 7E67A0", "# CDE868")) + 
+  scale_fill_manual (values=c("#7E67A0", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2311,98 +2317,95 @@ write_csv(ppdata, "output/ppdata - intercept and slope data.csv")
 # 
 mod <- lmer(i_bait_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_emerge_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_foodd_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_foodo_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_groomd_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_groomo_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_jumpd_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_jumpo_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_legsd_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_legso_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_moved_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_moveo_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_perchd_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_percho_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_sumsecto_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_totalacto_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
-
-# 
-mod <- lmer(i_trapstress_p ~ sex + body_weight_kg + study_site + 
-              cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_bagstress_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(i_tablestress_p ~ sex + body_weight_kg + study_site + 
               cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 ```
+
+NB - I did not test 'stress in trap' in the previous chunk as there was no variation between individual stress ratings. 
 
 ## Intercept tables
 
@@ -2429,9 +2432,9 @@ table
 ```{r}
 # Perching duration
 mod_pdi_site <- lmer(i_perchd_p ~ study_site + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 mod_pdi_weight <- lmer(i_perchd_p ~ sex*body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 models <- list(mod_pdi_site, mod_pdi_weight)
 model.names <- c("Study site", "Interaction of Sex and body weight kg")
 aictab(cand.set=models, modnames=model.names)
@@ -2447,7 +2450,7 @@ i_bs_site <- ggplot(data=ppdata, aes(x=study_site, y=i_bagstress_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2480,7 +2483,7 @@ i_ts_site <- ggplot(data=ppdata, aes(x=study_site, y=i_tablestress_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2513,7 +2516,7 @@ i_e_site <- ggplot(data=ppdata, aes(x=study_site, y=i_emerge_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2546,7 +2549,7 @@ i_b_site <- ggplot(data=ppdata, aes(x=study_site, y=i_bait_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2576,7 +2579,7 @@ i_gd_site <- ggplot(data=ppdata, aes(x=study_site, y=i_groomd_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2606,7 +2609,7 @@ i_ld_site <- ggplot(data=ppdata, aes(x=study_site, y=i_legsd_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2639,7 +2642,7 @@ i_jd_site <- ggplot(data=ppdata, aes(x=study_site, y=i_jumpd_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2672,7 +2675,7 @@ i_jo_site <- ggplot(data=ppdata, aes(x=study_site, y=i_jumpo_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2706,7 +2709,7 @@ i_pd_site <- ggplot(data=ppdata, aes(x=study_site, y=i_perchd_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2735,7 +2738,7 @@ i_po_site <- ggplot(data=ppdata, aes(x=study_site, y=i_percho_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2766,7 +2769,7 @@ i_md_site <- ggplot(data=ppdata, aes(x=study_site, y=i_moved_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2796,7 +2799,7 @@ i_sumsect_site <- ggplot(data=ppdata, aes(x=study_site, y=i_sumsecto_p,
   geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2830,7 +2833,7 @@ i_act_site <- ggplot(data=ppdata, aes(x=study_site, y=i_totalacto_p,
  geom_boxplot(col="grey20", fill="grey20", width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -2882,96 +2885,96 @@ Test behaviour slope (plasticity) against independent variables.
 # 
 mod <- lmer(s_bait_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_emerge_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_foodd_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_foodo_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_groomd_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_groomo_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_jumpd_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_jumpo_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_legsd_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_legso_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_moved_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_moveo_p ~ sex + body_weight_kg + study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_perchd_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_percho_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_sumsecto_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_totalacto_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_bagstress_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_trapstress_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 
 # 
 mod <- lmer(s_tablestress_p ~ sex + body_weight_kg + 
               study_site + cond_n + age_n + (1|arena), 
-            data=ppdata, na.action="na.fail")
+            data=ppdata, na.action="na.fail", REML=FALSE)
 ```
 
 ## Tables with kableExtra
@@ -2999,13 +3002,13 @@ table
 ```{r}
 # Food occ
 mod_fos_cond <- lmer(s_foodo_p ~ cond_n + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_fos_sex <- lmer(s_foodo_p ~ sex + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_fos_weight <- lmer(s_foodo_p ~ body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 models <- list(mod_fos_cond, mod_fos_sex, mod_fos_weight)
 model.names <- c("Condition", "Sex", "Body weight")
@@ -3015,16 +3018,16 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Legs occ
 mod_los_cond <- lmer(s_legso_p ~ cond_n + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_los_sex <- lmer(s_legso_p ~ sex + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_los_weight <- lmer(s_legso_p ~ body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_los_site <- lmer(s_legso_p ~ study_site + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 models <- list(mod_los_cond, mod_los_sex, mod_los_weight, mod_los_site)
 model.names <- c("Condition", "Sex", "Body weight", "Study site")
@@ -3034,13 +3037,13 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Jump occ
 mod_jos_cond <- lmer(s_jumpo_p ~ cond_n + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_jos_weight <- lmer(s_jumpo_p ~ body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_jos_site <- lmer(s_jumpo_p ~ study_site + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 models <- list(mod_jos_cond, mod_jos_weight, mod_jos_site)
 model.names <- c("Condition", "Body weight", "Study site")
@@ -3051,13 +3054,13 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Move dur
 mod_mds_cond <- lmer(s_moved_p ~ cond_n + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_mds_weight <- lmer(s_moved_p ~ body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_mds_site <- lmer(s_moved_p ~ study_site + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 models <- list(mod_mds_cond, mod_mds_weight, mod_mds_site)
 model.names <- c("Condition", "Body weight", "Study site")
@@ -3067,16 +3070,16 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Move occ
 mod_mos_cond <- lmer(s_moveo_p ~ cond_n + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_mos_weight <- lmer(s_moveo_p ~ body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_mos_site <- lmer(s_moveo_p ~ study_site + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_mos_sex <- lmer(s_moveo_p ~ sex + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 models <- list(mod_mos_cond, mod_mos_weight, mod_mos_site, mod_mos_sex)
 model.names <- c("Condition", "Body weight", "Study site", "Sex")
@@ -3086,13 +3089,13 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Table stress
 mod_tabs_cond <- lmer(s_tablestress_p ~ cond_n + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_tabs_weight <- lmer(s_tablestress_p ~ body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_tabs_site <- lmer(s_tablestress_p ~ study_site + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 models <- list(mod_tabs_cond, mod_tabs_weight, mod_tabs_site)
 model.names <- c("Condition", "Body weight", "Study site")
@@ -3102,10 +3105,10 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Sum section
 mod_sums_weight <- lmer(s_sumsecto_p ~ body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_sums_sex <- lmer(s_sumsecto_p ~ sex + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 models <- list(mod_sums_weight, mod_sums_sex)
 model.names <- c("Body weight", "Sex")
@@ -3115,13 +3118,13 @@ aictab(cand.set=models, modnames=model.names)
 ```{r}
 # Total act
 mod_tots_cond <- lmer(s_totalacto_p ~ cond_n + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_tots_weight <- lmer(s_totalacto_p ~ body_weight_kg + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 mod_tots_sex <- lmer(s_totalacto_p ~ sex + (1|arena), 
-            data=ppdata, control=control_ml, na.action="na.fail")
+            data=ppdata, control=control_ml, na.action="na.fail", REML=FALSE)
 
 models <- list(mod_tots_cond, mod_tots_weight, mod_tots_sex)
 model.names <- c("Condition", "Body weight", "Sex")
@@ -3135,7 +3138,7 @@ aictab(cand.set=models, modnames=model.names)
 food <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_foodo_p)) + 
  geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 440154", fill="# 82568D") + 
+              colour="#440154", fill="#82568D") + 
   theme_minimal() + 
     theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -3162,7 +3165,7 @@ print(food)
 legso_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_legso_p)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 472D7B", fill="# 8473A7") + 
+              colour="#472D7B", fill="#8473A7") + 
   theme_minimal() + 
     theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -3189,7 +3192,7 @@ print(legso_weight)
 legsd_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_legsd_p)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 3B528B", fill="# 7C8CB2") + 
+              colour="#3B528B", fill="#7C8CB2") + 
   theme_minimal() + 
     theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -3214,7 +3217,7 @@ print(legsd_weight)
 # Move dur v weight
 moveweight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_moved_p)) + 
   geom_point() + 
-  geom_smooth(method="lm", se=TRUE, colour="# 2C728E", fill="# 72A1B4") + 
+  geom_smooth(method="lm", se=TRUE, colour="#2C728E", fill="#72A1B4") + 
   theme_minimal() + 
     theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -3239,7 +3242,7 @@ print(moveweight)
 moveo_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_moveo_p)) + 
   geom_point() + 
   geom_smooth(method="lm", se=TRUE, 
-              colour="# 21908C", fill="# 6BB5B2") + 
+              colour="#21908C", fill="#6BB5B2") + 
   theme_minimal() + 
   theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -3265,7 +3268,7 @@ print(moveo_weight)
 # Sums sect v weight
 sum_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_sumsecto_p)) + 
   geom_point() + 
-  geom_smooth(method="lm", se=TRUE, colour="# 27AD81", fill="# 6FC8AB") + 
+  geom_smooth(method="lm", se=TRUE, colour="#27AD81", fill="#6FC8AB") + 
   theme_minimal() + 
     theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -3291,7 +3294,7 @@ sum_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_sumsecto_p)) +
 # Total act v weight
 tot_weight <- ggplot(data=ppdata, aes(x=body_weight_kg, y=s_totalacto_p)) + 
   geom_point() + 
-  geom_smooth(method="lm", se=TRUE, colour="# 5DC863", fill="# 93DA97") + 
+  geom_smooth(method="lm", se=TRUE, colour="#5DC863", fill="#93DA97") + 
   theme_minimal() + 
     theme(legend.position="right", 
         panel.grid=element_blank(), 
@@ -3334,8 +3337,13 @@ ggsave(filename="output/plots/slope - weight plots.jpeg",
 
 ```{r}
 # Assign custom numbers per site
-custom_colors <- c("Goorooyarroo"="# 2D718E", 
-                   "Mulligans Flat"="# B8DE29")
+custom_colors <- c("Goorooyarroo"="#2D718E", 
+                   "Mulligans Flat"="#B8DE29")
+
+# Create a df for using assay number as a number rather than a factor
+d2pred <- data2_pred %>%
+  mutate(assay_number = as.numeric(assay_number))
+
 ```
 
 ```{r}
@@ -3347,7 +3355,7 @@ s_fd_site <- ggplot(data=ppdata, aes(x=study_site, y=s_foodd_p,
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3408,7 +3416,7 @@ s_jd_site <- ggplot(data=ppdata, aes(x=study_site, y=s_jumpd_p,
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3466,7 +3474,7 @@ s_jo_site <- ggplot(data=ppdata, aes(x=study_site, y=s_jumpo_p,
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3529,7 +3537,7 @@ s_e_site <- ggplot(data=ppdata, aes(x=study_site, y=s_emerge_p,
   scale_y_continuous(breaks=seq(-10, 50, 10), 
                      labels=seq(-10, 50, 10), 
                      limits=c(-10, 50)) + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3587,7 +3595,7 @@ s_pd_site <- ggplot(data=ppdata, aes(x=study_site, y=s_perchd_p,
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3645,7 +3653,7 @@ s_po_site <- ggplot(data=ppdata, aes(x=study_site, y=s_percho_p,
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3702,7 +3710,7 @@ s_md_site <- ggplot(data=ppdata, aes(x=study_site, y=s_moved_p,
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") +  
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3758,7 +3766,7 @@ s_bs_site <- ggplot(data=ppdata, aes(x=study_site, y=s_bagstress_p,
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") + 
-  scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+  scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3817,7 +3825,7 @@ s_ts_site <- ggplot(data=ppdata, aes(x=study_site, y=s_tablestress_p,
   stat_summary(fun="median", geom="point", col="black", fill="white", 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", color="grey") + 
- scale_fill_manual (values=c("# 6B9BAF", "# CDE868")) + 
+ scale_fill_manual (values=c("#6B9BAF", "#CDE868")) + 
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
@@ -3888,7 +3896,7 @@ ggsave(plot, filename="output/plots/plasticity plots.jpeg",
 
 ```{r, eval=TRUE}
 # Display R version, OS, and loaded packages
-sessionInfo()
+sessionInfo() 
 ```
 
 ## Citation
@@ -3942,7 +3950,7 @@ cite <- function(rmd="analyses.Rmd")
    bold <- crayon::bold
    citation <- glue::glue(
      "\nIf you use this code, please cite the following:\n\n",
-     "{bold(glue::glue('{meta$author} ({substr(meta$date, 1, 4)})'))} {meta$title}. ",
+     "{bold(glue::glue('{meta$author} ({substr(meta$date, 1, 4)})'))} {meta$title} ",
      "Coexistence Conservation Lab, Fenner School of Environment and Society, ",
      "The Australian National University, Canberra.\n",
      "{bold('Available at:')} {meta$repo}\n",
