@@ -428,18 +428,18 @@ summary(mod)
 ## Extract table
 
 ```{r}
-# 
+# Reduce decimal points to 3 digits
 tidy_results <- tidy(mod) %>%
   mutate_if(is.numeric, ~round(., digits=3))
 
-# 
+# Format table
 table <- tidy_results %>%
   mutate(p.value=ifelse(p.value <=0.05, 
                         cell_spec(p.value, bold=TRUE), 
                         p.value)) %>%
   kbl(caption="Study site", escape=FALSE) %>%
-  kable_classic(full_width=F, html_font="Times New Roman") %>%
-  kable_styling(bootstrap_options="striped", font_size=15)
+  #kable_classic(full_width=F, html_font="Times New Roman") %>%
+  #kable_styling(bootstrap_options="striped", font_size=15)
 
 # Display table
 print(table)
@@ -453,6 +453,7 @@ age_plot  <- ggplot() +
   geom_smooth(data=data1, aes(x=age_n, y=as.numeric(site01)), 
               col=vir8, fill=vir8) + 
   annotate("text", x=1.9, y=0.95, label="a", size=8, hjust=1) + 
+  annotate("text", x=0.3, y=0.95, label=expression(italic(p) == 0.045), size=5) +
   theme_minimal() + 
   theme(panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
@@ -461,7 +462,7 @@ age_plot  <- ggplot() +
   scale_y_continuous(breaks=seq(-0.4, 1, 0.2), 
                      labels=seq(-0.4, 1, 0.2), 
                      limits=c(-0.4, 1)) + 
-  xlab("Age estimate") + ylab("Probability of capture in MF (0) or GS (1)") 
+  xlab("Age estimate (yrs)") + ylab("Probability of capture in MFWS (0) or GS (1)") 
 
 # Display plot
 print(age_plot)
@@ -473,6 +474,7 @@ weight_plot  <- ggplot() +
  geom_smooth(data=data1, aes(x=weight, y=as.numeric(site01)), 
              col=vir13, fill=vir13) + 
   annotate("text", x=1.6, y=0.95, label="b", size=8, hjust=-0.5) + 
+  annotate("text", x=0.6, y=0.95, label=expression(italic(p) == 0.031), size=5) +
   theme_minimal() + 
   theme(panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
@@ -493,6 +495,7 @@ cond_plot <- ggplot() +
   geom_smooth(data=data1, aes(x=cond_n, y=as.numeric(site01)), 
               col=vir9, fill=vir9) + 
   annotate("text", x=3.9, y=0.95, label="c", size=8, hjust=1) + 
+  annotate("text", x=2.3, y=0.95, label=expression(italic(p) == 0.041), size=5) +
   theme_minimal() + 
   theme(panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
@@ -510,7 +513,8 @@ print(cond_plot)
 ```{r}
 # Combine grooming plots
 plot <- ggarrange(age_plot, weight_plot, cond_plot, nrow=1, ncol=3)
-plot <- annotate_figure(plot, bottom=text_grob("Study site", size=20))
+plot <- annotate_figure(plot, bottom=text_grob("Demographic and morphological variables", size=20))
+plot <- annotate_figure(plot, left=text_grob("Study site", rot=90, size=20))
 
 # Display plot
 print(plot)
@@ -568,6 +572,15 @@ summary(glm(stress_bag ~ temp + moon_phase, data=data1))
 summary(glm(stress_table ~ temp + moon_phase, data=data1))
 ```
 
+## Environmental variables model extraction
+```{r}
+# Build model for extraction
+mod <- (glm(stress_table ~ temp + moon_phase, data=data1))
+
+# Summarise model
+summary(mod)
+```
+
 ## Environmental variables table
 
 ```{r}
@@ -584,7 +597,7 @@ table <- tidy_results %>%
                         p.value)) %>%
   kbl(caption=response_var, escape=FALSE) %>%
   kable_classic(full_width=F, html_font="Times New Roman") %>%
-  kable_styling(bootstrap_options="striped", font_size=12)
+  #kable_styling(bootstrap_options="striped", font_size=12)
 
 # 
 print(table)
