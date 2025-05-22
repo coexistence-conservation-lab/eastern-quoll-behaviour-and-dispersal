@@ -52,7 +52,7 @@ Here we install the [pacman](https://cran.r-project.org/web/packages/pacman/inde
 
 ```{r, eval=FALSE}
 # Manually install package
-install.packages(pacman)
+install.packages("pacman")
 ```
 
  2. Install and load other required packages using the `pacman` package.
@@ -111,7 +111,7 @@ We need a [Google API key](https://developers.google.com/maps/documentation/java
 
 If you don't have a Google API key, you will need to [set one up](https://support.google.com/googleapi/answer/6158862?hl=en), and paste it into the `input/api.txt` file. We have set up this repo so that Git will ignore this file so the key remains private and secure.
 
-```{r}
+```{r, eval=FALSE}
 # Read API key as a character string, while trimming whitespace
 api_key <- trimws(readLines("metadata/api.txt", warn=FALSE))
 
@@ -129,7 +129,7 @@ sound <- "coin"
 
 # **Map**
 
-```{r}
+```{r, eval=FALSE}
 # Read in trap site coordinates
 traps <- read_excel(raw_data, sheet="sites") %>% 
   # Standardise column names to lowercase with underscores
@@ -154,7 +154,7 @@ water <- st_read("input/shapefiles/mfgo_water_polygons.shp", quiet=TRUE) %>%
   st_transform(crs=4326)
 ```
 
-```{r}
+```{r, eval=FALSE}
 # Plot infrastructure on satellite map
 site_map <- ggmap(sat) + 
   # Goorooyarroo Sanctuary 
@@ -184,7 +184,7 @@ site_map <- ggmap(sat) +
 print(site_map)
 ```
 
-```{r}
+```{r, eval=FALSE}
 # Export plot to a jpeg file
 ggsave(site_map, filename="output/plots/site map.jpeg", 
        height=20, width=20, units="cm")
@@ -589,7 +589,7 @@ response_var <- all.vars(formula(mod))[1]
 
 # 
 tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits=3))
+  mutate_if(is.numeric, ~round(., digits=10))
 # 
 table <- tidy_results %>%
   mutate(p.value=ifelse(p.value <=0.05, 
@@ -665,7 +665,6 @@ summary(lmer(sumsect_o ~ site + sex + age_n + cond_n + weight +
 summary(lmer(totalact_o ~ site + sex + age_n + cond_n + weight + 
                (1|arena), data=data1, na.action="na.fail", REML=FALSE))
 ```
-
 
 ```{r}
 # Tables with kableExtra
@@ -2176,6 +2175,8 @@ write_csv(ppdata, "output/ppdata - intercept and slope data.csv")
 
 ## Intercept GLMMs - testing behaviour intercept (personality) against independent variables
 
+
+
 ```{r}
 # 
 summary(lmer(i_bait_p ~ sex + weight + site + cond_n + age_n + 
@@ -2234,6 +2235,71 @@ summary(lmer(i_stress_table_p ~ sex + weight + site + cond_n + age_n +
 ```
 
 NB - I did not test 'stress in trap' in the previous chunk as there was no variation between individual stress ratings. 
+
+# p value adjustment fiddling
+
+```{r}
+# Check how many sexes and sites were exposed to each arena
+ppdata %>%
+  group_by(arena) %>%
+  summarise(sex_n=n_distinct(sex), 
+            site_n=n_distinct(site), 
+            n=n()) %>%
+  arrange(sex_n)
+```
+
+```{r}
+# Prepare data
+ppdata <- ppdata %>%
+  mutate(sex=factor(sex), 
+         site=factor(site))
+
+# Define behavioural responses
+responses <- ppdata %>%
+  select(starts_with("i_"), starts_with("s_")) %>%
+  colnames()
+        
+# Define predictors
+predictors <- ppdata %>% 
+  select(age_n, weight, cond_n, sex, study_site) %>%
+  colnames()
+
+# Run lmer models across all responses
+lmer_results <- map_dfr(responses, function(beh) {
+  
+  # Build formula string
+  formula_str <- paste(beh, "~", paste(predictors, collapse=" + "))
+  
+  # Select target df
+  model_data <- ppdata %>%
+    select(all_of(c(beh, predictors))) %>%
+    drop_na()
+  
+  # Fit model only if there's enough data
+  if(nrow(model_data) >= length(predictors) + 1) {
+    model <- glm(as.formula(formula_str), data=ppdata, na.action=na.fail)
+    
+    tidy(model) %>%
+      filter(term %in% predictors) %>%
+      mutate(behaviour=beh)
+  
+  # If model fails (e.g., not enough data), return empty tibble
+  } else {tibble()}})
+
+# Apply FDR correction across all predictor-behaviour tests
+lmer_results <- lmer_results %>%
+  mutate(p_adj=p.adjust(p.value, method="BH")) %>%  # Benjamini-Hochberg 
+  mutate(significant=p_adj < 0.05) 
+
+# View top results
+lmer_results %>%
+  select(behaviour, term, estimate, p.value, p_adj, significant)
+
+
+View(lmer_results)
+```
+
+
 
 ## Intercept tables
 
