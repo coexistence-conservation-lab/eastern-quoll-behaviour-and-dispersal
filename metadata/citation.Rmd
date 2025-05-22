@@ -1,0 +1,77 @@
+---
+title: "citation"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Citation
+
+Here we define two functions to extract metadata from this repository to generate a `citation.cff` file that can then be read and exported (e.g., via [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files)). 
+
+```{r}
+# Define function to extract repo metadata
+extract_metadata <- function(rmd=main_rmd) 
+  {if (!requireNamespace("yaml", quietly=TRUE)) stop("Please install the 'yaml' package.")
+   lines <- suppressWarnings(readLines(rmd))
+   yaml_start <- which(lines=="---")[1]
+   yaml_end <- which(lines=="---")[2]
+   yaml_block <- lines[yaml_start:yaml_end]
+   meta <- yaml::yaml.load(paste(yaml_block, collapse="\n"))
+   date_iso <- tryCatch(
+     as.character(as.Date(meta$date, format="%B %d, %Y")), 
+     error=function(e) meta$date)
+   repo <- tryCatch(system("git config --get remote.origin.url", intern=TRUE),
+                    error=function(e) "")
+   repo_url <- sub("git@github.com:", "https://github.com/", repo)
+   repo_url <- sub(".git$", "", repo_url)
+   list(title=meta$title,
+        author=meta$author,
+        date=date_iso,
+        repo=repo_url,
+        license="MIT")}
+
+# Define function to write a citation.cff file
+write_cff_from_rmd <- function(rmd=main_rmd,
+                               cff_path=here::here("metadata/citation.cff")) 
+  {if (!requireNamespace("glue", quietly=TRUE)) stop("Please install the 'glue' package.")
+  meta <- extract_metadata(rmd)
+  dir.create(dirname(cff_path), showWarnings=FALSE, recursive=TRUE)
+  if (file.exists(cff_path)) file.remove(cff_path)
+  cff <- glue::glue(
+    "cff-version: 1.2.0\n",
+    "message: \"If you use this code, please cite the following.\"\n",
+    "title: \"{meta$title}\"\n",
+    "authors:\n",
+    "  - name: {meta$author}\n",
+    "date-released: {meta$date}\n",
+    "repository-code: {meta$repo}\n",
+    "license: {meta$license}\n")
+  writeLines(cff, cff_path, useBytes = TRUE)
+  message(glue::glue("{cff_path} written"))}
+
+# Define function to print the citation details
+cite <- function(rmd=main_rmd)
+  {if (!requireNamespace("crayon", quietly=TRUE)) stop("Please install the 'crayon' package.")
+   if (!requireNamespace("glue", quietly=TRUE)) stop("Please install the 'glue' package.")
+   meta <- extract_metadata(rmd)
+   bold <- crayon::bold
+   citation <- glue::glue(
+     "\nIf you use this code, please cite the following:\n\n",
+     "{bold(glue::glue('{meta$author} ({substr(meta$date, 1, 4)})'))} {meta$title}. ",
+     "Coexistence Conservation Lab, Fenner School of Environment and Society, ",
+     "The Australian National University, Canberra.\n",
+     "{bold('Available at:')} {meta$repo}\n",
+     "{bold('Date released:')} {meta$date}\n",
+     "{bold('License:')} {meta$license}\n\n",
+     "For more information, visit https://www.coexistenceconservationlab.org/")
+   cat(citation)}
+```
+
+```{r}
+# Create citation file 
+invisible(write_cff_from_rmd())
+
+# Print citation details
+cite()
+```

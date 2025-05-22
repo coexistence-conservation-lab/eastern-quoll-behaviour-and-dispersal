@@ -1,7 +1,7 @@
 ---
 title: "Ranging after reintroduction: do behavioural traits predict dispersal into new territory?"
-author: "Gee C & Wilson B" 
-date: "Apr 30, 2025"
+author: "Gee C & Wilson B A" 
+date: "May 22, 2025"
 output: 
   html_document:
     toc: true
@@ -59,44 +59,26 @@ install.packages("pacman")
 
 ```{r, results='hide', warning=FALSE, message=FALSE}
 # Install and load required packages
-pacman::p_load(beepr, broom, broom.mixed, dplyr, grid, gtools, janitor, 
-               lubridate, readxl, sjmisc, sjlabelled, 
-               tidyverse, writexl, # General functionality
-               ggplot2, ggpubr, sjPlot, scales, viridis, # Plotting
-               ggmap, sf, # Mapping
-               AICcmodavg, corrplot, kableExtra, 
-               lme4, lmerTest, MuMIn) # Modelling
+               # General functions
+pacman::p_load(beepr, broom, broom.mixed, dplyr, glue, grid, gtools, 
+               here, janitor, lubridate, openxlsx, readxl, rprojroot, 
+               sjlabelled, sjmisc, tidyverse, writexl, yaml, 
+               # Plotting
+               ggplot2, ggpubr, scales, sjPlot, viridis, 
+               # Mapping
+               ggmap, sf, sp, 
+               # Analyses
+               AICcmodavg, corrplot, kableExtra, lme4, lmerTest, MuMIn) 
 ```
 
   3. Assign custom values and global settings.
 
 ```{r}
-# Assign paths to objects
+# Define paths to objects
 raw_data <- "input/raw data.xlsx"
 processed_data <- "output/processed data.xlsx"
 
-# Assign viridis scale colours
-vir1  <- "#FDE725" 
-vir2  <- "#D8E219"
-vir3  <- "#B5DE2B" 
-vir4  <- "#90D743" 
-vir5  <- "#69CD5B" 
-vir6  <- "#42BE71" 
-vir7  <- "#27AD81" 
-vir8  <- "#1FA088" 
-vir9  <- "#2A788E" 
-vir10 <- "#3A528B" 
-vir11 <- "#443983" 
-vir12 <- "#472D7B" 
-vir13 <- "#481B6D" 
-vir14 <- "#440154" 
-
-white <- "#FFFFFF" 
-steel <- "#A9A9A9"
-grey  <- "#333333"
-black <- "#000000" 
-
-# Assign repeated values and constants to objects
+# Define repeated values and constants to objects
 # MFWS centre coordinates
 centre_lat <- -35.184396
 centre_lon <- 149.171633
@@ -105,11 +87,47 @@ centre_lon <- 149.171633
 options(scipen=100, digits=4)
 ```
 
+For consistency, here we assign steel- and viridis-scale colour codes as objects, rather than repeating the HEX codes for each of our plots.
+
+```{r}
+# Define discrete steel-scale colour codes
+white    <- "#FFFFFF" 
+mist     <- "#F0F0F0" 
+silver   <- "#E5E5E5" 
+steel    <- "#A9A9A9"
+charcoal <- "#333333"
+black    <- "#000000" 
+
+# Define discrete viridis-scale colour codes
+vir1     <- "#FDE725" # yellow 
+vir2     <- "#D8E219" # citrus 
+vir3     <- "#B5DE2B" # lime 
+vir4     <- "#90D743" # apple 
+vir5     <- "#69CD5B" # grass 
+vir6     <- "#42BE71" # mint 
+vir7     <- "#27AD81" # teal 
+vir8     <- "#1FA088" # turquoise 
+vir9     <- "#2A788E" # cyan 
+vir10    <- "#3A528B" # azure 
+vir11    <- "#443983" # indigo 
+vir12    <- "#472D7B" # violet 
+vir13    <- "#481B6D" # eggplant 
+vir14    <- "#440154" # plum 
+
+```
+
   4. Register Google API key.
 
-We need a [Google API key](https://developers.google.com/maps/documentation/javascript/get-api-key) to map our sites onto Google basemaps. 
+To use Google's basemaps in our plots, we need a [Google API key](https://developers.google.com/maps/documentation/javascript/get-api-key). If you don't have one, you will need to create one and save it to the `api.txt` file in this repo's `/metadata` folder. We have set up the repo's `.gitgnore` file so that will ignore the `api.txt` file when pushing to Git, so that your key will remain secure on your local copy. 
 
-If you don't have a Google API key, you will need to [set one up](https://support.google.com/googleapi/answer/6158862?hl=en), and paste it into the `input/api.txt` file. We have set up this repo so that Git will ignore this file so the key remains private and secure.
+To [create a Google API key](https://support.google.com/googleapi/answer/6158862?hl=en):
+
+  1. Go to Google Maps Platform [Credentials page](https://console.cloud.google.com/project/_/google/maps-apis/credentials?utm_source=Docs_CreateAPIKey&utm_content=Docs_maps-backend&_gl=1*zug43g*_ga*NjUyNDE0MDgyLjE3NDAwMTA3ODc.*_ga_NRWSTWS78N*czE3NDY2ODU4MTkkbzMkZzEkdDE3NDY2ODU4NDMkajAkbDAkaDA.)
+  2. `Create project` (e.g., "RStudio") > `No organisations` > `Create`. This will create a project, along with an API key > 
+  3. Copy `your API key` > check `Enable all Google Maps APIs for this project` > `Go to Google Maps Platform`. 
+  4. For `Protect your API key`, click `Maybe later`. Now you have an active Google Maps API key, which you can find under `Keys and credentials` in the left sidebar. 
+  5. Next, go to the RStudio `Files` pane > click the `metadata` folder > click `api.txt` > paste your new Google Maps API key here > `Save` and close.
+  6. Finally, register your API key using the code below. 
 
 ```{r, eval=FALSE}
 # Read API key as a character string, while trimming whitespace
@@ -757,7 +775,7 @@ aictab(cand.set=models, modnames=model.names)
 # Grooming duration by study site plot
 groomd_site <- ggplot(data=data1, aes(x=site, y=grooming_d, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=110, label="a", size=9, hjust=-2) + 
@@ -786,7 +804,7 @@ ggsave(filename="output/plots/1 assay/study site by grooming dur.jpeg",
 # Grooming occurrences by study site plot
 groomo_site <- ggplot(data=data1, aes(x=site, y=grooming_o, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=8, label="b", size=9, hjust=-2) + 
@@ -816,7 +834,7 @@ ggsave(filename="output/plots/1 assay/study site by grooming occ.jpeg",
 # Moving duration by study site plot
 moved_site <- ggplot(data=data1, aes(x=site, y=moving_d, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=300, label="c", size=9, hjust=-2) + 
@@ -1236,7 +1254,7 @@ aictab(cand.set=models, modnames=model.names)
 # Grooming duration by sex 
 groomdur <- ggplot(data=data2, aes(x=sex, y=grooming_d, fill=sex)) + 
   geom_boxplot() + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=black, 
              shape=21, size=1.5, stroke=1) + 
   annotate("text", x="M", y=80, label="c", size=7, hjust=-2) + 
@@ -1265,7 +1283,7 @@ ggsave(filename="output/plots/2 assays/sex by grooming.jpeg",
 # Bait eaten by age
 baitage <- ggplot(data=data2, aes(x=age, y=bait_eaten, fill=age)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=black, 
              shape=21, size=1.5, stroke=1) + 
   annotate("text", x=2, y=50, label="a", size=7, hjust=-6) + 
@@ -1292,7 +1310,7 @@ print(baitage)
 # Perhing by site
 perchocc <- ggplot(data=data2, aes(x=site, y=perch_o, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=black, 
              shape=21, size=1.5, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=60, label="b", size=7, hjust=-2) + 
@@ -1704,7 +1722,7 @@ print(table)
 # Latency to emerge
 ed_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=emerge_p, fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=50, label="d", size=7, hjust=-3) + 
@@ -1734,7 +1752,7 @@ ggsave(filename="output/plots/assay number/assay number by emerge.jpeg",
 # Food interaction occurrences
 fo_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=foodo_p, fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=30, label="a", size=7, hjust=-2) + 
@@ -1762,7 +1780,7 @@ ggsave(filename="output/plots/assay number/assay number by food occ by site.jpeg
 # Jump climb duration
 jd_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=jumpd_p, fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=200, label="b", size=7, hjust=-2) + 
@@ -1790,7 +1808,7 @@ ggsave(filename="output/plots/assay number/assay number by jump dur by site.jpeg
 # Jump climb occurrences
 jo_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=jumpo_p, fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=80, label="c", size=7, hjust=-2) + 
@@ -1818,7 +1836,7 @@ ggsave(filename="output/plots/assay number/assay number by jump occ by site.jpeg
 # Perching occurrences
 po_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=percho_p, fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   
@@ -1849,7 +1867,7 @@ ggsave(po_plot, filename="output/plots/assay number/assay number by perch occ.jp
 # Moving duration
 md_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=moved_p, fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=160, label="f", size=7, hjust=-2) + 
@@ -1880,7 +1898,7 @@ ggsave(filename="output/plots/assay number/assay number by move dur by site.jpeg
 # Moving occurrences
 mo_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=moveo_p, fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=150, label="g", size=7, hjust=-2) + 
@@ -1911,7 +1929,7 @@ ggsave(filename="output/plots/assay number/assay number by move occ by site.jpeg
 # Legs occurrences
 lo_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=legso_p, fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=110, label="h", size=7, hjust=-2) + 
@@ -1943,7 +1961,7 @@ ggsave(filename="output/plots/assay number/assay number by legs occ by site.jpeg
 act_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=totalacto_p, 
                                         fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=400, label="i", size=7, hjust=-2) + 
@@ -1973,7 +1991,7 @@ ggsave(filename="output/plots/assay number/assay number by totsect by site.jpeg"
 sum_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=sumsecto_p, 
                                         fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="2", y=80, label="j", size=7, hjust=-2) + 
@@ -2005,7 +2023,7 @@ ggsave(filename="output/plots/assay number/assay number by sum sect by site.jpeg
 bag_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=stress_bag_p, 
                                         fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   scale_fill_manual (values=c(vir12, vir6)) + 
@@ -2036,7 +2054,7 @@ ggsave(filename="output/plots/assay number/assay number by sum sect by site.jpeg
 table_plot <- ggplot(data=data2_pred, aes(x=assay_n, y=stress_table_p, 
                                           fill=assay_n)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   scale_fill_manual (values=c(vir12, vir6)) + 
@@ -2168,75 +2186,14 @@ ppdata <- ppdata[ , !duplicated(colnames(ppdata))]
 write_csv(ppdata, "output/ppdata - intercept and slope data.csv")
 ```
 
-## Analyse behaviour indicators for personality and plasticity 
+## Analyse personality and plasticity indices
 
-  1. I tested the influence of fixed (e.g., site) and random effects (e.g., arena) on behavioural responses (e.g., food interaction duration) using the `lmer()` function.
-  2. If multiple fixed effects produced significance, I performed model selection to determine which fixed effects are within delta 2 AICc.
+Here, we:
 
-## Intercept GLMMs - testing behaviour intercept (personality) against independent variables
-
-
-
-```{r}
-# 
-summary(lmer(i_bait_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_emerge_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_foodd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_foodo_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_groomd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-        
-summary(lmer(i_groomo_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_jumpd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_jumpo_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_legsd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_legso_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_moved_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_moveo_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_perchd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_percho_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_sumsecto_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_totalacto_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_stress_bag_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(i_stress_table_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-```
-
-NB - I did not test 'stress in trap' in the previous chunk as there was no variation between individual stress ratings. 
-
-# p value adjustment fiddling
+  1. Tested the influence of predictors (e.g., site) on behavioural responses (e.g., food interaction duration).
+      - Since one of the arenas only tested individuals of one sex, we could not include `arena` as a random variable in our models.
+      - We did not test `stress in trap` since there was no variation between individuals for this response. 
+  2. If multiple fixed effects produced significance, we performed model selection to determine which predictors were <△2 AICc.
 
 ```{r}
 # Check how many sexes and sites were exposed to each arena
@@ -2248,80 +2205,137 @@ ppdata %>%
   arrange(sex_n)
 ```
 
+Next, we used the False Discovery Rate (FDR) approach to account for our multiple hypothesis testing by controlling the **expected proportion of false positives** among the results we declared as significant. This involved:
+
+  1. Calculating *p*-values for each test
+  2. Ordering those *p*-values from smallest to largest
+  3. Applying an FDR control procedure to determine which *p*-values are statistically significant
+      - We used the Benjamini–Hochberg method (`BH`, [Benjamini & Hochberg 1995](https://doi.org/10.1111/j.2517-6161.1995.tb02031.x)) to set FDR = 0.05, meaning that on average, no more than 5% of the declared significant results are expected to be false positives. Note that this procedure doesn’t calculate a single adjusted alpha but rather compares each *p*-value to a threshold that increases with rank.
+  4. Declaring as significant those tests with *p*-values below the adjusted threshold (i.e., alpha)
+
+First, we prepare our input data for the GLMs.
+
 ```{r}
-# Prepare data
+# Convert categorical predictors to factors
 ppdata <- ppdata %>%
   mutate(sex=factor(sex), 
-         site=factor(site))
+         site=factor(site)) 
 
 # Define behavioural responses
 responses <- ppdata %>%
   select(starts_with("i_"), starts_with("s_")) %>%
   colnames()
-        
+
 # Define predictors
 predictors <- ppdata %>% 
-  select(age_n, weight, cond_n, sex, study_site) %>%
+  select(age_n, weight, cond_n, sex, site) %>%
   colnames()
 
-# Run lmer models across all responses
-lmer_results <- map_dfr(responses, function(beh) {
-  
-  # Build formula string
-  formula_str <- paste(beh, "~", paste(predictors, collapse=" + "))
-  
-  # Select target df
-  model_data <- ppdata %>%
-    select(all_of(c(beh, predictors))) %>%
-    drop_na()
-  
-  # Fit model only if there's enough data
-  if(nrow(model_data) >= length(predictors) + 1) {
-    model <- glm(as.formula(formula_str), data=ppdata, na.action=na.fail)
-    
-    tidy(model) %>%
-      filter(term %in% predictors) %>%
-      mutate(behaviour=beh)
-  
-  # If model fails (e.g., not enough data), return empty tibble
-  } else {tibble()}})
+# Load a table for renaming variables
+rename_table <- read_excel(raw_data, sheet="variables") %>%
+  select(Code, Description)
 
-# Apply FDR correction across all predictor-behaviour tests
-lmer_results <- lmer_results %>%
-  mutate(p_adj=p.adjust(p.value, method="BH")) %>%  # Benjamini-Hochberg 
-  mutate(significant=p_adj < 0.05) 
-
-# View top results
-lmer_results %>%
-  select(behaviour, term, estimate, p.value, p_adj, significant)
-
-
-View(lmer_results)
+# Extract desired order for response labels
+response_order <- rename_table %>%
+  filter(str_detect(Code, "^i_|^s_")) %>%
+  distinct(Description) %>%
+  pull()
 ```
 
-
-
-## Intercept tables
+Here we fitted our GLMs using a loop, and generated a model table including `response` (behaviour), `predictor`, `estimate` (coefficient of predictor), standard error (`SE`), `t-statistic` (`estimate`/`SE`), and `p-value`
 
 ```{r}
-# 
-response_var <- all.vars(formula(mod))[1]
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits=3))
-
-# 
-table <- tidy_results %>%
-  mutate(p.value=ifelse(p.value <=0.05, 
-                        cell_spec(p.value, bold=TRUE), 
-                        p.value)) %>%
-  kbl(caption=response_var, escape=FALSE) %>%
-  kable_classic(full_width=F)
-
-# 
-print(table)
+# Fit GLMs, extract summaries, and annotate with response variable
+glm_results <- map_dfr(responses, function(beh) {
+  
+  # Subset input data to response and predictors
+  model_data <- ppdata %>%
+    select(all_of(c(beh, predictors))) %>% 
+    # Exclude rows with missing values
+    drop_na()
+  
+  # Only fit model if enough complete rows
+  if(nrow(model_data) >= length(predictors) + 1) {
+    glm(as.formula(paste(beh, "~", paste(predictors, collapse=" + "))),
+        data=model_data, na.action=na.fail) %>%
+      tidy() %>%
+      mutate(behaviour=beh)} 
+  else tibble()}) %>%
+  
+  # Adjust p-values using Benjamini-Hochberg
+  mutate(p_adj=p.adjust(p.value, method="BH")) %>%
+  # Round all numeric columns to 3 decimal places
+  mutate(across(where(is.numeric), ~round(.x, 3))) %>%
+  # Flag statistically significant results
+  mutate(significant=p_adj < 0.05) %>%
+  # Clean `term` column for consistent joining with predictor codes
+  mutate(term_clean=case_when(
+    term == "(Intercept)"    ~ "(Intercept)",
+    str_starts(term, "sex")  ~ "sex",
+    str_starts(term, "site") ~ "site",
+    TRUE                     ~ term)) %>%
+  
+  # Join to readable predictor labels
+  left_join(rename_table, by=c("term_clean"="Code")) %>%
+  rename(Predictor_raw=Description) %>%
+  
+  # Format contrast predictors with sublabels
+  mutate(Predictor=case_when(
+    term == "(Intercept)"    ~ "Intercept",
+    str_starts(term, "sex")  ~ paste0("Sex (", str_remove(term, "sex"), ")"),
+    str_starts(term, "site") ~ paste0("Site (", str_remove(term, "site"), ")"),
+    TRUE                     ~ Predictor_raw)) %>%
+  
+  # Join to readable response labels
+  left_join(rename_table, by=c("behaviour"="Code")) %>%
+  rename(Response=Description)
 ```
 
-## Intercept AICc model selection
+Here we tidy the GLM results into an easily interpretable model table.
+
+```{r}
+# Format table content and arrange in response order
+glm_prep <- glm_results %>%
+  # Force factor levels for correct response ordering
+  mutate(Response=factor(Response, levels=response_order)) %>%
+  # Bold significant p-values
+  mutate(p=ifelse(p.value <= 0.05, cell_spec(p.value, bold=TRUE), p.value),
+         p_adj=ifelse(p_adj <= 0.05, cell_spec(p_adj, bold=TRUE), p_adj)) %>%
+  # Select and rename final columns
+  select(Response, Predictor, Estimate=estimate, SE=std.error, 
+         t=statistic, p, `p-adjusted`=p_adj) %>%
+  # Sort by response for grouped display
+  arrange(Response)
+
+# Count number of rows per response for grouping
+row_counts <- glm_prep %>%
+  count(Response, name="n") %>%
+  drop_na() %>%
+  deframe()
+
+# Compile model output table
+glm_table <- glm_prep %>%
+  # Blank repeated response values for cleaner layout
+  mutate(Response="") %>%
+  ungroup() %>%
+  
+  # Format table using kableExtra
+  kbl(escape=FALSE,
+      caption="<b>GLMs testing intercept and slope coefficients</b>",
+      col.names=c("<b>Response</b>", "<b>Predictor</b>", "<b>Estimate</b>",
+                  "<b>SE</b>", "<b><i>t</i></b>", "<b><i>p</i></b>", 
+                  "<b><i>p</i>-adjusted</b>"), 
+      # Align columns as desired
+      align=c("l", "l", "r", "r", "r", "r", "r")) %>%
+  kable_classic(full_width=FALSE) %>%
+  # Group rows using response blocks
+  pack_rows(index=row_counts)
+
+# Display table
+print(glm_table)
+```
+
+### Model selection
 
 ```{r}
 # Perching duration
@@ -2346,7 +2360,7 @@ aictab(cand.set=models, modnames=model.names)
 # Bag stress
 i_bs_site <- ggplot(data=ppdata, aes(x=site, y=i_stress_bag_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=1.3, label="a", size=7, hjust=-2) + 
@@ -2376,7 +2390,7 @@ ggsave(filename="output/plots/intercept/study site by bag stress.jpeg",
 # Table stress
 i_ts_site <- ggplot(data=ppdata, aes(x=site, y=i_stress_table_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=1.3, label="b", size=7, hjust=-2) + 
@@ -2406,7 +2420,7 @@ ggsave(filename="output/plots/intercept/study site by table stress.jpeg",
 # Latency to emerge
 i_e_site <- ggplot(data=ppdata, aes(x=site, y=i_emerge_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=50, label="c", size=7, hjust=-2) + 
@@ -2436,7 +2450,7 @@ ggsave(filename="output/plots/intercept/study site by latency to emerge.jpeg",
 # Hind legs duration
 i_ld_site <- ggplot(data=ppdata, aes(x=site, y=i_legsd_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=300, label="d", size=7, hjust=-2) + 
@@ -2467,7 +2481,7 @@ ggsave(filename="output/plots/intercept/study site by legs dur.jpeg",
 # Groom duration
 i_gd_site <- ggplot(data=ppdata, aes(x=site, y=i_groomd_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=25, label="e", size=7, hjust=-2) + 
@@ -2494,7 +2508,7 @@ ggsave(filename="output/plots/intercept/study site by grooming dur.jpeg",
 # Bait eaten
 i_b_site <- ggplot(data=ppdata, aes(x=site, y=i_bait_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=20, label="f", size=7, hjust=-2) + 
@@ -2521,7 +2535,7 @@ ggsave(filename="output/plots/intercept/study site by bait.jpeg",
 # Jump/climb duration
 i_jd_site <- ggplot(data=ppdata, aes(x=site, y=i_jumpd_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=220, label="g", size=7, hjust=-2) + 
@@ -2552,7 +2566,7 @@ ggsave(filename="output/plots/intercept/study site by jumpclimb dur.jpeg",
 # Jump/climb occurrences
 i_jo_site <- ggplot(data=ppdata, aes(x=site, y=i_jumpo_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=90, label="h", size=7, hjust=-2) + 
@@ -2584,7 +2598,7 @@ ggsave(filename="output/plots/intercept/study site by jumpclimb occ.jpeg",
 # Move duration
 i_md_site <- ggplot(data=ppdata, aes(x=site, y=i_moved_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=160, label="i", size=7, hjust=-2) + 
@@ -2612,7 +2626,7 @@ ggsave(filename="output/plots/intercept/study site by move dur.jpeg",
 # Perch duration
 i_pd_site <- ggplot(data=ppdata, aes(x=site, y=i_perchd_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=300, label="j", size=7, hjust=-2) + 
@@ -2640,7 +2654,7 @@ ggsave(filename="output/plots/intercept/study site by perch dur.jpeg",
 # Perch occurrences
 i_po_site <- ggplot(data=ppdata, aes(x=site, y=i_percho_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=30, label="k", size=7, hjust=-2) + 
@@ -2669,7 +2683,7 @@ ggsave(filename="output/plots/intercept/study site by perch occ.jpeg",
 # Sum of section visits
 i_sumsect_site <- ggplot(data=ppdata, aes(x=site, y=i_sumsecto_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=70, label="l", size=9, hjust=-2) + 
@@ -2701,7 +2715,7 @@ ggsave(filename="output/plots/intercept/study site by sum sections.jpeg",
 # Total activity occurrences
 i_act_site <- ggplot(data=ppdata, aes(x=site, y=i_totalacto_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   annotate("text", x="Mulligans Flat", y=350, label="m", size=9, hjust=-2) + 
@@ -3216,7 +3230,7 @@ d2pred <- data2_pred %>%
 # Food interaction dur violin
 s_fd_site <- ggplot(data=ppdata, aes(x=site, y=s_foodd_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) +  
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
@@ -3271,7 +3285,7 @@ print(food)
 # Jump + climb dur violin
 s_jd_site <- ggplot(data=ppdata, aes(x=site, y=s_jumpd_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
@@ -3323,7 +3337,7 @@ print(jump)
 # Jump + climb occurrences violin
 s_jo_site <- ggplot(data=ppdata, aes(x=site, y=s_jumpo_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
@@ -3378,7 +3392,7 @@ print(jump2)
 # Latency to emerge violin
 s_e_site <- ggplot(data=ppdata, aes(x=site, y=s_emerge_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
@@ -3433,7 +3447,7 @@ print(emerge)
 # Perching duration violin
 s_pd_site <- ggplot(data=ppdata, aes(x=site, y=s_perchd_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) +  
@@ -3486,7 +3500,7 @@ print(perch)
 # Perching occurrences violin
 s_po_site <- ggplot(data=ppdata, aes(x=site, y=s_percho_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) +  
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
@@ -3537,7 +3551,7 @@ print(perch2)
 # Movement duration by site
 s_md_site <- ggplot(data=ppdata, aes(x=site, y=s_moved_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
@@ -3588,7 +3602,7 @@ print(move)
 # Bag stress rating violin
 s_bs_site <- ggplot(data=ppdata, aes(x=site, y=s_stress_bag_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) + 
@@ -3641,7 +3655,7 @@ print(bag)
 # Table stress site violin
 s_ts_site <- ggplot(data=ppdata, aes(x=site, y=s_stress_table_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
-  geom_boxplot(col=grey, fill=grey, width=0.02, lwd=0.5) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
   geom_hline(yintercept=0, linetype="dashed", col=steel) + 
@@ -3702,78 +3716,15 @@ ggsave(plot, filename="output/plots/slope/combined slope plots.jpeg",
        height=700, width=450, units="mm")
 ```
 
-# **Reproducibility and citation**
-
-## Session information
+# **Session information**
 
 ```{r, eval=TRUE}
 # Display R version, OS, and loaded packages
-sessionInfo() 
+sessionInfo()
 ```
 
-## Citation
-
-Finally, we define functions to extract metadata from this repository to generate a `citation.cff` file that can then be read and exported (e.g., via [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files)). 
-
-```{r, eval=TRUE}
-# Define function to extract repo metadata
-extract_metadata <- function(rmd="analyses.Rmd") 
-  {if (!requireNamespace("yaml", quietly=TRUE)) stop("Please install the 'yaml' package.")
-   lines <- suppressWarnings(readLines(rmd))
-   yaml_start <- which(lines=="---")[1]
-   yaml_end <- which(lines=="---")[2]
-   yaml_block <- lines[yaml_start:yaml_end]
-   meta <- yaml::yaml.load(paste(yaml_block, collapse="\n"))
-   date_iso <- tryCatch(
-     as.character(as.Date(meta$date, format="%B %d, %Y")), 
-     error=function(e) meta$date)
-   repo <- tryCatch(system("git config --get remote.origin.url", intern=TRUE),
-                    error=function(e) "")
-   repo_url <- sub("git@github.com:", "https://github.com/", repo)
-   repo_url <- sub(".git$", "", repo_url)
-   list(title=meta$title,
-        author=meta$author,
-        date=date_iso,
-        repo=repo_url,
-        license="MIT")}
-
-# Define function to write a citation.cff file
-write_cff_from_rmd <- function(rmd="analyses.Rmd", 
-                               cff_path="metadata/citation.cff") 
-  {if (!requireNamespace("glue", quietly=TRUE)) stop("Please install the 'glue' package.")
-   meta <- extract_metadata(rmd)
-   cff <- glue::glue(
-     "cff-version: 1.2.0\n",
-     "message: \"If you use this code, please cite the following.\"\n",
-     "title: \"{meta$title}\"\n",
-     "authors:\n",
-     "  - name: {meta$author}\n",
-     "date-released: {meta$date}\n",
-     "repository-code: {meta$repo}\n",
-     "license: {meta$license}\n")
-   writeLines(cff, cff_path)
-   message(glue::glue("{cff_path} written"))}
-
-# Define function to print the citation details
-cite <- function(rmd="analyses.Rmd") 
-  {if (!requireNamespace("crayon", quietly=TRUE)) stop("Please install the 'crayon' package.")
-   if (!requireNamespace("glue", quietly=TRUE)) stop("Please install the 'glue' package.")
-   meta <- extract_metadata(rmd)
-   bold <- crayon::bold
-   citation <- glue::glue(
-     "\nIf you use this code, please cite the following:\n\n",
-     "{bold(glue::glue('{meta$author} ({substr(meta$date, 1, 4)})'))} {meta$title} ",
-     "Coexistence Conservation Lab, Fenner School of Environment and Society, ",
-     "The Australian National University, Canberra.\n",
-     "{bold('Available at:')} {meta$repo}\n",
-     "{bold('Date released:')} {meta$date}\n",
-     "{bold('License:')} {meta$license}\n\n",
-     "For more information, visit https://www.coexistenceconservationlab.org/")
-   cat(citation)}
-
-# Create citation file quietly
-invisible(write_cff_from_rmd())
-
-# Print citation details
-cite()
+```{r, include=FALSE}
+# Creates a citation.cff file for your analyses in the metadata folder
+params <- list(main_rmd=here::here("analyses.Rmd"))
+knitr::knit_child("metadata/citation.Rmd", envir=list2env(params))
 ```
