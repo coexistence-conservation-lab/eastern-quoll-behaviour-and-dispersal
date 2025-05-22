@@ -400,7 +400,7 @@ dev.off()
 
 # **Single assays**
 
-I created a data subset to test the demographic, morphometric and behavioural variables for the first assay for all 36 individual eastern quolls. 
+We created a data subset to test the demographic, morphometric and behavioural variables for the first assay for all 36 individual eastern quolls. 
 
 Subset data to include first assays only.
 
@@ -972,7 +972,7 @@ ggsave(filename="output/plots/1 assay/emerge plots.jpeg",
 
 # **Multiple assays**
 
-I created a data subset to test the behavioural variables over multiple assays for 17 individual eastern quolls. 
+We created a data subset to test the behavioural variables over multiple assays for 17 individual eastern quolls. 
 
 ## Subset to animals with repeated assays
 
@@ -1123,7 +1123,7 @@ summary(lmer(totalact_o ~ site + sex + age_n + cond_n + weight +
                (1|arena), data=data2, na.action="na.fail", REML=FALSE))
 ```
 
-NB - I did not test 'stress in trap' in the previous chunk as there was no variation between individual stress ratings. 
+NB - We did not test 'stress in trap' in the previous chunk as there was no variation between individual stress ratings. 
 
 Generate model tables.
 
@@ -1605,7 +1605,7 @@ ggsave(filename="output/plots/2 assays/fixed effects.jpeg",
 
 ## Environmental vars data mutate
 
-I minimised environmental influence on the behaviour models by standardising their values: the means of the environmental variables were all scaled to zero, and the standard deviation to one, as in Wilson *et al*. (2022).
+We minimised environmental influence on the behaviour models by standardising their values: the means of the environmental variables were all scaled to zero, and the standard deviation to one, as in Wilson *et al*. (2022).
 
 ```{r}
 # Mutating the environmental variables 
@@ -1624,7 +1624,7 @@ write.csv(data2_mutate,
 
 ## Adjusted behaviour variables - extracting values
 
-I fitted GLMs of the adjusted behaviours against assay number and the standardised environmental variables, and at the same time, I extracted intercept (‘personality’ measure) and slope (‘plasticity’ measure) coefficients for each behavioural variable. 
+We fitted GLMs of the adjusted behaviours against assay number and the standardised environmental variables, and at the same time, we extracted intercept (‘personality’ measure) and slope (‘plasticity’ measure) coefficients for each behavioural variable. 
 
 ```{r}
 # Define names for raw variables and corresponding predicted variables
@@ -2099,7 +2099,7 @@ ggsave(filename="output/plots/2 assays/activity by assay number.jpeg",
 
 # **Personality and plasticity**
 
-I created data frame for personality and plasticity analysis with individual eastern quoll demographic and morphological traits.  
+We created data frame for personality and plasticity analysis with individual eastern quoll demographic and morphological traits.  
 
 ```{r}
 # 
@@ -2128,7 +2128,7 @@ write.csv(quoll2, "output/quoll2.csv")
 
 ## Intercept and slope 
 
-Using the adjusted values I fitted models to extract the intercept (personality) and slope (plasticity) over multiple assays. 
+Using the adjusted values we fitted models to extract the intercept (personality) and slope (plasticity) over multiple assays. 
 
 ```{r}
 # Create a list of dependent behavioural variables
