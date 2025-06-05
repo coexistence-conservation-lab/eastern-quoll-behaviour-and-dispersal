@@ -2203,6 +2203,10 @@ ppdata %>%
             site_n=n_distinct(site), 
             n=n()) %>%
   arrange(sex_n)
+
+view(ppdata)
+view(data2_pred)
+
 ```
 
 Next, we used the False Discovery Rate (FDR) approach to account for our multiple hypothesis testing by controlling the **expected proportion of false positives** among the results we declared as significant. This involved:
@@ -2335,13 +2339,31 @@ glm_table <- glm_prep %>%
 print(glm_table)
 ```
 
-### Model selection
+## Model selection
 
 We tested competing models using Akaike Information Criteria, corrected for small samples sizes model selection test. 
 
+
+```{r}
+# MOdel selection for slope of occurrences of jumping
+mod_jos_site <- lmer(s_jumpo_p ~ site + (1|arena), data=ppdata, 
+                     control=control_ml, na.action="na.fail", REML=FALSE)
+
+mod_jos_weight <- lmer(s_jumpo_p ~ sex*weight + (1|arena), data=ppdata, 
+                       control=control_ml, na.action="na.fail", REML=FALSE)
+# 
+models <- list(mod_jos_site, mod_jos_weight)
+
+# 
+model.names <- c("Study site", "Interaction of Sex and body weight kg")
+
+# Model selection
+aictab(cand.set=models, modnames=model.names)
+```
+
 ```{r}
 
-# Hind legs occurrences slope
+# Model selection for slope of duration spent on hind legs
 mod_los_site <- lmer(s_legso_p ~ site + (1|arena), data=ppdata, 
                      control=control_ml, na.action="na.fail", REML=FALSE)
 
@@ -2358,127 +2380,16 @@ aictab(cand.set=models, modnames=model.names)
 
 ```
 
-```{r}
-# Jumping occurrences slope
-mod_jos_site <- lmer(s_jumpo_p ~ site + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_jos_weight <- lmer(s_jumpo_p ~ sex*weight + (1|arena), data=ppdata, 
-                       control=control_ml, na.action="na.fail", REML=FALSE)
-# 
-models <- list(mod_jos_site, mod_jos_weight)
-
-# 
-model.names <- c("Study site", "Interaction of Sex and body weight kg")
-
-# Model selection
-aictab(cand.set=models, modnames=model.names)
-```
-
-
 ## Intercept plots
 
-```{r}
-# Bag stress
-i_bs_site <- ggplot(data=ppdata, aes(x=site, y=i_stress_bag_p, fill=site)) + 
-  geom_violin(alpha=0.8) + 
-  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
-  stat_summary(fun="median", geom="point", col=black, fill=white, 
-               shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=1.3, label="a", size=7, hjust=-2) + 
-  annotate("text", x=0.9, y=1.3, label=expression(italic(p) == "<0.001"), size=5) +
-theme_minimal() + 
-  theme(legend.position="none", 
-        panel.grid=element_blank(), 
-        axis.line.x=element_line(colour=steel), 
-        axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
-        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
-  scale_fill_manual (values=c(vir3, vir9)) + 
-  scale_y_continuous(breaks=seq(0.9, 1.3, 0.1), 
-                     labels=seq(0.9, 1.3, 0.1), 
-                     limits=c(0.9, 1.3)) + 
-  labs("") + xlab("") + ylab("Adjusted bag stress \nrating intercept") 
-
-# Display plot
-print(i_bs_site)
-
-# Export plot as a jpeg file
-ggsave(filename="output/plots/intercept/study site by bag stress.jpeg", 
-       i_bs_site, width=200, height=150, units="mm")
-```
 
 ```{r}
-# Table stress
-i_ts_site <- ggplot(data=ppdata, aes(x=site, y=i_stress_table_p, fill=site)) + 
-  geom_violin(alpha=0.8) + 
-  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
-  stat_summary(fun="median", geom="point", col=black, fill=white, 
-               shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=1.3, label="b", size=7, hjust=-2) + 
-  annotate("text", x=0.9, y=1.3, label=expression(italic(p) == "<0.001"), size=5) +
-  theme_minimal() + 
-  theme(legend.position="none", 
-        panel.grid=element_blank(), 
-        axis.line.x=element_line(colour=steel), 
-        axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
-        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
-  scale_fill_manual (values=c(vir3, vir9)) + 
-  scale_y_continuous(breaks=seq(0.9, 1.3, 0.1), 
-                     labels=seq(0.9, 1.3, 0.1), 
-                     limits=c(0.9, 1.3)) + 
-  labs("") + xlab("") + ylab("Adjusted table stress \nrating intercept") 
-
-# Display plot
-print(i_ts_site)
-
-# Export plot as a jpeg file
-ggsave(filename="output/plots/intercept/study site by table stress.jpeg", 
-       i_ts_site, width=200, height=150, units="mm")
-```
-
-```{r}
-# Latency to emerge
-i_e_site <- ggplot(data=ppdata, aes(x=site, y=i_emerge_p, fill=site)) + 
-  geom_violin(alpha=0.8) + 
-  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
-  stat_summary(fun="median", geom="point", col=black, fill=white, 
-               shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=50, label="c", size=7, hjust=-2) + 
-  annotate("text", x=0.9, y=50, label=expression(italic(p) == "<0.001"), size=5) +
-  theme_minimal() + 
-  theme(legend.position="none", 
-        panel.grid=element_blank(), 
-        axis.line.x=element_line(colour=steel), 
-        axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
-        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
-  scale_fill_manual (values=c(vir3, vir9)) + 
-  scale_y_continuous(breaks=seq(0, 50, 10), 
-                     labels=seq(0, 50, 10), 
-                     limits=c(0, 50)) + 
-  labs("") + xlab("") + ylab("Adjusted latency \nto emerge (s) intercept") 
-
-# Display plot
-print(i_e_site)
-
-# Export plot as a jpeg file
-ggsave(filename="output/plots/intercept/study site by latency to emerge.jpeg", 
-       i_e_site, width=200, height=150, units="mm")
-```
-
-```{r}
-# Sum of section visits
+# Sum of section visits (standalone plot)
 i_sumsect_site <- ggplot(data=ppdata, aes(x=site, y=i_sumsecto_p, fill=site)) + 
   geom_violin(alpha=0.8) + 
   geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=70, label="d", size=9, hjust=-2) + 
   annotate("text", x=0.9, y=70, label=expression(italic(p) == 0.005), size=5) +
   theme_minimal() + 
   theme(legend.position="none", 
@@ -2492,7 +2403,7 @@ i_sumsect_site <- ggplot(data=ppdata, aes(x=site, y=i_sumsecto_p, fill=site)) +
   scale_y_continuous(breaks=seq(30, 70, 10), 
                      labels=seq(30, 70, 10), 
                      limits=c(30, 70)) + 
-  xlab("") +
+  xlab("Study site") +
   ylab(expression(paste("Adjusted total arena \nsection visits intercept ", 
                         italic("(n)")))) 
 
@@ -2504,6 +2415,108 @@ ggsave(filename="output/plots/intercept/study site by sum sections.jpeg",
        i_sumsect_site, width=200, height=150, units="mm")
 ```
 
+
+```{r}
+# Bag stress
+i_bs_site <- ggplot(data=ppdata, aes(x=site, y=i_stress_bag_p, fill=site)) + 
+  geom_violin(alpha=0.8) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
+  stat_summary(fun="median", geom="point", col=black, fill=white, 
+               shape=21, size=3, stroke=1) + 
+  annotate("text", x="Mulligans Flat", y=1.3, label="a", size=10, hjust=-2) + 
+  annotate("text", x=1, y=1.3, label=expression(italic(p) == "<0.001"), size=8) +
+theme_minimal() + 
+  theme(legend.position="none", 
+        panel.grid=element_blank(), 
+        axis.line.x=element_line(colour=steel), 
+        axis.line.y=element_line(colour=steel), 
+        #axis.text.x=element_text(size=18),
+        axis.text.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20),
+        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
+  scale_fill_manual (values=c(vir3, vir9)) + 
+  #scale_x_discrete(labels=c("Goorooyarroo"="GS", "Mulligans Flat"="MFWS")) +
+scale_y_continuous(breaks=seq(0.9, 1.3, 0.1), 
+                     labels=seq(0.9, 1.3, 0.1), 
+                     limits=c(0.9, 1.3)) + 
+  labs("") + xlab("") + ylab("Bag stress rating") 
+
+# Display plot
+print(i_bs_site)
+
+# Export plot as a jpeg file
+ggsave(filename="output/plots/intercept/study site by bag stress.jpeg", 
+       i_bs_site, width=100, height=100, units="mm")
+```
+
+```{r}
+# Table stress
+i_ts_site <- ggplot(data=ppdata, aes(x=site, y=i_stress_table_p, fill=site)) + 
+  geom_violin(alpha=0.8) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
+  stat_summary(fun="median", geom="point", col=black, fill=white, 
+               shape=21, size=3, stroke=1) + 
+  annotate("text", x="Mulligans Flat", y=1.3, label="b", size=10, hjust=-2) + 
+  annotate("text", x=0.9, y=1.3, label=expression(italic(p) == "<0.001"), size=8) +
+  theme_minimal() + 
+  theme(legend.position="none", 
+        panel.grid=element_blank(), 
+        axis.line.x=element_line(colour=steel), 
+        axis.line.y=element_line(colour=steel), 
+        #axis.text.x=element_text(size=18),
+        axis.text.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20),
+        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
+  scale_fill_manual (values=c(vir3, vir9)) + 
+  scale_y_continuous(breaks=seq(0.9, 1.3, 0.1), 
+                     labels=seq(0.9, 1.3, 0.1), 
+                     limits=c(0.9, 1.3)) + 
+  labs("") + xlab("") + ylab("Table stress rating") 
+
+
+# Display plot
+print(i_ts_site)
+
+# Export plot as a jpeg file
+ggsave(filename="output/plots/intercept/study site by table stress.jpeg", 
+       i_ts_site, width=100, height=100, units="mm")
+```
+
+```{r}
+# Latency to emerge
+i_e_site <- ggplot(data=ppdata, aes(x=site, y=i_emerge_p, fill=site)) + 
+  geom_violin(alpha=0.8) + 
+  geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
+  stat_summary(fun="median", geom="point", col=black, fill=white, 
+               shape=21, size=3, stroke=1) + 
+  annotate("text", x="Mulligans Flat", y=50, label="c", size=10, hjust=-2) + 
+  annotate("text", x=0.9, y=50, label=expression(italic(p) == "<0.001"), size=8) +
+  theme_minimal() + 
+  theme(legend.position="none", 
+        panel.grid=element_blank(), 
+        axis.line.x=element_line(colour=steel), 
+        axis.line.y=element_line(colour=steel), 
+        #axis.text.x=element_text(size=18),
+        axis.text.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20),  
+        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
+  scale_fill_manual (values=c(vir3, vir9)) + 
+  scale_y_continuous(breaks=seq(0, 50, 10), 
+                     labels=seq(0, 50, 10), 
+                     limits=c(0, 50)) + 
+  labs("") + xlab("") + ylab("Latency to emerge (s)") 
+
+# Display plot
+print(i_e_site)
+
+# Export plot as a jpeg file
+ggsave(filename="output/plots/intercept/study site by latency to emerge.jpeg", 
+       i_e_site, width=200, height=150, units="mm")
+```
+
 ```{r}
 # Move duration
 i_md_site <- ggplot(data=ppdata, aes(x=site, y=i_moved_p, fill=site)) + 
@@ -2511,19 +2524,23 @@ i_md_site <- ggplot(data=ppdata, aes(x=site, y=i_moved_p, fill=site)) +
   geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=160, label="e", size=7, hjust=-2) + 
-  annotate("text", x=0.9, y=170, label=expression(italic(p) == 0.017), size=5) +
+  annotate("text", x="Mulligans Flat", y=200, label="d", size=10, hjust=-2) + 
+  annotate("text", x=0.9, y=200, label=expression(italic(p) == 0.017), size=8) +
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
         axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
+        axis.text.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20), 
         plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
   scale_fill_manual (values=c(vir3, vir9)) + 
+  scale_y_continuous(breaks=seq(50, 200, 50), 
+                     labels=seq(50, 200, 50), 
+                     limits=c(50, 200)) + 
   labs("") + xlab("") + 
-  ylab("Adjusted quadrupedal movement\n duration intercept  (s)") 
+  ylab("Quadrupedal movement duration (s)") 
 
 # Display plot
 print(i_md_site)
@@ -2541,22 +2558,23 @@ i_ld_site <- ggplot(data=ppdata, aes(x=site, y=i_legsd_p, fill=site)) +
   geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=300, label="f", size=7, hjust=-2) + 
-  annotate("text", x=0.9, y=300, label=expression(italic(p) == "<0.001"), size=5) +
+  annotate("text", x="Mulligans Flat", y=300, label="e", size=10, hjust=-2) + 
+  annotate("text", x=0.9, y=300, label=expression(italic(p) == "<0.001"), size=8) +
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
         axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
+        axis.text.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20), 
         plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
-  scale_y_continuous(breaks=seq(100, 300, 100), 
-                     labels=seq(100, 300, 100), 
+  scale_y_continuous(breaks=seq(100, 300, 50), 
+                     labels=seq(100, 300, 50), 
                      limits=c(100, 300)) + 
   scale_fill_manual (values=c(vir3, vir9)) + 
   labs("") + xlab("") +
-  ylab("Adjusted hindleg stands \nduration (s) intercept") 
+  ylab("Hindleg stands duration (s)") 
 
 # Display plot
 print(i_ld_site)
@@ -2574,23 +2592,23 @@ i_jo_site <- ggplot(data=ppdata, aes(x=site, y=i_jumpo_p, fill=site)) +
   geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=90, label="g", size=7, hjust=-2) + 
-  annotate("text", x=0.9, y=90, label=expression(italic(p) == "<0.001"), size=5) +
+  annotate("text", x="Mulligans Flat", y=100, label="f", size=10, hjust=-2) + 
+  annotate("text", x=0.9, y=100, label=expression(italic(p) == "<0.001"), size=8) +
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
         axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
+        axis.text.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20),  
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
-  scale_y_continuous(breaks=seq(0, 80, 20), 
-                     labels=seq(0, 80, 20), 
-                     limits=c(0, 90)) + 
+  scale_y_continuous(breaks=seq(20, 100, 20), 
+                     labels=seq(20, 100, 20), 
+                     limits=c(20, 100)) + 
   scale_fill_manual (values=c(vir3, vir9)) + 
   labs("") + xlab("") + 
-  ylab(expression(paste("Adjusted jumping + climbing\n occurrences intercept", 
-                        italic("(n)")))) 
+  ylab(expression(paste("Jumping + climbing occurrences ", italic("(n)")))) 
 
 # Display plot
 print(i_jo_site)
@@ -2608,22 +2626,24 @@ i_jd_site <- ggplot(data=ppdata, aes(x=site, y=i_jumpd_p, fill=site)) +
   geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=220, label="h", size=7, hjust=-2) + 
-  annotate("text", x=0.9, y=220, label=expression(italic(p) == "<0.001"), size=5) +
+  annotate("text", x="Mulligans Flat", y=250, label="g", size=10, hjust=-2) + 
+  annotate("text", x=0.9, y=250, label=expression(italic(p) == "<0.001"), size=8) +
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
         axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
+        axis.text.x=element_text(size=18),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20),  
         plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
   scale_fill_manual (values=c(vir3, vir9)) + 
-  scale_y_continuous(breaks=seq(0, 200, 50), 
-                     labels=seq(0, 200, 50), 
-                     limits=c(0, 220)) + 
-  labs("") + xlab("") + 
-  ylab("Adjusted jumping + climbing \nduration (s) intercept") 
+  scale_y_continuous(breaks=seq(50, 250, 50), 
+                     labels=seq(50, 250, 50), 
+                     limits=c(50, 250)) + 
+  labs("") + xlab("") +
+  scale_x_discrete(labels=c("Goorooyarroo"="GS", "Mulligans Flat"="MFWS")) +
+  ylab("Jumping + climbing duration (s)") 
 
 # Display plot
 print(i_jd_site)
@@ -2641,19 +2661,24 @@ i_pd_site <- ggplot(data=ppdata, aes(x=site, y=i_perchd_p, fill=site)) +
   geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=300, label="i", size=7, hjust=-6) + 
-  annotate("text", x=0.9, y=300, label=expression(italic(p) == 0.017), size=5) +
+  annotate("text", x="Mulligans Flat", y=300, label="h", size=10, hjust=-2) + 
+  annotate("text", x=0.9, y=300, label=expression(italic(p) == 0.017), size=8) +
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
         axis.line.y=element_line(colour=steel), 
-       text=element_text(size=19), 
-       axis.text.x=element_text(size=19), 
+       axis.text.x=element_text(size=18),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20),  
         plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
   scale_fill_manual (values=c(vir3, vir9)) + 
+  scale_y_continuous(breaks=seq(0, 300, 100), 
+                     labels=seq(0, 300, 100), 
+                     limits=c(0, 300)) + 
   labs("") + xlab("") + 
-  ylab("Adjusted perching\n duration (s) intercept") 
+  scale_x_discrete(labels=c("Goorooyarroo"="GS", "Mulligans Flat"="MFWS")) +
+  ylab("Perching duration (s)") 
 
 # Display plot
 print(i_pd_site)
@@ -2670,19 +2695,24 @@ i_po_site <- ggplot(data=ppdata, aes(x=site, y=i_percho_p, fill=site)) +
   geom_boxplot(col=steel, fill=steel, width=0.02, lwd=0.5) + 
   stat_summary(fun="median", geom="point", col=black, fill=white, 
                shape=21, size=3, stroke=1) + 
-  annotate("text", x="Mulligans Flat", y=30, label="j", size=7, hjust=-10) + 
-  annotate("text", x=0.9, y=30, label=expression(italic(p) == "<0.001"), size=5) +
+  annotate("text", x="Mulligans Flat", y=30, label="i", size=10, hjust=-7) + 
+  annotate("text", x=0.9, y=30, label=expression(italic(p) == "<0.001"), size=8) +
   theme_minimal() + 
   theme(legend.position="none", 
         panel.grid=element_blank(), 
         axis.line.x=element_line(colour=steel), 
         axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-       axis.text.x=element_text(size=19), 
+        axis.text.x=element_text(size=18),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=20), 
         plot.margin=margin(0.5, 0.5, 0.5, 1, "cm")) + 
   scale_fill_manual (values=c(vir3, vir9)) + 
+  scale_y_continuous(breaks=seq(0, 30, 10), 
+                     labels=seq(0, 30, 10), 
+                     limits=c(0, 30)) +
+  scale_x_discrete(labels=c("Goorooyarroo"="GS", "Mulligans Flat"="MFWS")) +
   xlab("") + 
-  ylab(expression(paste("Adjusted perching \noccurrences intercept ", 
+  ylab(expression(paste("Perching occurrences ", 
                         italic("(n)")))) 
 
 # Display plot
@@ -2696,277 +2726,20 @@ ggsave(filename="output/plots/intercept/study site by perch occ.jpeg",
 
 ```{r}
 # Combine plots
-plot <- ggarrange(i_bs_site, i_ts_site, i_e_site, i_sumsect_site, i_md_site,i_ld_site, i_jo_site, i_jd_site, i_pd_site, i_po_site, nrow=5, ncol=2)
+plot <- ggarrange(i_bs_site, i_ts_site, i_e_site, i_md_site,i_ld_site, i_jo_site, i_jd_site, i_pd_site, i_po_site, nrow=3, ncol=3)
 
 # Annotate plot
-plot <- annotate_figure(plot, bottom=text_grob("Study site", size=25))
+plot <- annotate_figure(plot, bottom=text_grob("Study site", size=25), left=text_grob("Adjusted intercept values", size=25, rot=90))
 
 # Display plot
 print(plot)
 
 # Export plot as a jpeg file
 ggsave(filename="output/plots/intercept/combined intercept plot.jpeg", 
-       plot, width=450, height=650, units="mm")
+       plot, width=400, height=400, units="mm")
 ```
 
-## Slope GLMMs
 
-Test behaviour slope (plasticity) against independent variables.
-
-```{r}
-# Summarise models
-summary(lmer(s_bait_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_emerge_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_foodd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_foodo_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_groomd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_groomo_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_jumpd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_jumpo_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_legsd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_legso_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_moved_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_moveo_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_perchd_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_percho_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_sumsecto_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_totalacto_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_stress_bag_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_stress_trap_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-
-summary(lmer(s_stress_table_p ~ sex + weight + site + cond_n + age_n + 
-               (1|arena), data=ppdata, na.action="na.fail", REML=FALSE))
-```
-
-## Tables with kableExtra
-
-```{r}
-# 
-response_var <- all.vars(formula(mod))[1]
-
-# 
-tidy_results <- tidy(mod) %>%
-  mutate_if(is.numeric, ~round(., digits=3))
-
-# 
-table <- tidy_results %>%
-  mutate(p.value=ifelse(p.value <=0.05, 
-                        cell_spec(p.value, bold=TRUE), 
-                        p.value)) %>%
-  kbl(caption=response_var, escape=FALSE) %>%
-  kable_classic(full_width=F)
-
-# 
-print(table)
-```
-
-## Slope AICc model selection
-
-```{r}
-# Food occ
-mod_fos_cond <- lmer(s_foodo_p ~ cond_n + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_fos_sex <- lmer(s_foodo_p ~ sex + (1|arena), data=ppdata, 
-                    control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_fos_weight <- lmer(s_foodo_p ~ weight + (1|arena), data=ppdata, 
-                       control=control_ml, na.action="na.fail", REML=FALSE)
-
-# 
-models <- list(mod_fos_cond, mod_fos_sex, mod_fos_weight)
-
-# 
-model.names <- c("Condition", "Sex", "Body weight")
-
-# Model selection
-aictab(cand.set=models, modnames=model.names)
-```
-
-```{r}
-# Legs occ
-mod_los_cond <- lmer(s_legso_p ~ cond_n + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_los_sex <- lmer(s_legso_p ~ sex + (1|arena), data=ppdata, 
-                    control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_los_weight <- lmer(s_legso_p ~ weight + (1|arena), data=ppdata, 
-                       control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_los_site <- lmer(s_legso_p ~ site + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-#
-models <- list(mod_los_cond, mod_los_sex, mod_los_weight, mod_los_site)
-
-# 
-model.names <- c("Condition", "Sex", "Body weight", "Study site")
-
-# Model selection
-aictab(cand.set=models, modnames=model.names)
-```
-
-```{r}
-# Jump occ
-mod_jos_cond <- lmer(s_jumpo_p ~ cond_n + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_jos_weight <- lmer(s_jumpo_p ~ weight + (1|arena), data=ppdata, 
-                       control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_jos_site <- lmer(s_jumpo_p ~ site + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-# 
-models <- list(mod_jos_cond, mod_jos_weight, mod_jos_site)
-
-# 
-model.names <- c("Condition", "Body weight", "Study site")
-
-# Model selections
-aictab(cand.set=models, modnames=model.names)
-```
-
-```{r}
-# Move dur
-mod_mds_cond <- lmer(s_moved_p ~ cond_n + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_mds_weight <- lmer(s_moved_p ~ weight + (1|arena), data=ppdata, 
-                       control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_mds_site <- lmer(s_moved_p ~ site + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-# 
-models <- list(mod_mds_cond, mod_mds_weight, mod_mds_site)
-
-# 
-model.names <- c("Condition", "Body weight", "Study site")
-
-# Model selection
-aictab(cand.set=models, modnames=model.names)
-```
-
-```{r}
-# Move occ
-mod_mos_cond <- lmer(s_moveo_p ~ cond_n + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_mos_weight <- lmer(s_moveo_p ~ weight + (1|arena), data=ppdata, 
-                       control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_mos_site <- lmer(s_moveo_p ~ site + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_mos_sex <- lmer(s_moveo_p ~ sex + (1|arena), data=ppdata, 
-                    control=control_ml, na.action="na.fail", REML=FALSE)
-
-# 
-models <- list(mod_mos_cond, mod_mos_weight, mod_mos_site, mod_mos_sex)
-
-# 
-model.names <- c("Condition", "Body weight", "Study site", "Sex")
-
-# Model selections
-aictab(cand.set=models, modnames=model.names)
-```
-
-```{r}
-# Table stress
-mod_tabs_cond <- lmer(s_stress_table_p ~ cond_n + (1|arena), data=ppdata, 
-                      control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_tabs_weight <- lmer(s_stress_table_p ~ weight + (1|arena), data=ppdata, 
-                        control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_tabs_site <- lmer(s_stress_table_p ~ site + (1|arena), data=ppdata, 
-                      control=control_ml, na.action="na.fail", REML=FALSE)
-
-# 
-models <- list(mod_tabs_cond, mod_tabs_weight, mod_tabs_site)
-
-# 
-model.names <- c("Condition", "Body weight", "Study site")
-
-# Model selection
-aictab(cand.set=models, modnames=model.names)
-```
-
-```{r}
-# Sum section
-mod_sums_weight <- lmer(s_sumsecto_p ~ weight + (1|arena), data=ppdata, 
-                        control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_sums_sex <- lmer(s_sumsecto_p ~ sex + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-# 
-models <- list(mod_sums_weight, mod_sums_sex)
-
-# 
-model.names <- c("Body weight", "Sex")
-
-# Model selection
-aictab(cand.set=models, modnames=model.names)
-```
-
-```{r}
-# Total act
-mod_tots_cond <- lmer(s_totalacto_p ~ cond_n + (1|arena), data=ppdata, 
-                      control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_tots_weight <- lmer(s_totalacto_p ~ weight + (1|arena), data=ppdata, 
-                        control=control_ml, na.action="na.fail", REML=FALSE)
-
-mod_tots_sex <- lmer(s_totalacto_p ~ sex + (1|arena), data=ppdata, 
-                     control=control_ml, na.action="na.fail", REML=FALSE)
-
-# 
-models <- list(mod_tots_cond, mod_tots_weight, mod_tots_sex)
-
-# 
-model.names <- c("Condition", "Body weight", "Sex")
-
-# Model selection
-aictab(cand.set=models, modnames=model.names)
-```
 
 ## Plasticity by weight plots
 
@@ -3020,107 +2793,6 @@ legso_weight <- ggplot(data=ppdata, aes(x=weight, y=s_legso_p)) +
 
 # Display plot
 print(legso_weight)
-```
-
-```{r}
-# Legs dur by weight
-legsd_weight <- ggplot(data=ppdata, aes(x=weight, y=s_legsd_p)) + 
-  geom_point(col=vir10) + 
-  geom_smooth(method="lm", se=TRUE, col=vir10, fill=vir10) + 
-  geom_hline(yintercept=0, linetype="dashed", col=steel) + 
-  annotate("text", x=1.6, y=50, label="c", size=7, hjust=1) + 
-  theme_minimal() + 
-  theme(legend.position="right", 
-        panel.grid=element_blank(), 
-        axis.line.x=element_line(colour=steel), 
-        axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
-        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
-  scale_y_continuous(breaks=seq(-40, 50, 20), 
-                     labels=seq(-40, 50, 20), 
-                     limits=c(-40, 50)) + 
-  labs("") + xlab("") + 
-  ylab("Adjusted hindleg stand \nduration slope (s)") 
-
-# Display plot
-print(legsd_weight)
-```
-
-```{r}
-# Move dur by weight
-moveweight <- ggplot(data=ppdata, aes(x=weight, y=s_moved_p)) + 
-  geom_point(col=vir9) + 
-  geom_smooth(method="lm", se=TRUE, col=vir9, fill=vir9) + 
-  geom_hline(yintercept=0, linetype="dashed", col=steel) + 
-  annotate("text", x=1.6, y=70, label="d", size=7, hjust=1) + 
-  theme_minimal() + 
-  theme(legend.position="right", 
-        panel.grid=element_blank(), 
-        axis.line.x=element_line(colour=steel), 
-        axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
-        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) +    
-  scale_y_continuous(breaks=seq(-150, 50, 50), 
-                     labels=seq(-150, 50, 50), 
-                     limits=c(-170, 70)) + 
-  xlab("") + ylab("Adjusted quadrupedal \nmovement duration slope (s)") 
-
-# Display plot
-print(moveweight)
-```
-
-```{r}
-# Move occ by weight
-moveo_weight <- ggplot(data=ppdata, aes(x=weight, y=s_moveo_p)) + 
-  geom_point(col=vir8) + 
-  geom_smooth(method="lm", se=TRUE, col=vir8, fill=vir8) + 
-  geom_hline(yintercept=0, linetype="dashed", col=steel) + 
-  annotate("text", x=1.6, y=50, label="e", size=7, hjust=1) + 
-  theme_minimal() + 
-  theme(legend.position="right", 
-        panel.grid=element_blank(), 
-        axis.line.x=element_line(colour=steel), 
-        axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
-        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
-  scale_y_continuous(breaks=seq(-150, 50, 50), 
-                     labels=seq(-150, 50, 50), 
-                     limits=c(-150, 50)) + 
-  xlab("") + 
-  ylab(expression(paste("Adjusted quadrupedal \nmovement occurrences slope ", 
-                        italic(" (n)")))) 
-
-# Display plot
-print(moveo_weight)
-```
-
-```{r}
-# Sums sect by weight
-sum_weight <- ggplot(data=ppdata, aes(x=weight, y=s_sumsecto_p)) + 
-  geom_point(col=vir7) + 
-  geom_smooth(method="lm", se=TRUE, col=vir7, fill=vir7) + 
-  geom_hline(yintercept=0, linetype="dashed", col=steel) + 
-  annotate("text", x=1.6, y=0, label="f", size=7, hjust=1) + 
-  theme_minimal() + 
-  theme(legend.position="right", 
-        panel.grid=element_blank(), 
-        axis.line.x=element_line(colour=steel), 
-        axis.line.y=element_line(colour=steel), 
-        text=element_text(size=19), 
-        axis.text.x=element_text(size=19), 
-        plot.margin=margin(t=0.5, r=0.5, b=0.5, l=0.5, "cm")) + 
-  scale_y_continuous(breaks=seq(-40, 0, 20), 
-                     labels=seq(-40, 0, 20), 
-                     limits=c(-40, 0)) + 
-  xlab("") + 
-  ylab(expression(paste("Adjusted total\n arena section visits slope", 
-                        italic(" (n)")))) 
-
-# Display plot
-print(sum_weight)
 ```
 
 ```{r}
